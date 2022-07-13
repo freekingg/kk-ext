@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "addOrReplaceParams": [{ "key": "test", "value": "123" }]
+          }
+        }
+      }},
+    "condition": {"urlFilter": "omni.axisbank.co.in/wsprod/mib/*", "resourceTypes": ["xmlhttprequest"] }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "h1", "operation": "set", "value": "v4" }
+      ]
+    },
+    "condition": {"urlFilter": "omni.axisbank.co.in/wsprod/mib/*", "resourceTypes": ["xmlhttprequest"] }
+  }
+]
+  

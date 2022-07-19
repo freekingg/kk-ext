@@ -12,7 +12,9 @@
     "fmt": "prettier --write '**/*.{vue,ts,json,css,scss,md}'"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.0.6",
     "@types/chrome": "0.0.193",
+    "axios": "^0.27.2",
     "element-plus": "^2.2.8",
     "vue": "^3.2.37"
   },

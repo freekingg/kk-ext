@@ -37,6 +37,7 @@ export default defineManifest({
     "webRequest",
     "declarativeNetRequest",
     "tabs",
+    "storage",
     "contextMenus"
   ],
   "host_permissions": [

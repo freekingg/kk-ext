@@ -27,8 +27,18 @@ s.onload = function () {
 };
 (document.body || document.head).appendChild(s);
 
+var s2 = document.createElement('script');
+s2.src = chrome.runtime.getURL('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js');
+s2.onload = function () {
+    // s.remove();
+};
+(document.body || document.head).appendChild(s2);
+
 // receive message from injected script
 window.addEventListener('message', function (e) {
-  console.log('content script received:' , e.data);
+  console.log('content script received:' , e);
+  if(e.data){
+    vm.onMessage(e.data)
+  }
 });
 

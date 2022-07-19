@@ -60042,8 +60042,6 @@ var kkde = null
           }
           return (
             (t.prototype.downloadFile = function (t) {
-              console.log('downloadFile',t)
-              console.log('downloadFile',this.clientProfile.getBaseUrl() + '/servlets/report')
               var e = this,
                 n = new V()
               return (

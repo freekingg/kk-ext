@@ -53,7 +53,7 @@ export default defineComponent({
     data: String,
   },
   emits: ['onOffHandle'],
-  setup(props, ctx) {
+  setup(props: any, ctx) {
     const cutDownNum = ref(30)
     const settingVisible = ref(false)
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
@@ -65,10 +65,11 @@ export default defineComponent({
 
     const ruleFormRef = ref()
     const ruleForm = reactive({
-      intervalTime: 30, //爬取间隔时间
+      intervalTime: 20, //爬取间隔时间
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      accNumber: '', //accNumber
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
@@ -134,7 +135,7 @@ export default defineComponent({
         '.cdk-global-overlay-wrapper .cdk-overlay-pane.mx-session-popup-class',
       )
       if (hasOverlay) {
-        let jxbtn = document.querySelector(
+        let jxbtn: any = document.querySelector(
           '.cdk-global-overlay-wrapper .mat-raised-button.mat-warn',
         )
         console.log('发现超时继续按钮', jxbtn)
@@ -145,7 +146,7 @@ export default defineComponent({
 
       let hasOverlay2 = document.querySelector('.mat-dialog-container.ng-trigger-dialogContainer')
       if (hasOverlay2) {
-        let jxbtn2 = document.querySelector(
+        let jxbtn2: any = document.querySelector(
           '.mat-dialog-container.ng-trigger-dialogContainer .mat-raised-button.mat-warn',
         )
         console.log('发现超时继续按钮2', jxbtn2)
@@ -159,23 +160,37 @@ export default defineComponent({
       let xxsrftoken = getCookie('XSRF-TOKEN')
       if (!xxsrftoken || !props.onOff) return
 
-      // let inputs = document.querySelector('.search-wrapper input')
-      // if(inputs){
-      //   console.log('inputs: ', inputs);
-      //   inputs.click()
-      //   inputs.focus()
-      // }
+      let parseProps = JSON.parse(props.data)
+      console.log('parseProps: ', parseProps);
+
+       function add(n:any){
+          if(n<=9){
+              return `0${n}`
+          }
+          return n
+      }
+
+      var myDate = new Date()
+      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+      var myToday = add(myDate.getDate()) //获取当前日(1-31)
+      var myToday1 = '03' //获取当前日(1-31)
+      var myToday2 = '09' //获取当前日(1-31)
+
+      let body = `fromdate=${parseProps.fromdate}&todate=${parseProps.todate}&month=&year=&selectedValue=0&accNumber=${parseProps.accNumber}&docType=2&data=0&referenceId=${parseProps.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000`
+      console.log('body: ', body);
 
       fetch('https://omni.axisbank.co.in/wsprod/mib/servlets/report', {
         headers: {
           accept: 'application/json, text/plain, */*',
           'content-type': 'text/plain',
           'sec-fetch-site': 'same-origin',
-          'x-xsrf-token': `${xxsrftoken}`,
+          'X-XSRF-TOKEN': `${xxsrftoken}`,
         },
         referrer: 'https://omni.axisbank.co.in/axisretailbanking/',
         referrerPolicy: 'strict-origin-when-cross-origin',
-        body: 'fromdate=07%2F13%2F2022&todate=07%2F13%2F2022&month=&year=&selectedValue=0&accNumber=920020052641917&docType=2&data=0&referenceId=${props.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000',
+        // body: body,
+        body: body,
         method: 'POST',
         mode: 'cors',
         credentials: 'include',
@@ -187,7 +202,7 @@ export default defineComponent({
         .then((res) => {
           // blob对象
           const a = document.createElement('a')
-          const body = document.querySelector('body')
+          const body: any = document.querySelector('body')
           // 这里注意添加需要下载的文件后缀；
           a.download = 'axisDownloadName.xls'
           a.href = window.URL.createObjectURL(res)

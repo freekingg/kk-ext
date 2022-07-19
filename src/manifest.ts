@@ -1,7 +1,7 @@
 import { defineManifest } from '@crxjs/vite-plugin'
 
 export default defineManifest({
-  name: 'create-chrome-ext',
+  name: 'chrome-ext',
   description: 'A chrome extension boilerplate built by create-chrome-ext',
   version: '0.0.0',
   manifest_version: 3,
@@ -28,9 +28,9 @@ export default defineManifest({
   ],
   web_accessible_resources: [
     {
-      resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png','js/*'],
+      resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png','/js/*','/img/*','js/injected.js','js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js'],
       // resources: ['assets/*'],
-      matches: [],
+      "matches": ["<all_urls>"],
     },
   ],
   permissions: [

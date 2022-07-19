@@ -33,7 +33,7 @@ export default defineComponent({
       type: '',
       typeName:'',
       onOff: false,
-      data:null
+      data: ''
     })
 
     /**

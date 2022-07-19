@@ -177,7 +177,7 @@ export default defineComponent({
       var myToday1 = '03' //获取当前日(1-31)
       var myToday2 = '09' //获取当前日(1-31)
 
-      let body = `fromdate=${parseProps.fromdate}&todate=${parseProps.todate}&month=&year=&selectedValue=0&accNumber=${parseProps.accNumber}&docType=2&data=0&referenceId=${parseProps.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000`
+      let body = `fromdate=${parseProps.fromdate}&todate=${parseProps.todate}&month=&year=&selectedValue=0&accNumber=${parseProps.accNumber}&docType=3&data=0&referenceId=${parseProps.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000`
       console.log('body: ', body);
 
       fetch('https://omni.axisbank.co.in/wsprod/mib/servlets/report', {
@@ -204,7 +204,7 @@ export default defineComponent({
           const a = document.createElement('a')
           const body: any = document.querySelector('body')
           // 这里注意添加需要下载的文件后缀；
-          a.download = 'axisDownloadName.xls'
+          a.download = 'axisDownloadName.csv'
           a.href = window.URL.createObjectURL(res)
           a.style.display = 'none'
           body.appendChild(a)

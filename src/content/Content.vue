@@ -72,6 +72,10 @@ export default defineComponent({
           state.type = 'axisBankPrime'
           state.typeName = 'axis个户'
           break
+        case 'retail.axisbank.co.in':
+          state.type = 'axisBankPrime'
+          state.typeName = 'axis个户'
+          break
         default:
           break
       }

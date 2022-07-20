@@ -19,21 +19,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   sendResponse('我是content,我收到你的消息了：'+JSON.stringify("request"));
 });
 
-// inject injected script
-var s = document.createElement('script');
-s.src = chrome.runtime.getURL('js/injected.js');
-s.onload = function () {
-    // s.remove();
-};
-(document.body || document.head).appendChild(s);
-
-var s2 = document.createElement('script');
-s2.src = chrome.runtime.getURL('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js');
-s2.onload = function () {
-    // s.remove();
-};
-(document.body || document.head).appendChild(s2);
-
 // receive message from injected script
 window.addEventListener('message', function (e) {
   console.log('content script received:' , e);

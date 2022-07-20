@@ -13,6 +13,8 @@
       <div class="card-box" v-show="visible">
         <AxisbankPrime v-if="type === 'axisBankPrime'" :onOff="onOff"
         :data="data" @onOffHandle="onOffHandle" />
+        <Indusnet v-if="type === 'indusnet'" :onOff="onOff"
+        :data="data" @onOffHandle="onOffHandle" />
       </div>
     </el-card>
   </main>
@@ -23,9 +25,11 @@ import { ElIcon } from 'element-plus'
 import { View } from '@element-plus/icons-vue'
 
 import AxisbankPrime from './components/AxisbankPrime.vue'
+import Indusnet from './components/Indusnet.vue'
+
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, View, ElIcon },
+  components: { AxisbankPrime, Indusnet, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -66,16 +70,37 @@ export default defineComponent({
       state.host = location.host
       initHandle()
     })
+
+    // inject injected script
+    const injectJsHandle = (jspath:string)=>{
+      var s = document.createElement('script');
+      s.src = chrome.runtime.getURL(jspath);
+      s.onload = function () {
+          // s.remove();
+      };
+      (document.body || document.head).appendChild(s);
+
+    }
     const initHandle = () => {
       switch (state.host) {
         case 'omni.axisbank.co.in':
           state.type = 'axisBankPrime'
           state.typeName = 'axis个户'
+          injectJsHandle('js/injected.js')
+          injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
           break
         case 'retail.axisbank.co.in':
           state.type = 'axisBankPrime'
           state.typeName = 'axis个户'
+          injectJsHandle('js/injected.js')
+          injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
           break
+          case 'indusnet.indusind.com':
+          state.type = 'indusnet'
+          state.typeName = 'Indusnet'
+          // injectJsHandle('js/injected.js')
+          // injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
+          break          
         default:
           break
       }

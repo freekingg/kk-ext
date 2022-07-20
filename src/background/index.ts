@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 */
 chrome.webRequest.onCompleted.addListener(
   function(details) {
-    console.log('details: ', details);
+    // console.log('details: ', details);
     // return {cancel: details.url.indexOf(":omni.axisbank.co.in/wsprod/mib") != -1};
   },
   {urls: ["<all_urls>"]}

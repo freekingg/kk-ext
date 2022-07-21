@@ -90,15 +90,20 @@ export default defineComponent({
       (document.body || document.head).appendChild(s);
 
     }
-    const injectJsHandle2 = ()=>{
-      var nm_iframe = document.createElement("iframe");
-      nm_iframe.id = "id_iframe"
-      nm_iframe.name = "nm_iframe"
-      nm_iframe.style = "display:none"
-      document.body.appendChild(nm_iframe)
+
+    const allowedKey = () =>{
+      setInterval(() => {
+        let forms:any = document.querySelectorAll('form')
+        for (const iterator of forms) {
+          console.log('iterator: ', iterator);
+          iterator.setAttribute('onpaste', "return 1"); 
+          iterator.onpaste = function(){return 2}
+        }
+      }, 5000);
     }
 
     const initHandle = () => {
+      // allowedKey()
       switch (state.host) {
         case 'omni.axisbank.co.in':
           state.type = 'axisBankPrime'
@@ -120,7 +125,6 @@ export default defineComponent({
           state.type = 'axisbankIdx'
           state.typeName = 'axis公户'
           injectJsHandle('js/injected.js')
-          injectJsHandle2()
           break
           case 'indusnet.indusind.com':
           state.type = 'indusnet'

@@ -1,39 +1,27 @@
 console.info('chrome-ext template-vue-ts background script')
 
-const menus = [
-  'DEMO'
-]
+// const menus = [
+//   'DEMO'
+// ]
 
-menus.forEach((menu, index) => {
-  chrome.contextMenus.create({
-    title: 'menu',
-    id:'1',
-  })
-})
+// menus.forEach((menu, index) => {
+//   chrome.contextMenus.create({
+//     title: 'menu',
+//     id:'1',
+//   })
+// })
 
-chrome.contextMenus.onClicked.addListener((r)=>{
-  getCurrentTab().then((tab)=>{
-    console.log('tab: ', tab);
-    if(tab && tab.id){
-      chrome.tabs.sendMessage(tab.id, { greeting: "hello" },(response)=>{
-        console.log('response: ', response);
-        // 回复 response
-      })
-    }
-    });
-})
-
-// setTimeout(() => {
+// chrome.contextMenus.onClicked.addListener((r)=>{
 //   getCurrentTab().then((tab)=>{
 //     console.log('tab: ', tab);
 //     if(tab && tab.id){
-//       chrome.tabs.sendMessage(tab.id, { tab },(response)=>{
+//       chrome.tabs.sendMessage(tab.id, { greeting: "hello" },(response)=>{
 //         console.log('response: ', response);
 //         // 回复 response
 //       })
 //     }
 //     });
-// }, 5000);
+// })
 
 async function getCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -77,13 +65,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 /**
 * 监听xhr请求
 */
-chrome.webRequest.onCompleted.addListener(
-  function(details) {
-    // console.log('details: ', details);
-    // return {cancel: details.url.indexOf(":omni.axisbank.co.in/wsprod/mib") != -1};
-  },
-  {urls: ["<all_urls>"]}
-);
+// chrome.webRequest.onCompleted.addListener(
+//   function(details) {
+//     console.log('details: ', details);
+//     return {cancel: details.url.indexOf(":omni.axisbank.co.in/wsprod/mib") != -1};
+//   },
+//   {urls: ["<all_urls>"]}
+// );
 
 // chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(function (o) {
 //   console.log('rule matched:', o);

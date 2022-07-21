@@ -46,6 +46,7 @@
         <ul style="padding: 0 20px">
           <li>1、需要在流水界面点击一次查询，类型选择"onscren"</li>
           <li>2、点击开关开始即可</li>
+          <li>3、间隔时间在配置里面改</li>
         </ul>
       </div>
       <template #footer>
@@ -72,7 +73,7 @@ export default defineComponent({
   },
   emits: ['onOffHandle'],
   setup(props: any, ctx) {
-    const cutDownNum = ref(30)
+    const cutDownNum = ref(20)
     const settingVisible = ref(false)
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
     const state = reactive({
@@ -234,7 +235,7 @@ export default defineComponent({
           cutDownNum.value = ruleForm.intervalTime
           timer = setTimeout(() => {
             download()
-          }, ruleForm.intervalTime * 1000 || 30000)
+          }, ruleForm.intervalTime * 1000 || 20000)
           cutDownNumTimer = setInterval(() => {
             cutDownNum.value--
             checkOverlay()
@@ -283,7 +284,7 @@ export default defineComponent({
       // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
-      ruleForm.intervalTime = _intervalTime || 30
+      ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
     })
     return {

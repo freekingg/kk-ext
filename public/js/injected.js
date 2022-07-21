@@ -4,6 +4,7 @@ console.info('chrome-ext template-vue-ts injected.js script')
 
 
 function getUrlParam(url) {
+  url = decodeURIComponent(url)
    // str为？之后的参数部分字符串
    const str = url.substr(url.indexOf('?') + 1)
    // arr每个元素都是完整的参数键值
@@ -32,12 +33,20 @@ function getUrlParam(url) {
   };
 
   XHR.send = function (postData) {
-      // console.log('xhr request:', this._method, this._url, postData);
-      // 监听下载接口
+      console.log('xhr request:', this._method, this._url, postData);
+
+      // 监听下载接口 axis个户
       if(this._url && this._url.indexOf('/wsprod/mib/servlets/report')!= -1){
         let _postData = getUrlParam('?'+postData)
         window.postMessage({ actionType: 'axisPrimeDownloadParams', data: _postData }, '*');
       }
+
+      // 监听下载接口 axis公户
+      if(this._url && postData && postData.indexOf('onscreen')!= -1){
+        let _postData = getUrlParam('?'+postData)
+        window.postMessage({ actionType: 'axisIdxDownloadParams', data: _postData }, '*');
+      }
+
       // this.addEventListener('load', function () {
         // sessionStorage['key'] = JSON.stringify(response); // 插件需要添加'storage'权限
         // document.cookie

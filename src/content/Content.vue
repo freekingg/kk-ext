@@ -11,10 +11,17 @@
         </div>
       </template>
       <div class="card-box" v-show="visible">
+
         <AxisbankPrime v-if="type === 'axisBankPrime'" :onOff="onOff"
         :data="data" @onOffHandle="onOffHandle" />
+
         <Indusnet v-if="type === 'indusnet'" :onOff="onOff"
         :data="data" @onOffHandle="onOffHandle" />
+
+        <AxisbankIdx v-if="type === 'axisbankIdx'" :onOff="onOff"
+        :data="data" @onOffHandle="onOffHandle" />
+
+        
       </div>
     </el-card>
   </main>
@@ -25,11 +32,12 @@ import { ElIcon } from 'element-plus'
 import { View } from '@element-plus/icons-vue'
 
 import AxisbankPrime from './components/AxisbankPrime.vue'
+import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, Indusnet, View, ElIcon },
+  components: { AxisbankPrime, AxisbankIdx, Indusnet, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -46,6 +54,7 @@ export default defineComponent({
     const onMessage = (e:any) => {
       console.log('content接收到了后台的消息',e)
       if(e.actionType){
+        
         state.data = JSON.stringify(e.data)
         if(e.actionType){
           ElMessage({
@@ -81,6 +90,14 @@ export default defineComponent({
       (document.body || document.head).appendChild(s);
 
     }
+    const injectJsHandle2 = ()=>{
+      var nm_iframe = document.createElement("iframe");
+      nm_iframe.id = "id_iframe"
+      nm_iframe.name = "nm_iframe"
+      nm_iframe.style = "display:none"
+      document.body.appendChild(nm_iframe)
+    }
+
     const initHandle = () => {
       switch (state.host) {
         case 'omni.axisbank.co.in':
@@ -95,11 +112,19 @@ export default defineComponent({
           injectJsHandle('js/injected.js')
           injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
           break
+        case 'corporate.axisbank.co.in':
+          state.type = 'axisbankIdx'
+          state.typeName = 'axis公户'
+          break
+        case 'idp.axisbank.co.in':
+          state.type = 'axisbankIdx'
+          state.typeName = 'axis公户'
+          injectJsHandle('js/injected.js')
+          injectJsHandle2()
+          break
           case 'indusnet.indusind.com':
           state.type = 'indusnet'
           state.typeName = 'Indusnet'
-          // injectJsHandle('js/injected.js')
-          // injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
           break          
         default:
           break

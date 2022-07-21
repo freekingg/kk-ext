@@ -28,7 +28,7 @@ export default defineManifest({
   ],
   web_accessible_resources: [
     {
-      resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png','/js/*','/img/*','js/injected.js','js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js'],
+      resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png','/js/*','/img/*','js/injected.js','js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js','js/mib020821.js'],
       // resources: ['assets/*'],
       "matches": ["<all_urls>"],
     },

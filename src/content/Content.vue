@@ -11,17 +11,28 @@
         </div>
       </template>
       <div class="card-box" v-show="visible">
+        <AxisbankPrime
+          v-if="type === 'axisBankPrime'"
+          :onOff="onOff"
+          :data="data"
+          @onOffHandle="onOffHandle"
+        />
 
-        <AxisbankPrime v-if="type === 'axisBankPrime'" :onOff="onOff"
-        :data="data" @onOffHandle="onOffHandle" />
+        <Indusnet
+          v-if="type === 'indusnet'"
+          :onOff="onOff"
+          :data="data"
+          @onOffHandle="onOffHandle"
+        />
 
-        <Indusnet v-if="type === 'indusnet'" :onOff="onOff"
-        :data="data" @onOffHandle="onOffHandle" />
+        <AxisbankIdx
+          v-if="type === 'axisbankIdx'"
+          :onOff="onOff"
+          :data="data"
+          @onOffHandle="onOffHandle"
+        />
 
-        <AxisbankIdx v-if="type === 'axisbankIdx'" :onOff="onOff"
-        :data="data" @onOffHandle="onOffHandle" />
-
-        
+        <Pnbcor v-if="type === 'pnbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
       </div>
     </el-card>
   </main>
@@ -34,39 +45,65 @@ import { View } from '@element-plus/icons-vue'
 import AxisbankPrime from './components/AxisbankPrime.vue'
 import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
+import Pnbcor from './components/Pnbcor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, AxisbankIdx, Indusnet, View, ElIcon },
+  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
       host: '',
       type: '',
-      typeName:'',
+      typeName: '',
       onOff: false,
-      data: ''
+      data: '',
     })
+
+    // 网站配置 
+    const matchSite = [
+      {
+        type: 'axisBankPrime',
+        typeName: 'axis个户',
+        matches: ['omni.axisbank.co.in', 'retail.axisbank.co.in'],
+        injectJs: ['js/injected.js', 'js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js'],
+      },
+      {
+        type: 'axisbankIdx',
+        typeName: 'axis公户',
+        matches: ['corporate.axisbank.co.in', 'idp.axisbank.co.in'],
+        injectJs: ['js/injected.js'],
+      },
+      {
+        type: 'indusnet',
+        typeName: 'Indusnet',
+        matches: ['indusnet.indusind.com'],
+      },
+      {
+        type: 'pnbcor',
+        typeName: 'PNBcor',
+        matches: ['internetbanking.netpnb.com'],
+        injectJs: ['js/injected.js'],
+      },
+    ]
 
     /**
      * 接收消息
      */
-    const onMessage = (e:any) => {
-      console.log('content接收到了后台的消息',e)
-      if(e.actionType){
-        
+    const onMessage = (e: any) => {
+      console.log('content接收到了后台的消息', e)
+      if (e.actionType) {
         state.data = JSON.stringify(e.data)
-        if(e.actionType){
+        if (e.actionType) {
           ElMessage({
             message: '请求参数已更新.',
             type: 'success',
           })
         }
-        
       }
     }
-    
-    const onOffHandle = (flag:any) => {
+
+    const onOffHandle = (flag: any) => {
       state.onOff = flag
     }
 
@@ -81,57 +118,33 @@ export default defineComponent({
     })
 
     // inject injected script
-    const injectJsHandle = (jspath:string)=>{
-      var s = document.createElement('script');
-      s.src = chrome.runtime.getURL(jspath);
+    const injectJsHandle = (jspath: string) => {
+      var s = document.createElement('script')
+      s.src = chrome.runtime.getURL(jspath)
       s.onload = function () {
-          // s.remove();
-      };
-      (document.body || document.head).appendChild(s);
-
-    }
-
-    const allowedKey = () =>{
-      setInterval(() => {
-        let forms:any = document.querySelectorAll('form')
-        for (const iterator of forms) {
-          console.log('iterator: ', iterator);
-          iterator.setAttribute('onpaste', "return 1"); 
-          iterator.onpaste = function(){return 2}
-        }
-      }, 5000);
+        // s.remove();
+      }
+      ;(document.body || document.head).appendChild(s)
     }
 
     const initHandle = () => {
-      // allowedKey()
-      switch (state.host) {
-        case 'omni.axisbank.co.in':
-          state.type = 'axisBankPrime'
-          state.typeName = 'axis个户'
-          injectJsHandle('js/injected.js')
-          injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
-          break
-        case 'retail.axisbank.co.in':
-          state.type = 'axisBankPrime'
-          state.typeName = 'axis个户'
-          injectJsHandle('js/injected.js')
-          injectJsHandle('js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js')
-          break
-        case 'corporate.axisbank.co.in':
-          state.type = 'axisbankIdx'
-          state.typeName = 'axis公户'
-          break
-        case 'idp.axisbank.co.in':
-          state.type = 'axisbankIdx'
-          state.typeName = 'axis公户'
-          injectJsHandle('js/injected.js')
-          break
-          case 'indusnet.indusind.com':
-          state.type = 'indusnet'
-          state.typeName = 'Indusnet'
-          break          
-        default:
-          break
+      const host = state.host
+
+      let target: any = null
+      for (const iterator of matchSite) {
+        if (iterator.matches.includes(host)) {
+          target = iterator
+        }
+      }
+      console.log('target', target)
+      if (!target) return
+      const { type, typeName, injectJs } = target
+      state.type = type
+      state.typeName = typeName
+      if(injectJs && injectJs.length){
+        for (const iterator of injectJs) {
+          injectJsHandle(iterator)
+        }
       }
     }
     const toggleVisile = () => {

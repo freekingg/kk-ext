@@ -33,7 +33,7 @@ function getUrlParam(url) {
   };
 
   XHR.send = function (postData) {
-      // console.log('xhr request:', this._method, this._url, postData);
+      console.log('xhr request:', this._method, this._url, postData);
 
       // 监听下载接口 axis个户
       if(this._url && this._url.indexOf('/wsprod/mib/servlets/report')!= -1){

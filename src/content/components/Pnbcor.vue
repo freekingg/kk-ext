@@ -1,7 +1,9 @@
 <template>
   <main id="kk-container">
-    <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
-    <p style="font-size: 14px;display: inline-block;">在Accounts标签下，点击开关即可自动下载</p>
+    <div style="display: flex;align-items: center;">
+      <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
+      <p style="font-size: 14px;display: inline-block;">此网站不支持后台下载流水，需要打开流水界面进行下载</p>
+    </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
@@ -45,7 +47,7 @@
       <div>
         <strong>使用方法</strong>
         <ul style="padding: 0 20px">
-          <li>1、在Accounts标签下，点击开关即可开始自动下载流水操作</li>
+          <li>1、在流水界面执行一次查询操作，然后点击开始</li>
           <li>2、不想下载流水时将开关关闭</li>
           <li>3、下载间隔时间从设置里面配置</li>
         </ul>
@@ -56,16 +58,18 @@
         </span>
       </template>
     </el-dialog>
+
   </main>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
-import { ElMessage, ElIcon } from 'element-plus'
+import { ElMessage,ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
 let timer: any = null
 let cutDownNumTimer: any = null
+
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
   props: {
@@ -101,99 +105,46 @@ export default defineComponent({
     watch(
       () => props.onOff,
       (newValue) => {
-        setSyncStorage({ onOff: props.onOff })
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
+
         if (newValue) {
-          let flag = checkNavPage()
-          if (newValue && flag) {
-            getBillHandle(flag)
-          } else {
+          if (!watchBillPage()) {
             ElMessage({
-              message: '[启动失败]：先登录再操作.',
+              message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
               type: 'error',
             })
             ctx.emit('onOffHandle', false)
+          } else {
+            ElMessage({
+              message: '[任务执行成功].',
+              type: 'success',
+            })
+            download()
           }
+        } else if (!newValue) {
+          ElMessage({
+            message: '[任务已经关闭].',
+            type: 'info',
+          })
+        } else {
+          ElMessage({
+            message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
+            type: 'error',
+          })
+          ctx.emit('onOffHandle', false)
         }
       },
     )
 
-    const checkNavPage = () => {
-      let flag: any = false
-
-      // 检测是否为流水页面
-      let ls1: any = document.querySelectorAll('#Transaction[style="display: block;"] .tLink')
-      if (ls1.length) {
-        for (const iterator of ls1) {
-          if (iterator.innerText.indexOf('Mini Statement') != -1) {
-            flag = 'ministatement'
-          }
-        }
-      }
-
-      if (flag) return flag
-
-      // 检测是否为流水页面父级菜单
-      let ls2: any = document.querySelectorAll('#SavingsCurrentAccounts .tLinkz')
-      if (ls2.length) {
-        for (const iterator of ls2) {
-          if (iterator.innerText.indexOf('Statement') != -1) {
-            flag = 'statement'
-          }
-        }
-      }
-
-      if (flag) return flag
-
-      // 检测是否为顶级菜单
-      let ls3: any = document.querySelectorAll('.inBxL .tLink')
-      if (ls3.length) {
-        flag = 'top'
-      }
-
-      return flag
-    }
-
-    const getBillHandle = (flag: any) => {
-      if (flag === 'ministatement') {
-        console.log('流水界面')
-        let ls = document.querySelectorAll('.bx02Bg[colspan="5"]')
-        if (ls.length) {
-          console.log('点击下载按钮')
-          let xlsbtn: any = ls[2].querySelectorAll('a')
-          xlsbtn[1].click()
-
-          timer = setTimeout(() => {
-            // let ls: any = document.querySelectorAll('#SavingsCurrentAccounts .tLinkz')
-            // ls[0].click()
-
-            // 比较奇趴，需要点击父级才能下载
-            let ls: any = document.querySelectorAll('.inBxL .tLink')
-            if(ls.length){
-              ls[0].click()
-            }
-
-          }, ruleForm.intervalTime * 1000 || 30000)
-          cutDownNumTimer = setInterval(() => {
-            cutDownNum.value--
-            if (cutDownNum.value < 0) {
-              clearInterval(cutDownNumTimer)
-            }
-          }, 1000)
-        }
-      } else if (flag === 'statement') {
-        let ls: any = document.querySelectorAll('#SavingsCurrentAccounts .tLinkz')
-        if(ls.length){
-          ls[0].click()
-        }
-        console.log('流水界面父级菜单')
-      } else if (flag === 'top') {
-        console.log('顶级菜单')
-        let ls: any = document.querySelectorAll('.inBxL .tLink')
-        if(ls.length){
-          ls[0].click()
-        }
+    // 检查流水页面
+    const watchBillPage = () => {
+      let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
+      let ra1 = document.querySelector('#dwnldDetailsCaption')
+      if (inputs.length && ra1) {
+        return true
+      } else {
+        return false
       }
     }
 
@@ -207,6 +158,41 @@ export default defineComponent({
           console.log('error submit!', fields)
         }
       })
+    }
+
+    const download = () => {
+      if (!props.onOff) return
+      let ra1 = document.querySelector('#dwnldDetailsCaption')
+      let dwt:any = document.getElementById('TransactionHistoryFG.OUTFORMAT')
+      if (!dwt) {
+         ElMessage({
+            message: '[启动失败]：请在此界面执行一次查询操作，然后再开始.',
+            type: 'error',
+          })
+        return false
+      }
+
+      // csv=3
+      dwt.value = 3
+
+      let okButton:any = document.querySelector('form[name="TransactionHistoryFG"] .HW_formbtn #okButton')
+      okButton.click()
+
+      setTimeout(() => {
+        // 重置
+        clearTimeout(timer)
+        clearInterval(cutDownNumTimer)
+        cutDownNum.value = ruleForm.intervalTime
+        timer = setTimeout(() => {
+          download()
+        }, ruleForm.intervalTime * 1000 || 20000)
+        cutDownNumTimer = setInterval(() => {
+          cutDownNum.value--
+          if (cutDownNum.value < 0) {
+            clearInterval(cutDownNumTimer)
+          }
+        }, 1000)
+      }, 5000);
     }
 
     const resetForm = (formEl: any) => {
@@ -224,25 +210,14 @@ export default defineComponent({
 
     // 与后台通信
     onMounted(async () => {
+      // chrome.runtime.sendMessage({ type: "POPUP_INIT" }, async tab => {
+      //   state.currentTab = await tab;
+      //   console.log(state.currentTab);
+      // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
-      let onOff: any = (await getSyncStorage('onOff')) || false
-      ctx.emit('onOffHandle', onOff)
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
-      cutDownNum.value = ruleForm.intervalTime
-
-      if (onOff) {
-        let flag = checkNavPage()
-        if (onOff && flag) {
-          getBillHandle(flag)
-        } else {
-          ElMessage({
-            message: '[启动失败]：先登录再操作.',
-            type: 'error',
-          })
-        }
-      }
     })
     return {
       settingVisible,
@@ -251,10 +226,10 @@ export default defineComponent({
       ruleFormRef,
       ruleForm,
       rules,
+      helpHandle,
       cutDownNum,
       submitForm,
       resetForm,
-      helpHandle,
       dialogHelpVisible,
       ...toRefs(state),
     }

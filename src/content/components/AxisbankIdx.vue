@@ -1,7 +1,9 @@
 <template>
   <main id="kk-container">
-    <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
-    <p style="font-size: 14px;">需要在流水界面点击一次查询，类型选择"onscren"</p>
+    <div style="display: flex;align-items: center;width: 350px;">
+      <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
+      <p style="font-size: 14px;">此网站支持后台下载流水，需要在流水界面点击一次查询，类型选择"onscren"</p>
+    </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">

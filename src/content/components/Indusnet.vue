@@ -1,7 +1,9 @@
 <template>
   <main id="kk-container">
-    <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
-    <p style="font-size: 14px;display: inline-block;">在Accounts标签下，点击开关即可自动下载</p>
+    <div style="display: flex;align-items: center;width: 350px;">
+      <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
+      <p style="font-size: 14px;display: inline-block;">此网站不支持后台下载流水，需要在Accounts标签下，点击开关即可自动下载</p>
+    </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">

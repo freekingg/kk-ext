@@ -1,5 +1,9 @@
 <template>
   <main id="kk-container">
+    <div style="display: flex;align-items: center;width: 350px;">
+      <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
+      <p style="font-size: 14px;display: inline-block;">此网站支持后台下载流水，需要流水界面进行一次下载</p>
+    </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
@@ -43,11 +47,13 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElIcon } from 'element-plus'
+import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
 let timer: any = null
 let cutDownNumTimer: any = null
 export default defineComponent({
+  components: { QuestionFilled, ElIcon },
   props: {
     onOff: Boolean,
     data: String,

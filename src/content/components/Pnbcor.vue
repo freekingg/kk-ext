@@ -1,6 +1,6 @@
 <template>
   <main id="kk-container">
-    <div style="display: flex;align-items: center;">
+    <div style="display: flex;align-items: center;width: 350px;">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px;display: inline-block;">此网站不支持后台下载流水，需要打开流水界面进行下载</p>
     </div>

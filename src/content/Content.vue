@@ -32,6 +32,13 @@
           @onOffHandle="onOffHandle"
         />
 
+        <Iobp
+          v-if="type === 'iobp'"
+          :onOff="onOff"
+          :data="data"
+          @onOffHandle="onOffHandle"
+        />
+
         <Pnbcor v-if="type === 'pnbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
       </div>
     </el-card>
@@ -46,10 +53,11 @@ import AxisbankPrime from './components/AxisbankPrime.vue'
 import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
 import Pnbcor from './components/Pnbcor.vue'
+import Iobp from './components/Iobp.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor, View, ElIcon },
+  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -84,6 +92,11 @@ export default defineComponent({
         typeName: 'PNBcor',
         matches: ['internetbanking.netpnb.com'],
         injectJs: ['js/injected.js'],
+      },
+      {
+        type: 'iobp',
+        typeName: 'IOBp',
+        matches: ['www.iobnet.co.in'],
       },
     ]
 

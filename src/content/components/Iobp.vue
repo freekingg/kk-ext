@@ -2,8 +2,8 @@
   <main id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px; display: inline-block;margin: 0;">
-        此网站支持不后台下载流水，需要停留在流水界面
+      <p style="font-size: 14px; display: inline-block; margin: 0">
+        此网站支持不后台下载流水，需要停留在流水界面,直接点开始即可
       </p>
     </div>
     <section class="run-status">
@@ -49,9 +49,8 @@
       <div>
         <strong>使用方法</strong>
         <ul style="padding: 0 20px">
-          <li>1、在流水界面，选择好时间后，点击 "view" 查询流水</li>
-          <li>2、如果有流水记录，则打开插件开关即可，如果没有流水，无法开启</li>
-          <li>3、下载间隔时间从设置里面配置</li>
+          <li>1、在流水界面，直接打开插件开关即可</li>
+          <li>2、下载间隔时间从设置里面配置</li>
         </ul>
       </div>
       <template #footer>
@@ -106,54 +105,70 @@ export default defineComponent({
       () => props.onOff,
       async (newValue) => {
         console.log('newValue: ', newValue)
-
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
-
         if (newValue) {
+          setSyncStorage({ onOff: newValue })
           let accountstatement_csvAcctStmt = document.querySelector('#accountstatement_csvAcctStmt')
-          if (!accountstatement_csvAcctStmt) {
+
+          // 如果有csv下载按钮，直接进行下载
+          if (accountstatement_csvAcctStmt) {
             ElMessage({
-              message: '[启动失败]：请下载一次流水操作csv.',
-              type: 'error',
+              message: '[任务执行成功].',
+              type: 'success',
             })
-            ctx.emit('onOffHandle', false)
+            download()
+            return
+          }
 
-            function add(n:any){
-                if(n<=9){
-                    return `0${n}`
-                }
-                return n
+          // 如果有表单，则自动填充
+          let accountstatement: any = document.querySelector('#accountstatement')
+          if (accountstatement) {
+            function add(n: any) {
+              if (n <= 9) {
+                return `0${n}`
+              }
+              return n
             }
-
             var myDate = new Date()
             var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
             var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
             var myToday = add(myDate.getDate()) //获取当前日(1-31)
 
-            let accountNo:any = document.querySelector('#accountNo')
-            if(accountNo){
-            let accountNoOption:any = accountNo.querySelectorAll('option')
-              accountNo.value = accountNoOption[accountNoOption.length-1].value
+            let accountNo: any = document.querySelector('#accountNo')
+            if (accountNo) {
+              let accountNoOption: any = accountNo.querySelectorAll('option')
+              accountNo.value = accountNoOption[accountNoOption.length - 1].value
             }
 
-            let fromDate:any = document.querySelector('#fromDate')
-            if(fromDate){
+            let fromDate: any = document.querySelector('#fromDate')
+            if (fromDate) {
               fromDate.value = `${myMonth}/${myToday}/${myYear}`
             }
-            let toDate:any = document.querySelector('#toDate')
-            if(toDate){
+            let toDate: any = document.querySelector('#toDate')
+            if (toDate) {
               toDate.value = `${myMonth}/${myToday}/${myYear}`
             }
 
+            // 查询按钮
+            let accountstatement_view: any = document.querySelector('#accountstatement_view')
+            accountstatement_view.click()
+            return
+          }
+
+          if (location.href.indexOf('accountstatement.do?print=true') !== -1 && !accountstatement_csvAcctStmt) {
+            ElMessage({
+              message: '[启动失败]：请确认是否有流水',
+              type: 'error',
+            })
             return
           }
 
           ElMessage({
-            message: '[任务执行成功].',
-            type: 'success',
+            message: '[启动失败]：请确认是否在流水界面',
+            type: 'error',
           })
-          download()
+          ctx.emit('onOffHandle', false)
         } else if (!newValue) {
           setSyncStorage({ onOff: false })
           ElMessage({
@@ -204,7 +219,7 @@ export default defineComponent({
         }
       } else {
         ElMessage({
-          message: '[启动失败]：请下载一次流水操作csv.',
+          message: '[启动失败]：请确认是否在流水界面.',
           type: 'error',
         })
         return
@@ -317,7 +332,9 @@ export default defineComponent({
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       let onOff: any = (await getSyncStorage('onOff')) || false
-      // ctx.emit('onOffHandle', onOff)
+      if (onOff) {
+        ctx.emit('onOffHandle', onOff)
+      }
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime

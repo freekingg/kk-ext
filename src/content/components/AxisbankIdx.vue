@@ -196,7 +196,7 @@ export default defineComponent({
 
       // let body = `fromdate=${parseProps.fromdate}&todate=${parseProps.todate}&month=&year=&selectedValue=0&accNumber=${parseProps.accNumber}&docType=3&data=0&referenceId=${parseProps.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000`
       // let body = `fromdate=${parseProps.fromdate}&todate=${parseProps.todate}&month=&year=&selectedValue=0&accNumber=${parseProps.accNumber}&docType=3&data=0&referenceId=${parseProps.data.referenceId}&ser=STDWGO&app=OC&mxrs=2000`
-      let body = `fltrtyp=0&txnprd=0&frmdate=${parseProps.frmdate}&todate=${parseProps.todate}&dwnload=csv&ser=ACCSER&app=ID&mxrs=109`
+      let body = `fltrtyp=0&txnprd=0&frmdate=${parseProps.frmdate}&todate=${parseProps.todate}&dwnload=xls&ser=ACCSER&app=ID&mxrs=109`
       console.log('body: ', body);
 
       fetch('https://idp.axisbank.co.in/mib/servlets/report', {
@@ -223,7 +223,7 @@ export default defineComponent({
           const a = document.createElement('a')
           const body: any = document.querySelector('body')
           // 这里注意添加需要下载的文件后缀；
-          a.download = 'axisDownloadName.csv'
+          a.download = 'axisDownloadName.xls'
           a.href = window.URL.createObjectURL(res)
           a.style.display = 'none'
           body.appendChild(a)

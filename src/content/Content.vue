@@ -40,6 +40,7 @@
         />
 
         <Pnbcor v-if="type === 'pnbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
+        <Bandhan v-if="type === 'bandhan'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
       </div>
     </el-card>
   </main>
@@ -54,10 +55,11 @@ import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
 import Pnbcor from './components/Pnbcor.vue'
 import Iobp from './components/Iobp.vue'
+import Bandhan from './components/Bandhan.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp, View, ElIcon },
+  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -97,6 +99,17 @@ export default defineComponent({
         type: 'iobp',
         typeName: 'IOBp',
         matches: ['www.iobnet.co.in'],
+      },
+      {
+        type: 'canara',
+        typeName: 'Canara',
+        matches: ['netbanking.canarabank.in'],
+      },
+      {
+        type: 'bandhan',
+        typeName: 'Bandhan',
+        matches: ['corporate.bandhanbank.com'],
+        // injectJs: ['js/injected.js'],
       },
     ]
 

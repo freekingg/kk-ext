@@ -41,6 +41,8 @@
 
         <Pnbcor v-if="type === 'pnbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
         <Bandhan v-if="type === 'bandhan'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
+        <KVBcor v-if="type === 'kvbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
+        
       </div>
     </el-card>
   </main>
@@ -56,10 +58,11 @@ import Indusnet from './components/Indusnet.vue'
 import Pnbcor from './components/Pnbcor.vue'
 import Iobp from './components/Iobp.vue'
 import Bandhan from './components/Bandhan.vue'
+import KVBcor from './components/KVBcor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan, View, ElIcon },
+  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan,KVBcor, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -110,6 +113,11 @@ export default defineComponent({
         typeName: 'Bandhan',
         matches: ['corporate.bandhanbank.com'],
         // injectJs: ['js/injected.js'],
+      },
+      {
+        type: 'kvbcor',
+        typeName: 'KVBcor',
+        matches: ['www.kvbin.com'],
       },
     ]
 

@@ -3,7 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站支持后台下载流水，需要流水界面进行一次下载
+        此网站支持后台下载流水，需要流水界面选择日期进行一次查询
       </p>
     </div>
     <section class="run-status">
@@ -120,7 +120,7 @@ export default defineComponent({
           let flag = checkNavPage()
           if (!flag) {
             ElMessage({
-              message: '[启动失败]：请执行一次查询流水操作.',
+              message: '[启动失败]：需要流水界面选择日期进行一次查询.',
               type: 'error',
             })
             ctx.emit('onOffHandle', false)
@@ -140,7 +140,7 @@ export default defineComponent({
           clearInterval(cutDownNumTimer)
         } else {
           ElMessage({
-            message: '[启动失败]：请执行一次查询流水操作.',
+            message: '[启动失败]：需要流水界面选择日期进行一次查询.',
             type: 'error',
           })
           clearTimeout(timer)
@@ -205,41 +205,8 @@ export default defineComponent({
       })
     }
 
-    const checkOverlay = () => {
-      let hasOverlay = document.querySelector(
-        '.cdk-global-overlay-wrapper .cdk-overlay-pane.mx-session-popup-class',
-      )
-      if (hasOverlay) {
-        let jxbtn: any = document.querySelector(
-          '.cdk-global-overlay-wrapper .mat-raised-button.mat-warn',
-        )
-        console.log('发现超时继续按钮', jxbtn)
-        if (jxbtn) {
-          jxbtn.click()
-        }
-      }
-
-      let hasOverlay2 = document.querySelector('.mat-dialog-container.ng-trigger-dialogContainer')
-      if (hasOverlay2) {
-        let jxbtn2: any = document.querySelector(
-          '.mat-dialog-container.ng-trigger-dialogContainer .mat-raised-button.mat-warn',
-        )
-        console.log('发现超时继续按钮2', jxbtn2)
-        if (jxbtn2) {
-          jxbtn2.click()
-        }
-      }
-    }
-
     const download = async () => {
       if (!props.onOff) return
-
-      function add(n: any) {
-        if (n <= 9) {
-          return `0${n}`
-        }
-        return n
-      }
 
       let body1 = `_csrf=${dataForm.token}&accountId=${dataForm.accountId}&accountNumber=${dataForm.accountNumber}&fromDate=${dataForm.fromDate}&toDate=${dataForm.toDate}&format=${dataForm.format}&isEmail=false&fromAmount=&toAmount=&monthOf=&noOfTransactions=`
       let body2 = `_csrf=${dataForm.token}`

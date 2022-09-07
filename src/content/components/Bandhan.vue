@@ -255,7 +255,6 @@ export default defineComponent({
           method: 'POST',
           mode: 'cors',
           credentials: 'include',
-          responseType: 'arraybuffer',
         })
           .then((res) => {
             // 这里解析body

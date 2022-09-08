@@ -3,7 +3,10 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站不支持后台下载流水，需要打开流水界面进行下载
+        此网站支持后台下载流水 <br>
+        1、登录后，进入 Accounts - Account Activity 中 <br>
+        2、选择相关的查询条件后，点击 Submit<br>
+        3、此时会自动进行流水下载，如果想停止，刷新网页即可<br>
       </p>
     </div>
     <section class="run-status">
@@ -68,7 +71,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
-let timer: any = null
+let timer1: any = null
 let cutDownNumTimer: any = null
 
 export default defineComponent({
@@ -84,6 +87,7 @@ export default defineComponent({
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
     const state = reactive({
       currentTab: null,
+      files:{}
     })
 
     const { setSyncStorage, getSyncStorage } = useStorage()
@@ -103,52 +107,6 @@ export default defineComponent({
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
-    watch(
-      () => props.onOff,
-      (newValue) => {
-        clearTimeout(timer)
-        clearInterval(cutDownNumTimer)
-
-        if (newValue) {
-          if (!watchBillPage()) {
-            ElMessage({
-              message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
-              type: 'error',
-            })
-            ctx.emit('onOffHandle', false)
-          } else {
-            ElMessage({
-              message: '[任务执行成功].',
-              type: 'success',
-            })
-            download()
-          }
-        } else if (!newValue) {
-          ElMessage({
-            message: '[任务已经关闭].',
-            type: 'info',
-          })
-        } else {
-          ElMessage({
-            message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
-            type: 'error',
-          })
-          ctx.emit('onOffHandle', false)
-        }
-      },
-    )
-
-    // 检查流水页面
-    const watchBillPage = () => {
-      let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
-      let ra1 = document.querySelector('#dwnldDetailsCaption')
-      if (inputs.length && ra1) {
-        return true
-      } else {
-        return false
-      }
-    }
-
     const submitForm = async (formEl: any) => {
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
@@ -162,29 +120,66 @@ export default defineComponent({
     }
 
     const download = () => {
-      let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
-      let flddownload = frame_txn.contentWindow.document.querySelector('input#flddownload')
+      let data:any = state.files
+      let body:any = ''
+      for (const key in data) {
+          body +=  `${key}=${encodeURIComponent(data[key])}&`
+      }
+      fetch("https://www.kvbin.com/B001/internet", {
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "accept-language": "zh-CN,zh;q=0.9,en-CA;q=0.8,en;q=0.7,ja-JP;q=0.6,ja;q=0.5",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua": "\"Chromium\";v=\"104\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"104\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": "\"macOS\"",
+          "sec-fetch-dest": "frame",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1"
+        },
+        "referrer": "https://www.kvbin.com/B001/internet",
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        body,
+        "method": "POST",
+        "mode": "cors",
+        "credentials": "include"
+      }).then((res:any)=>{
+        // 使用blob()方法获取blob对象数据
+        res.blob().then(
+          (res:any) => {
+            const blob = new Blob([res], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; application/octet-stream'
+            })
+            const a = document.createElement('a')
+            const fileUrl = window.URL.createObjectURL(blob)
+            a.href = fileUrl
+            a.setAttribute('download','kvb.csv' )
+            a.style.display = 'none'
+            a.click()
+            a.remove()
+            window.URL.revokeObjectURL(a.href)
 
-      let fldsearchformat = frame_txn.contentWindow.document.querySelector('#fldsearchformat')
-            fldsearchformat.value = '05'
-            flddownload.click()
-
-      setTimeout(() => {
-        // 重置
-        clearTimeout(timer)
-        clearInterval(cutDownNumTimer)
-        cutDownNum.value = ruleForm.intervalTime
-        timer = setTimeout(() => {
-          download()
-        }, ruleForm.intervalTime * 1000 || 20000)
-        cutDownNumTimer = setInterval(() => {
-          console.log('下载倒计时',cutDownNum.value)
-          cutDownNum.value--
-          if (cutDownNum.value < 0) {
+            // 重置
+            clearTimeout(timer1)
             clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+            timer1 = setTimeout(() => {
+              download()
+            }, ruleForm.intervalTime * 1000 || 20000)
+            cutDownNumTimer = setInterval(() => {
+              cutDownNum.value--
+              console.log('下载倒计时: ', cutDownNum.value);
+              if (cutDownNum.value < 0) {
+                clearInterval(cutDownNumTimer)
+              }
+            }, 1000)
+
           }
-        }, 1000)
-      }, 5000)
+        )
+      })
     }
 
     const resetForm = (formEl: any) => {
@@ -203,21 +198,41 @@ export default defineComponent({
     // 与后台通信
     onMounted(async () => {
       let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
+      console.log('frame_txn: ', frame_txn);
       let timer: any = null
       let onOff = false
       if (frame_txn) {
-       setInterval(() => {
+        timer=setInterval(() => {
           console.log('检查是否可下载')
           let flddownload = frame_txn.contentWindow.document.querySelector('input#flddownload')
           if (flddownload) {
-            if(onOff) return
+            let form_frmmain = frame_txn.contentWindow.document.querySelector('form[name="frmmain"]')
+            let inputs = form_frmmain.querySelectorAll('input')
+            let selects = form_frmmain.querySelectorAll('select')
+            let files:any = {}
+            
+            for (const iterator of inputs) {
+              files[iterator.name] = iterator.value
+            }
+            for (const iterator of selects) {
+              files[iterator.name] = iterator.value
+            }
+            files['fldsearchformat']= '05'
+            files['fldRequestId']= 'RRAAC05'
+            
+            state.files = files
+            console.log('有参数了,进行下载',files)
+            // if(onOff) return
             onOff = true
             download()
-          } else {
-            onOff = false
             clearTimeout(timer)
             clearInterval(cutDownNumTimer)
-          }
+          } 
+          // else {
+          //   onOff = false
+          //   clearTimeout(timer)
+          //   clearInterval(cutDownNumTimer)
+          // }
         }, 2000)
       }
 

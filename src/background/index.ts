@@ -1,5 +1,21 @@
 console.info('chrome-ext template-vue-ts background script')
 
+
+const menus:any = {
+    contexts: ["all"],
+    id: 'copy',
+    title: '复制当前窗口',
+}
+chrome.contextMenus.create(menus);//添加menu菜单
+
+chrome.contextMenus.onClicked.addListener((menu)=>{
+  getCurrentTab().then((tab)=>{
+    if(tab && tab.id){
+      chrome.tabs.duplicate(tab.id);
+    }
+    });
+})
+
 // const menus = [
 //   'DEMO'
 // ]

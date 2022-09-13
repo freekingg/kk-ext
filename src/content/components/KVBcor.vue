@@ -1,7 +1,7 @@
 <template>
-  <main id="kk-container">
+  <div id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
+      <el-icon :size="24" color="#e6a23c" ><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
         此网站为双窗口模式 <br />
         1、登陆后，点击左上角的复制窗口按钮，此时会打开一个新窗口<br />
@@ -48,23 +48,7 @@
         </el-form-item>
       </el-form>
     </section>
-
-    <el-dialog v-model="dialogHelpVisible" title="Tips" width="30%">
-      <div>
-        <strong>使用方法</strong>
-        <ul style="padding: 0 20px">
-          <li>1、在流水界面执行一次查询操作，然后点击开始</li>
-          <li>2、不想下载流水时将开关关闭</li>
-          <li>3、下载间隔时间从设置里面配置</li>
-        </ul>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button type="primary" @click="dialogHelpVisible = false">Confirm</el-button>
-        </span>
-      </template>
-    </el-dialog>
-  </main>
+  </div>
 </template>
 
 <script lang="ts">
@@ -176,7 +160,8 @@ export default defineComponent({
       let frame_menu_bill_btn = frame_menu.contentWindow.document.querySelector('li#RRAAC a')
       if (frame_menu_bill_btn) {
         // 点击左侧导航按钮
-        frame_menu_bill_btn.click()
+        // frame_menu_bill_btn.click()
+        frame_menu_bill_btn.dispatchEvent(new Event('click'))
 
         // 选择表单
         timer2 = setInterval(() => {
@@ -225,13 +210,33 @@ export default defineComponent({
                       'form[name="frmmain"] input[name="flddownload"]',
                     )
                     fldseaflddownloadrchformat.click()
+                    
+                    clearInterval(cutDownNumTimer)
+                    cutDownNum.value = ruleForm.intervalTime
+
                     timer = setTimeout(() => {
                       downloadHandle()
                     }, ruleForm.intervalTime * 1000 || 20000)
+
+                    cutDownNumTimer = setInterval(() => {
+                      cutDownNum.value--
+
+                      let frame_top: any = document.querySelector('frame[name="frame_top"]')
+                      if (frame_top) {
+                        let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
+                        if(welcome_note){
+                          welcome_note.innerText = `下载中：${cutDownNum.value}s`
+                        }
+                      }
+
+                      if (cutDownNum.value < 0) {
+                        clearInterval(cutDownNumTimer)
+                      }
+                     }, 1000)
                   }
                 }, 1000)
               }, 2000)
-            }, 600)
+            }, 1000)
           }
         }, 1000)
       }
@@ -279,6 +284,16 @@ export default defineComponent({
             clearInterval(timer2)
             clearTimeout(timer3)
             clearTimeout(timer4)
+            clearInterval(cutDownNumTimer)
+
+            let frame_top: any = document.querySelector('frame[name="frame_top"]')
+            if (frame_top) {
+              let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
+              if(welcome_note){
+                welcome_note.innerText = `复制当前窗口`
+              }
+            }
+
           }
           // else {
           //   onOff = false
@@ -289,7 +304,7 @@ export default defineComponent({
 
         setTimeout(() => {
           initBtn()
-        }, 3000);
+        }, 5000);
       }
 
       let _intervalTime: number = await getSyncStorage('intervalTime')

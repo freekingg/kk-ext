@@ -21,6 +21,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs } from 'vue'
 import { ElIcon } from 'element-plus'
 import { View } from '@element-plus/icons-vue'
 
+import Default from './components/Default.vue'
 import AxisbankPrime from './components/AxisbankPrime.vue'
 import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
@@ -31,12 +32,12 @@ import KVBcor from './components/KVBcor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan,KVBcor, View, ElIcon },
+  components: { Default, AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan,KVBcor, View, ElIcon },
   setup() {
     const visible = ref(true)
     const state = reactive({
       host: '',
-      type: '',
+      type: 'Default',
       typeName: '',
       onOff: false,
       data: '',
@@ -122,7 +123,9 @@ export default defineComponent({
       s.onload = function () {
         // s.remove();
       }
-      ;(document.body || document.head).appendChild(s)
+      if(document.body || document.head){
+        (document.body || document.head).appendChild(s)
+      }
     }
 
     const initHandle = () => {

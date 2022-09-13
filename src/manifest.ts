@@ -3,14 +3,14 @@ import { defineManifest } from '@crxjs/vite-plugin'
 export default defineManifest({
   name: 'chrome-ext',
   description: 'A chrome extension boilerplate built by create-chrome-ext',
-  version: '0.0.0',
+  version: '2.0.0',
   manifest_version: 3,
   icons: {
-    48: 'img/logo-48.png',
+    128: 'img/logo-128.png',
   },
   action: {
     default_popup: 'popup.html',
-    default_icon: 'img/logo-48.png',
+    default_icon: 'img/logo-128.png',
   },
   options_page: 'options.html',
   background: {

@@ -220,7 +220,6 @@ export default defineComponent({
 
                     cutDownNumTimer = setInterval(() => {
                       cutDownNum.value--
-
                       let frame_top: any = document.querySelector('frame[name="frame_top"]')
                       if (frame_top) {
                         let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
@@ -229,7 +228,7 @@ export default defineComponent({
                         }
                       }
 
-                      if (cutDownNum.value < 0) {
+                      if (cutDownNum.value <= 0) {
                         clearInterval(cutDownNumTimer)
                       }
                      }, 1000)

@@ -3,10 +3,11 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站支持后台下载流水 <br />
-        1、登录后，进入 Accounts - Account Activity 中 <br />
-        2、选择相关的查询条件后，点击 Submit<br />
-        3、此时会自动进行流水下载，如果想停止，刷新网页即可<br />
+        此网站为双窗口模式 <br />
+        1、登陆后，点击左上角的复制窗口按钮，此时会打开一个新窗口<br />
+        2、在新打开的窗口，刷新下页面 F5<br />
+        3、此时已经打开两个窗口了，可以一个窗口下载流水，一个窗口进行其它操作<br />
+        4、一个窗口进入 Accounts  中 ，此时会自动下载流水<br />
       </p>
     </div>
     <section class="run-status">
@@ -130,70 +131,6 @@ export default defineComponent({
       })
     }
 
-    const download = () => {
-      let data: any = state.files
-      data['fldsearch'] = '3'
-      console.log('data: ', data)
-      let body: any = ''
-      for (const key in data) {
-        body += `${key}=${encodeURIComponent(data[key])}&`
-      }
-      console.log('body: ', body)
-      fetch('https://www.kvbin.com/B001/internet', {
-        headers: {
-          accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'accept-language': 'zh-CN,zh;q=0.9,en-CA;q=0.8,en;q=0.7,ja-JP;q=0.6,ja;q=0.5',
-          'cache-control': 'max-age=0',
-          'content-type': 'application/x-www-form-urlencoded',
-          'sec-ch-ua': '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"macOS"',
-          'sec-fetch-dest': 'frame',
-          'sec-fetch-mode': 'navigate',
-          'sec-fetch-site': 'same-origin',
-          'sec-fetch-user': '?1',
-          'upgrade-insecure-requests': '1',
-        },
-        referrer: 'https://www.kvbin.com/B001/internet',
-        referrerPolicy: 'strict-origin-when-cross-origin',
-        body,
-        method: 'POST',
-        mode: 'cors',
-        credentials: 'include',
-      }).then((res: any) => {
-        // 使用blob()方法获取blob对象数据
-        res.blob().then((res: any) => {
-          const blob = new Blob([res], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; application/octet-stream',
-          })
-          const a = document.createElement('a')
-          const fileUrl = window.URL.createObjectURL(blob)
-          a.href = fileUrl
-          a.setAttribute('download', 'kvb.csv')
-          a.style.display = 'none'
-          a.click()
-          a.remove()
-          window.URL.revokeObjectURL(a.href)
-
-          // 重置
-          clearTimeout(timer1)
-          clearInterval(cutDownNumTimer)
-          cutDownNum.value = ruleForm.intervalTime
-          timer1 = setTimeout(() => {
-            download()
-          }, ruleForm.intervalTime * 1000 || 20000)
-          cutDownNumTimer = setInterval(() => {
-            cutDownNum.value--
-            console.log('下载倒计时: ', cutDownNum.value)
-            if (cutDownNum.value < 0) {
-              clearInterval(cutDownNumTimer)
-            }
-          }, 1000)
-        })
-      })
-    }
-
     const resetForm = (formEl: any) => {
       if (!formEl) return
       formEl.resetFields()
@@ -269,7 +206,6 @@ export default defineComponent({
               let fldnooftxn = frame_txn.contentWindow.document.querySelector(
                 'form[name="frmmain"] input[name="fldnooftxn"]',
               )
-              // console.log('fldnooftxn: ', fldnooftxn);
               fldnooftxn.value = 5000
 
               let fldsubmit = frame_txn.contentWindow.document.querySelector(
@@ -292,7 +228,6 @@ export default defineComponent({
                     timer = setTimeout(() => {
                       downloadHandle()
                     }, ruleForm.intervalTime * 1000 || 20000)
-                    // }, 10000)
                   }
                 }, 1000)
               }, 2000)
@@ -307,6 +242,7 @@ export default defineComponent({
       if (frame_top) {
         let welcome_note = frame_top.contentWindow.document.querySelector('.topbarlogo')
         let div = document.createElement('div')
+        div.id = 'xzbtn'
         div.innerText = '复制当前窗口'
         div.style.background = 'red'
         div.style.color = '#fff'

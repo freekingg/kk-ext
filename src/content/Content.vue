@@ -11,38 +11,7 @@
         </div>
       </template>
       <div class="card-box" v-show="visible">
-        <AxisbankPrime
-          v-if="type === 'axisBankPrime'"
-          :onOff="onOff"
-          :data="data"
-          @onOffHandle="onOffHandle"
-        />
-
-        <Indusnet
-          v-if="type === 'indusnet'"
-          :onOff="onOff"
-          :data="data"
-          @onOffHandle="onOffHandle"
-        />
-
-        <AxisbankIdx
-          v-if="type === 'axisbankIdx'"
-          :onOff="onOff"
-          :data="data"
-          @onOffHandle="onOffHandle"
-        />
-
-        <Iobp
-          v-if="type === 'iobp'"
-          :onOff="onOff"
-          :data="data"
-          @onOffHandle="onOffHandle"
-        />
-
-        <Pnbcor v-if="type === 'pnbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
-        <Bandhan v-if="type === 'bandhan'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
-        <KVBcor v-if="type === 'kvbcor'" :onOff="onOff" :data="data" @onOffHandle="onOffHandle" />
-        
+        <component :is="type" :onOff="onOff" :data="data" @onOffHandle="onOffHandle"></component>
       </div>
     </el-card>
   </main>
@@ -76,46 +45,41 @@ export default defineComponent({
     // 网站配置 
     const matchSite = [
       {
-        type: 'axisBankPrime',
+        type: 'AxisbankPrime',
         typeName: 'axis个户',
         matches: ['omni.axisbank.co.in', 'retail.axisbank.co.in'],
         injectJs: ['js/injected.js', 'js/vendor.1c9aa43f6bed1fff4f4b1656508073138.js'],
       },
       {
-        type: 'axisbankIdx',
+        type: 'AxisbankIdx',
         typeName: 'axis公户',
         matches: ['corporate.axisbank.co.in', 'idp.axisbank.co.in'],
         injectJs: ['js/injected.js'],
       },
       {
-        type: 'indusnet',
+        type: 'Indusnet',
         typeName: 'Indusnet',
         matches: ['indusnet.indusind.com'],
       },
       {
-        type: 'pnbcor',
+        type: 'Pnbcor',
         typeName: 'PNBcor',
         matches: ['internetbanking.netpnb.com'],
         injectJs: ['js/injected.js'],
       },
       {
-        type: 'iobp',
+        type: 'Iobp',
         typeName: 'IOBp',
         matches: ['www.iobnet.co.in'],
       },
       {
-        type: 'canara',
-        typeName: 'Canara',
-        matches: ['netbanking.canarabank.in'],
-      },
-      {
-        type: 'bandhan',
+        type: 'Bandhan',
         typeName: 'Bandhan',
         matches: ['corporate.bandhanbank.com'],
         // injectJs: ['js/injected.js'],
       },
       {
-        type: 'kvbcor',
+        type: 'KVBcor',
         typeName: 'KVBcor',
         matches: ['www.kvbin.com'],
       },

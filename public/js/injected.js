@@ -1,60 +1,56 @@
-console.info('chrome-ext template-vue-ts injected.js script')
+
 
 // window.postMessage({ type: 'fetch', data: {a:6} }, '*');
 
 
-function getUrlParam(url) {
-  url = decodeURIComponent(url)
-   // str为？之后的参数部分字符串
-   const str = url.substr(url.indexOf('?') + 1)
-   // arr每个元素都是完整的参数键值
-   const arr = str.split('&')
-   // result为存储参数键值的集合
-   const result = {}
-   for (let i = 0; i < arr.length; i++) {
-       // item的两个元素分别为参数名和参数值
-       const item = arr[i].split('=')
-       result[item[0]] = item[1]
-   }
-   return result
-}
+
+(function () {
+  console.info('chrome-ext template-vue-ts injected.js script')
+  function getUrlParam(url) {
+    url = decodeURIComponent(url)
+     // str为？之后的参数部分字符串
+     const str = url.substr(url.indexOf('?') + 1)
+     // arr每个元素都是完整的参数键值
+     const arr = str.split('&')
+     // result为存储参数键值的集合
+     const result = {}
+     for (let i = 0; i < arr.length; i++) {
+         // item的两个元素分别为参数名和参数值
+         const item = arr[i].split('=')
+         result[item[0]] = item[1]
+     }
+     return result
+  }
 
 
+    var XHR = XMLHttpRequest.prototype;
 
-  var XHR = XMLHttpRequest.prototype;
+    var open = XHR.open;
+    var send = XHR.send;
 
-  var open = XHR.open;
-  var send = XHR.send;
+    XHR.open = function (method, url) {
+        this._method = method;
+        this._url = url;
+        return open.apply(this, arguments);
+    };
 
-  XHR.open = function (method, url) {
-      this._method = method;
-      this._url = url;
-      return open.apply(this, arguments);
-  };
+    XHR.send = function (postData) {
+        console.log('xhr request:', this._method, this._url, postData);
 
-  XHR.send = function (postData) {
-      console.log('xhr request:', this._method, this._url, postData);
+        // 监听下载接口 axis个户
+        if(this._url && this._url.indexOf('/wsprod/mib/servlets/report')!= -1){
+          let _postData = getUrlParam('?'+postData)
+          window.postMessage({ actionType: 'axisPrimeDownloadParams', data: _postData }, '*');
+        }
 
-      // 监听下载接口 axis个户
-      if(this._url && this._url.indexOf('/wsprod/mib/servlets/report')!= -1){
-        let _postData = getUrlParam('?'+postData)
-        window.postMessage({ actionType: 'axisPrimeDownloadParams', data: _postData }, '*');
-      }
-
-      // 监听下载接口 axis公户
-      if(this._url && postData && postData.indexOf('onscreen')!= -1){
-        let _postData = getUrlParam('?'+postData)
-        window.postMessage({ actionType: 'axisIdxDownloadParams', data: _postData }, '*');
-      }
-
-      // this.addEventListener('load', function () {
-        // sessionStorage['key'] = JSON.stringify(response); // 插件需要添加'storage'权限
-        // document.cookie
-        // localStorage['key']
-        // window.postMessage({ type: 'xhr', data: this.response }, '*');  // 将响应发送到 content script
-      // });
-      return send.apply(this, arguments);
-  };
+        // 监听下载接口 axis公户
+        if(this._url && postData && postData.indexOf('onscreen')!= -1){
+          let _postData = getUrlParam('?'+postData)
+          window.postMessage({ actionType: 'axisIdxDownloadParams', data: _postData }, '*');
+        }
+        return send.apply(this, arguments);
+    };
+})()
 
 
 

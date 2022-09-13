@@ -72,7 +72,7 @@ import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
 let timer: any = null
-let timertop:any = null
+let timertop: any = null
 let timer1: any = null
 let timer2: any = null
 let timer3: any = null
@@ -121,6 +121,12 @@ export default defineComponent({
         } else {
           console.log('error submit!', fields)
         }
+      })
+    }
+
+    const copyWin = () => {
+      chrome.runtime.sendMessage({ type: 'COPY_WIN' }, function (response) {
+        console.log('收到来自后台的回复：' + response)
       })
     }
 
@@ -209,14 +215,15 @@ export default defineComponent({
           let frame_menu_top_btn =
             frame_top.contentWindow.document.querySelector('li#menutab2.menuactive')
           if (frame_menu_top_btn) {
-            let frame_menu_top_btna =
-            frame_top.contentWindow.document.querySelector('li#menutab2.menuactive a')
-            if(frame_menu_top_btna.innerText == 'Accounts'){
+            let frame_menu_top_btna = frame_top.contentWindow.document.querySelector(
+              'li#menutab2.menuactive a',
+            )
+            if (frame_menu_top_btna.innerText == 'Accounts') {
               resolve(true)
-            }else{
+            } else {
               resolve(false)
             }
-          }else{
+          } else {
             resolve(false)
           }
         }
@@ -258,42 +265,60 @@ export default defineComponent({
             fldsearch.dispatchEvent(new Event('change'))
 
             setTimeout(() => {
-                 // 选择条数
-            let fldnooftxn = frame_txn.contentWindow.document.querySelector(
-              'form[name="frmmain"] input[name="fldnooftxn"]',
-            )
-            // console.log('fldnooftxn: ', fldnooftxn);
-            fldnooftxn.value = 5000
+              // 选择条数
+              let fldnooftxn = frame_txn.contentWindow.document.querySelector(
+                'form[name="frmmain"] input[name="fldnooftxn"]',
+              )
+              // console.log('fldnooftxn: ', fldnooftxn);
+              fldnooftxn.value = 5000
 
-            let fldsubmit = frame_txn.contentWindow.document.querySelector(
-              'form[name="frmmain"] input[name="fldsubmit"]',
-            )
-            timer4 = setTimeout(() => {
-              fldsubmit.click()
-              timer3 = setInterval(() => {
-                let fldsearchformat = frame_txn.contentWindow.document.querySelector(
-                  'form[name="frmmain"] select[name="fldsearchformat"]',
-                )
-                if (fldsearchformat) {
-                  clearInterval(timer3)
-                  fldsearchformat.value = '05'
-                  fldsearchformat.dispatchEvent(new Event('change'))
-                  let fldseaflddownloadrchformat = frame_txn.contentWindow.document.querySelector(
-                    'form[name="frmmain"] input[name="flddownload"]',
+              let fldsubmit = frame_txn.contentWindow.document.querySelector(
+                'form[name="frmmain"] input[name="fldsubmit"]',
+              )
+              timer4 = setTimeout(() => {
+                fldsubmit.click()
+                timer3 = setInterval(() => {
+                  let fldsearchformat = frame_txn.contentWindow.document.querySelector(
+                    'form[name="frmmain"] select[name="fldsearchformat"]',
                   )
-                  fldseaflddownloadrchformat.click()
-                  timer = setTimeout(() => {
-                    downloadHandle()
+                  if (fldsearchformat) {
+                    clearInterval(timer3)
+                    fldsearchformat.value = '05'
+                    fldsearchformat.dispatchEvent(new Event('change'))
+                    let fldseaflddownloadrchformat = frame_txn.contentWindow.document.querySelector(
+                      'form[name="frmmain"] input[name="flddownload"]',
+                    )
+                    fldseaflddownloadrchformat.click()
+                    timer = setTimeout(() => {
+                      downloadHandle()
                     }, ruleForm.intervalTime * 1000 || 20000)
-                  // }, 10000)
-                }
-              }, 1000)
-            }, 2000)
-            }, 600);
-
-         
+                    // }, 10000)
+                  }
+                }, 1000)
+              }, 2000)
+            }, 600)
           }
         }, 1000)
+      }
+    }
+
+    const initBtn = () => {
+      let frame_top: any = document.querySelector('frame[name="frame_top"]')
+      if (frame_top) {
+        let welcome_note = frame_top.contentWindow.document.querySelector('.topbarlogo')
+        let div = document.createElement('div')
+        div.innerText = '复制当前窗口'
+        div.style.background = 'red'
+        div.style.color = '#fff'
+        div.style.width = '100px'
+        div.style.height = '30px'
+        div.style.lineHeight = '30px'
+        div.style.textAlign = 'center'
+        div.style.borderRadius = '6px'
+        welcome_note.appendChild(div)
+        div.addEventListener('click', () => {
+          copyWin()
+        })
       }
     }
 
@@ -302,6 +327,8 @@ export default defineComponent({
       let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
       let onOff = false
       if (frame_txn) {
+        console.log('frame_txn: ', frame_txn);
+        
         timertop = setInterval(async () => {
           let result = await watchPage()
           if (result) {
@@ -316,7 +343,6 @@ export default defineComponent({
             clearInterval(timer2)
             clearTimeout(timer3)
             clearTimeout(timer4)
-            
           }
           // else {
           //   onOff = false
@@ -324,6 +350,10 @@ export default defineComponent({
           //   clearInterval(cutDownNumTimer)
           // }
         }, 1000)
+
+        setTimeout(() => {
+          initBtn()
+        }, 3000);
       }
 
       let _intervalTime: number = await getSyncStorage('intervalTime')

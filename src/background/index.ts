@@ -73,6 +73,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({result:'success'})
       });
       return true;
+    case "COPY_WIN":
+      getCurrentTab().then((tab)=>{
+        if(tab && tab.id){
+          chrome.tabs.duplicate(tab.id);
+          sendResponse({result:'success'})
+        }
+      });
+      return true;
     default:
       break;
   }

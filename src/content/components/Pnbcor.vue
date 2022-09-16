@@ -2,7 +2,11 @@
   <main id="kk-container">
     <div style="display: flex;align-items: center;width: 350px;">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px;display: inline-block;">此网站不支持后台下载流水，需要打开流水界面进行下载</p>
+      <p style="font-size: 14px;display: inline-block;">
+        -、此网站需要打开流水界面进行下载 <br>
+        1、进入流水界面 <br>
+        2、打开插件开关，此时会自动下载 <br>
+      </p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
@@ -47,7 +51,7 @@
       <div>
         <strong>使用方法</strong>
         <ul style="padding: 0 20px">
-          <li>1、在流水界面执行一次查询操作，然后点击开始</li>
+          <li>1、进入流水界面，然后点击开始</li>
           <li>2、不想下载流水时将开关关闭</li>
           <li>3、下载间隔时间从设置里面配置</li>
         </ul>
@@ -69,6 +73,7 @@ import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
 let timer: any = null
 let cutDownNumTimer: any = null
+let checkDownTimer:any = null
 
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
@@ -107,29 +112,35 @@ export default defineComponent({
       (newValue) => {
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
+        clearInterval(checkDownTimer)
 
         if (newValue) {
+          setSyncStorage({ onOff: newValue })
           if (!watchBillPage()) {
             ElMessage({
-              message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
+              message: '[启动失败]：请在流水界面执行开始.',
               type: 'error',
             })
             ctx.emit('onOffHandle', false)
+            setSyncStorage({ onOff: false })
           } else {
-            ElMessage({
-              message: '[任务执行成功].',
-              type: 'success',
-            })
+            // ElMessage({
+            //   message: '[任务执行成功].',
+            //   type: 'success',
+            // })
             download()
           }
         } else if (!newValue) {
+          setSyncStorage({ onOff: false })
+          ctx.emit('onOffHandle', false)
           ElMessage({
             message: '[任务已经关闭].',
             type: 'info',
           })
         } else {
+          setSyncStorage({ onOff: false })
           ElMessage({
-            message: '[启动失败]：请在流水界面执行一次查询操作，然后点击开始.',
+            message: '[启动失败]：请在流水界面执行开始.',
             type: 'error',
           })
           ctx.emit('onOffHandle', false)
@@ -139,13 +150,20 @@ export default defineComponent({
 
     // 检查流水页面
     const watchBillPage = () => {
-      let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
-      let ra1 = document.querySelector('#dwnldDetailsCaption')
-      if (inputs.length && ra1) {
+      let PgHeadingRa1C2:any = document.querySelector('#PgHeading .pageheadingcaps')
+      if(PgHeadingRa1C2 && PgHeadingRa1C2.innerText == 'My Transactions'){
         return true
-      } else {
+      }else{
         return false
       }
+
+      // let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
+      // let ra1 = document.querySelector('#dwnldDetailsCaption')
+      // if (inputs.length && ra1) {
+      //   return true
+      // } else {
+      //   return false
+      // }
     }
 
     const submitForm = async (formEl: any) => {
@@ -162,37 +180,58 @@ export default defineComponent({
 
     const download = () => {
       if (!props.onOff) return
-      let ra1 = document.querySelector('#dwnldDetailsCaption')
-      let dwt:any = document.getElementById('TransactionHistoryFG.OUTFORMAT')
-      if (!dwt) {
-         ElMessage({
-            message: '[启动失败]：请在此界面执行一次查询操作，然后再开始.',
-            type: 'error',
-          })
-        return false
+      if (!watchBillPage()) {
+        return
       }
 
-      // csv=3
-      dwt.value = 3
+      // checkDownTimer =  setInterval(()=>{
+        let dwt:any = document.getElementById('TransactionHistoryFG.OUTFORMAT')
+        if(dwt){
+          clearInterval(checkDownTimer)
+          // csv=3
+         dwt.value = 3
+         let okButton:any = document.querySelector('form[name="TransactionHistoryFG"] .HW_formbtn #okButton')
+         okButton.click()
 
-      let okButton:any = document.querySelector('form[name="TransactionHistoryFG"] .HW_formbtn #okButton')
-      okButton.click()
-
-      setTimeout(() => {
-        // 重置
-        clearTimeout(timer)
-        clearInterval(cutDownNumTimer)
-        cutDownNum.value = ruleForm.intervalTime
-        timer = setTimeout(() => {
-          download()
-        }, ruleForm.intervalTime * 1000 || 20000)
-        cutDownNumTimer = setInterval(() => {
-          cutDownNum.value--
-          if (cutDownNum.value < 0) {
+         setTimeout(() => {
+            // 重置
+            clearTimeout(timer)
             clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+            timer = setTimeout(() => {
+              // download()
+
+              let searchBtn:any = document.querySelector('#SEARCH')
+              console.log('点击查询按钮')
+              if(searchBtn){
+                searchBtn.click()
+              }
+
+            }, ruleForm.intervalTime * 1000 || 20000)
+            cutDownNumTimer = setInterval(() => {
+              cutDownNum.value--
+              if (cutDownNum.value < 0) {
+                clearInterval(cutDownNumTimer)
+              }
+            }, 1000)
+          }, 5000);
+        }else{
+
+          console.log('下载一个文件')
+
+          let ra1:any = document.querySelectorAll('input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]')
+          if(ra1){
+            ra1[1].click()
           }
-        }, 1000)
-      }, 5000);
+
+          let lastdaysel:any = document.querySelector('select[name="TransactionHistoryFG.TXN_PERIOD"]')
+          lastdaysel.value = '01'
+
+          let searchBtn:any = document.querySelector('#SEARCH')
+          searchBtn.click()
+
+        }
+      // },1000)
     }
 
     const resetForm = (formEl: any) => {
@@ -216,8 +255,13 @@ export default defineComponent({
       // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
+      let onOff: any = (await getSyncStorage('onOff')) || false
+      if (onOff) {
+        ctx.emit('onOffHandle', onOff)
+      }
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
+      cutDownNum.value = ruleForm.intervalTime
     })
     return {
       settingVisible,

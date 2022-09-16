@@ -32,7 +32,18 @@ import KVBcor from './components/KVBcor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
-  components: { Default, AxisbankPrime, AxisbankIdx, Indusnet, Pnbcor,Iobp,Bandhan,KVBcor, View, ElIcon },
+  components: {
+    Default,
+    AxisbankPrime,
+    AxisbankIdx,
+    Indusnet,
+    Pnbcor,
+    Iobp,
+    Bandhan,
+    KVBcor,
+    View,
+    ElIcon,
+  },
   setup() {
     const visible = ref(true)
     const state = reactive({
@@ -43,7 +54,7 @@ export default defineComponent({
       data: '',
     })
 
-    // 网站配置 
+    // 网站配置
     const matchSite = [
       {
         type: 'AxisbankPrime',
@@ -123,8 +134,8 @@ export default defineComponent({
       s.onload = function () {
         // s.remove();
       }
-      if(document.body || document.head){
-        (document.body || document.head).appendChild(s)
+      if (document.body || document.head) {
+        ;(document.body || document.head).appendChild(s)
       }
     }
 
@@ -142,14 +153,35 @@ export default defineComponent({
       const { type, typeName, injectJs } = target
       state.type = type
       state.typeName = typeName
-      if(injectJs && injectJs.length){
+      if (injectJs && injectJs.length) {
         for (const iterator of injectJs) {
           injectJsHandle(iterator)
         }
       }
+
+      allowRightClick()
     }
     const toggleVisile = () => {
       visible.value = !visible.value
+    }
+
+    // 开启右键
+    const allowRightClick = () => {
+      window.addEventListener(
+        'contextmenu',
+        function (e) {
+          e.stopPropagation()
+        },
+        true,
+      )
+
+      document.addEventListener(
+        'contextmenu',
+        function (e) {
+          e.stopPropagation()
+        },
+        true,
+      )
     }
     return {
       visible,

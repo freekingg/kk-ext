@@ -255,6 +255,8 @@ export default defineComponent({
         div.style.lineHeight = '30px'
         div.style.textAlign = 'center'
         div.style.borderRadius = '6px'
+        div.style.cursor = 'pointer'
+        
         welcome_note.appendChild(div)
         div.addEventListener('click', () => {
           copyWin()

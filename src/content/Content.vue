@@ -1,6 +1,6 @@
 <template>
   <main id="kk-content">
-    <el-card shadow="always" v-show="type">
+    <el-card shadow="always" v-show="type !== 'Default'">
       <template #header>
         <div class="card-header">
           <span>{{ typeName || '-' }}</span>
@@ -28,6 +28,7 @@ import Indusnet from './components/Indusnet.vue'
 import Pnbcor from './components/Pnbcor.vue'
 import Iobp from './components/Iobp.vue'
 import Bandhan from './components/Bandhan.vue'
+import Jana from './components/Jana.vue'
 import KVBcor from './components/KVBcor.vue'
 
 import { ElMessage } from 'element-plus'
@@ -41,6 +42,7 @@ export default defineComponent({
     Iobp,
     Bandhan,
     KVBcor,
+    Jana,
     View,
     ElIcon,
   },
@@ -88,7 +90,11 @@ export default defineComponent({
         type: 'Bandhan',
         typeName: 'Bandhan',
         matches: ['corporate.bandhanbank.com'],
-        // injectJs: ['js/injected.js'],
+      },
+      {
+        type: 'Jana',
+        typeName: 'Jana',
+        matches: ['corporatebanking.janabank.com'],
       },
       {
         type: 'KVBcor',

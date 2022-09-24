@@ -1,13 +1,13 @@
 <template>
   <div id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c" ><QuestionFilled /></el-icon>
+      <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
         此网站为双窗口模式 <br />
         1、登陆后，点击左上角的复制窗口按钮，此时会打开一个新窗口<br />
         2、在新打开的窗口，刷新下页面 F5<br />
         3、此时已经打开两个窗口了，可以一个窗口下载流水，一个窗口进行其它操作<br />
-        4、一个窗口进入 Accounts  中 ，此时会自动下载流水<br />
+        4、一个窗口进入 Accounts 中 ，此时会自动下载流水<br />
       </p>
     </div>
     <section class="run-status">
@@ -210,7 +210,7 @@ export default defineComponent({
                       'form[name="frmmain"] input[name="flddownload"]',
                     )
                     fldseaflddownloadrchformat.click()
-                    
+
                     clearInterval(cutDownNumTimer)
                     cutDownNum.value = ruleForm.intervalTime
 
@@ -223,7 +223,7 @@ export default defineComponent({
                       let frame_top: any = document.querySelector('frame[name="frame_top"]')
                       if (frame_top) {
                         let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
-                        if(welcome_note){
+                        if (welcome_note) {
                           welcome_note.innerText = `下载中：${cutDownNum.value}s`
                         }
                       }
@@ -231,7 +231,7 @@ export default defineComponent({
                       if (cutDownNum.value <= 0) {
                         clearInterval(cutDownNumTimer)
                       }
-                     }, 1000)
+                    }, 1000)
                   }
                 }, 1000)
               }, 2000)
@@ -256,7 +256,7 @@ export default defineComponent({
         div.style.textAlign = 'center'
         div.style.borderRadius = '6px'
         div.style.cursor = 'pointer'
-        
+
         welcome_note.appendChild(div)
         div.addEventListener('click', () => {
           copyWin()
@@ -269,8 +269,8 @@ export default defineComponent({
       let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
       let onOff = false
       if (frame_txn) {
-        console.log('frame_txn: ', frame_txn);
-        
+        console.log('frame_txn: ', frame_txn)
+
         timertop = setInterval(async () => {
           let result = await watchPage()
           if (result) {
@@ -290,11 +290,10 @@ export default defineComponent({
             let frame_top: any = document.querySelector('frame[name="frame_top"]')
             if (frame_top) {
               let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
-              if(welcome_note){
+              if (welcome_note) {
                 welcome_note.innerText = `复制当前窗口`
               }
             }
-
           }
           // else {
           //   onOff = false
@@ -305,7 +304,7 @@ export default defineComponent({
 
         setTimeout(() => {
           initBtn()
-        }, 5000);
+        }, 5000)
       }
 
       let _intervalTime: number = await getSyncStorage('intervalTime')

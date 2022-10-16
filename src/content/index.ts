@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // receive message from injected script
 window.addEventListener('message', function (e) {
-  console.log('content script received:' , e);
+  // console.log('content script received:' , e);
   if(e.data){
     vm.onMessage(e.data)
   }

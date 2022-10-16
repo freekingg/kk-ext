@@ -30,6 +30,7 @@ import Iobp from './components/Iobp.vue'
 import Bandhan from './components/Bandhan.vue'
 import Jana from './components/Jana.vue'
 import KVBcor from './components/KVBcor.vue'
+import KotakCor from './components/KotakCor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
@@ -42,6 +43,7 @@ export default defineComponent({
     Iobp,
     Bandhan,
     KVBcor,
+    KotakCor,
     Jana,
     View,
     ElIcon,
@@ -101,13 +103,18 @@ export default defineComponent({
         typeName: 'KVBcor',
         matches: ['www.kvbin.com'],
       },
+      {
+        type: 'KotakCor',
+        typeName: 'KotakCor',
+        matches: ['netbanking.kotak.com'],
+      },
     ]
 
     /**
      * 接收消息
      */
     const onMessage = (e: any) => {
-      console.log('content接收到了后台的消息', e)
+      // console.log('content接收到了后台的消息', e)
       if (e.actionType) {
         state.data = JSON.stringify(e.data)
         if (e.actionType) {

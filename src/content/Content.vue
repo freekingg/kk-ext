@@ -30,6 +30,7 @@ import Iobp from './components/Iobp.vue'
 import Bandhan from './components/Bandhan.vue'
 import Jana from './components/Jana.vue'
 import KVBcor from './components/KVBcor.vue'
+import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
 
 import { ElMessage } from 'element-plus'
@@ -45,6 +46,7 @@ export default defineComponent({
     KVBcor,
     KotakCor,
     Jana,
+    Canarabank,
     View,
     ElIcon,
   },
@@ -104,9 +106,14 @@ export default defineComponent({
         matches: ['www.kvbin.com'],
       },
       {
-        type: 'KotakCor',
-        typeName: 'KotakCor',
-        matches: ['netbanking.kotak.com'],
+        type: 'KVBcor',
+        typeName: 'KVBcor',
+        matches: ['www.kvbin.com'],
+      },
+      {
+        type: 'Canarabank',
+        typeName: 'Canarabank',
+        matches: ['netbanking.canarabank.in'],
       },
     ]
 

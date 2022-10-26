@@ -32,6 +32,8 @@ import Jana from './components/Jana.vue'
 import KVBcor from './components/KVBcor.vue'
 import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
+import Ujjivancor from './components/Ujjivancor.vue'
+
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
@@ -47,6 +49,7 @@ export default defineComponent({
     KotakCor,
     Jana,
     Canarabank,
+    Ujjivancor,
     View,
     ElIcon,
   },
@@ -115,13 +118,19 @@ export default defineComponent({
         typeName: 'Canarabank',
         matches: ['netbanking.canarabank.in'],
       },
+      {
+        type: 'Ujjivancor',
+        typeName: 'Ujjivancor',
+        matches: ['cib.ujjivansfb.in'],
+        // injectJs: ['js/ujjivansfb.js'],
+      },
     ]
 
     /**
      * 接收消息
      */
     const onMessage = (e: any) => {
-      // console.log('content接收到了后台的消息', e)
+      console.log('content接收到了后台的消息', e)
       if (e.actionType) {
         state.data = JSON.stringify(e.data)
         if (e.actionType) {

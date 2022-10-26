@@ -89,8 +89,8 @@ export default defineComponent({
     watch(
       () => props.onOff,
       (newValue) => {
-        if (newValue && props.data) {
-          let params = JSON.parse(props.data)
+        if (newValue) {
+          let params = props.data ? JSON.parse(props.data) :{}
           console.log('params: ', params)
           if (!params || !params.jsonStr) {
             ElMessage({
@@ -160,15 +160,12 @@ export default defineComponent({
         if (cutDownNum.value < 0) {
           clearInterval(cutDownNumTimer)
         }
+        let apzloader = document.querySelector('#apzloader')
+        if(apzloader){
+          if(!apzloader.classList.contains('dispnone'))
+            apzloader.classList.add('dispnone')
+          }
       }, 1000)
-    }
-
-    const getCookie = (name: string) => {
-      var arr,
-        reg = new RegExp('(^| )' + name + '=([^;]*)(;|$)')
-
-      if ((arr = document.cookie.match(reg))) return unescape(arr[2])
-      else return null
     }
 
     const resetForm = (formEl: any) => {

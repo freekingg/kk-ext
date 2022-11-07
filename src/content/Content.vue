@@ -29,6 +29,7 @@ import Pnbcor from './components/Pnbcor.vue'
 import Iobp from './components/Iobp.vue'
 import Bandhan from './components/Bandhan.vue'
 import Jana from './components/Jana.vue'
+import UtkarshCor from './components/UtkarshCor.vue'
 import KVBcor from './components/KVBcor.vue'
 import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
@@ -48,6 +49,7 @@ export default defineComponent({
     KVBcor,
     KotakCor,
     Jana,
+    UtkarshCor,
     Canarabank,
     Ujjivancor,
     View,
@@ -122,7 +124,11 @@ export default defineComponent({
         type: 'Ujjivancor',
         typeName: 'Ujjivancor',
         matches: ['cib.ujjivansfb.in'],
-        // injectJs: ['js/ujjivansfb.js'],
+      },
+      {
+        type: 'UtkarshCor',
+        typeName: 'UtkarshCor',
+        matches: ['corporatenetbanking.utkarsh.bank'],
       },
     ]
 

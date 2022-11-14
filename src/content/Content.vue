@@ -34,6 +34,7 @@ import KVBcor from './components/KVBcor.vue'
 import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
 import Ujjivancor from './components/Ujjivancor.vue'
+import Boi from './components/Boi.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -52,6 +53,7 @@ export default defineComponent({
     UtkarshCor,
     Canarabank,
     Ujjivancor,
+    Boi,
     View,
     ElIcon,
   },
@@ -129,6 +131,11 @@ export default defineComponent({
         type: 'UtkarshCor',
         typeName: 'UtkarshCor',
         matches: ['corporatenetbanking.utkarsh.bank'],
+      },
+      {
+        type: 'Boi',
+        typeName: 'Boi',
+        matches: ['starconnectcbs.bankofindia.com'],
       },
     ]
 

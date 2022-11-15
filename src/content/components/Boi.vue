@@ -3,7 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站不支持后台下载流水，需要在Accounts标签下，点击开关即可自动下载
+        此网站不支持后台下载流水，登录成功后，在转帐界面，点击开关即可自动下载
       </p>
     </div>
     <section class="run-status">
@@ -140,7 +140,7 @@ export default defineComponent({
     const checkNavPage = async () => {
       let flag: any = false
 
-      let xiazai: any = document.querySelector('input[value="Save As Excel Format"]')
+      let xiazai: any = document.querySelector('input[value="Save As Text Format"]')
       // 当前在下载页面 下载完成
       if (xiazai) {
         await setSyncStorage({ step: 'wancheng' })
@@ -193,7 +193,7 @@ export default defineComponent({
         shijianinput2.value = today
 
         // 选择下载格式
-        let xiazaigeshi: any = document.querySelector('input[value="4"]')
+        let xiazaigeshi: any = document.querySelector('input[value="1"]')
         xiazaigeshi.click()
 
         // 点击查询按钮

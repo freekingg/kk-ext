@@ -35,6 +35,7 @@ import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
 import Ujjivancor from './components/Ujjivancor.vue'
 import Boi from './components/Boi.vue'
+import Esaf from './components/Esaf.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -54,6 +55,7 @@ export default defineComponent({
     Canarabank,
     Ujjivancor,
     Boi,
+    Esaf,
     View,
     ElIcon,
   },
@@ -136,6 +138,11 @@ export default defineComponent({
         type: 'Boi',
         typeName: 'Boi',
         matches: ['starconnectcbs.bankofindia.com'],
+      },
+      {
+        type: 'Esaf',
+        typeName: 'Esaf Personal',
+        matches: ['netbanking.esafbank.com'],
       },
     ]
 

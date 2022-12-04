@@ -67,6 +67,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
+import { sleep, Timer } from '../../utils/index'
 let timer: any = null
 let cutDownNumTimer: any = null
 let checkDownCsvBtn:any = null
@@ -129,13 +130,13 @@ export default defineComponent({
             navList[2].querySelector('a').click()
             let list = navList[2].querySelectorAll('li')
             list[4].querySelector('a').click()
-            let s = setInterval(() => {
+            Timer.setInterval.start('checkBtn', ()=>{
               let submitBtn = document.querySelector('form[name="stmtForm"] button[type="submit"]')
               if (submitBtn) {
-                clearInterval(s)
+                Timer.setInterval.stop('checkBtn');
                 download()
               }
-            }, 1000)
+            },1500);
             return
           }
 
@@ -174,12 +175,9 @@ export default defineComponent({
       })
     }
 
-    const sleep = (seconds: number) => new Promise((resolve) => setTimeout(resolve, seconds))
-
     const download = async () => {
       if (!props.onOff) return
       await sleep(1500)
-      let dataForm: any = {}
       let submitBtn: any = document.querySelector('form[name="stmtForm"] button[type="submit"]')
       if (submitBtn) {
         await sleep(1500)
@@ -277,14 +275,6 @@ export default defineComponent({
           type: 'error',
         })
       }
-    }
-
-    const getCookie = (name: string) => {
-      var arr,
-        reg = new RegExp('(^| )' + name + '=([^;]*)(;|$)')
-
-      if ((arr = document.cookie.match(reg))) return unescape(arr[2])
-      else return null
     }
 
     const resetForm = (formEl: any) => {

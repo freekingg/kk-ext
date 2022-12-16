@@ -122,7 +122,7 @@ export default defineComponent({
       {
         type: 'Canarabank',
         typeName: 'Canarabank',
-        matches: ['netbanking.canarabank.in'],
+        matches: ['netbanking.canarabank.in','online.canarabank.in'],
       },
       {
         type: 'Ujjivancor',

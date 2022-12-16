@@ -3,11 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站为双窗口模式 <br />
-        1、登陆后，点击左上角的复制窗口按钮，此时会打开一个新窗口<br />
-        2、在新打开的窗口，刷新下页面 F5<br />
-        3、此时已经打开两个窗口了，可以一个窗口下载流水，一个窗口进行其它操作<br />
-        4、一个窗口进入 Accounts 中 ，此时会自动下载流水<br />
+        此网站下载流水需要在流水界面 <br />
       </p>
     </div>
     <section class="run-status">
@@ -56,6 +52,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
+import { sleep, Timer, eventClick } from '../../utils/index'
 let timer: any = null
 let timertop: any = null
 let timer1: any = null
@@ -63,7 +60,7 @@ let timer2: any = null
 let timer3: any = null
 let timer4: any = null
 let cutDownNumTimer: any = null
-
+let checkDownCsvBtn: any = null
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
   props: {
@@ -97,6 +94,41 @@ export default defineComponent({
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
+    watch(
+      () => props.onOff,
+      async (newValue) => {
+        clearTimeout(timer)
+        clearInterval(cutDownNumTimer)
+        clearInterval(checkDownCsvBtn)
+        if (newValue) {
+          const url = location.search
+          if(url.indexOf('page=manage-accounts&state=statement') !== -1){
+            download()
+            ctx.emit('onOffHandle', true)
+            return
+          }
+          ElMessage({
+            message: '请先到流水界面.',
+            type: 'error',
+          })
+          ctx.emit('onOffHandle', false)
+        } else if (!newValue) {
+          setSyncStorage({ onOff: false })
+          ElMessage({
+            message: '[任务已经关闭].',
+            type: 'info',
+          })
+        } else {
+          setSyncStorage({ onOff: false })
+          ElMessage({
+            message: '[启动失败]：请下载一次流水操作csv.',
+            type: 'error',
+          })
+          ctx.emit('onOffHandle', false)
+        }
+      },
+    )
+
     const submitForm = async (formEl: any) => {
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
@@ -106,12 +138,6 @@ export default defineComponent({
         } else {
           console.log('error submit!', fields)
         }
-      })
-    }
-
-    const copyWin = () => {
-      chrome.runtime.sendMessage({ type: 'COPY_WIN' }, function (response) {
-        console.log('收到来自后台的回复：' + response)
       })
     }
 
@@ -128,218 +154,82 @@ export default defineComponent({
       dialogHelpVisible.value = true
     }
 
-    const watchPage = () => {
+    const download =  async () => {
+      if (!props.onOff) return
+      const url = location.search
       // 顶层框架
-      return new Promise((resolve) => {
-        let frame_top: any = document.querySelector('frame[name="frame_top"]')
-        if (frame_top) {
-          let frame_menu_top_btn =
-            frame_top.contentWindow.document.querySelector('li#menutab1.menuactive')
-          if (frame_menu_top_btn) {
-            let frame_menu_top_btna = frame_top.contentWindow.document.querySelector(
-              'li#menutab1.menuactive a',
-            )
-            if (frame_menu_top_btna.innerText == 'Accounts') {
-              let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
-              if (frame_txn) {
-                let frame_menu: any = document.querySelector('frame[name="frame_menu"]')
-                let frame_menu_bill_btn = frame_menu.contentWindow.document.querySelector('li#RRAAC.current_sub')
-                console.log('frame_menu_bill_btn: ', frame_menu_bill_btn);
-          //       let sel_fldacctno = frame_txn.contentWindow.document.querySelector(
-          //   'form[name="frmmain"] select[name="fldacctno"]',
-          // )
-                if (frame_menu_bill_btn) {
-                  resolve(true)
-                } else {
-                  resolve(false)
-                }
-              } else {
-                resolve(false)
+        if(url.indexOf('page=manage-accounts&state=statement') !== -1){
+          console.log('帐单页面')
+
+          let sel:any = document.querySelector('div.account-statement-left__selectPeriod .oj-select-choice')
+          console.log('sel: ', sel);
+          eventClick(sel)
+          await sleep(1500)
+
+          let lis:any = document.querySelectorAll('#oj-listbox-drop .oj-listbox-results li')
+          console.log('lis: ', lis);
+          eventClick(lis[3])
+          await sleep(1500)
+
+          let datedoms:any = document.querySelectorAll('.oj-inputdatetime-input-trigger span')
+          eventClick(datedoms[0])
+          await sleep(1000)
+
+          let today1:any = document.querySelector('.oj-enabled.oj-selected')
+          eventClick(today1)
+          await sleep(1000)
+
+          eventClick(datedoms[1])
+          await sleep(1000)
+
+          let today2:any = document.querySelector('.oj-enabled.oj-selected')
+          eventClick(today2)
+          await sleep(1000)
+
+          let btns:any = document.querySelectorAll('.oj-button-button.oj-component-initnode')
+          let el = Array.from(btns).find((item:any) => item.innerText  === 'Apply Filter')
+          eventClick(el)
+
+          checkDownCsvBtn = setInterval(async () => {
+          let btns:any = document.querySelectorAll('.oj-button-button.oj-component-initnode')
+          let panel = Array.from(btns).find((item:any) => item.innerText  === 'Download')
+          if (panel) {
+            eventClick(panel)
+            clearInterval(checkDownCsvBtn)
+            await sleep(1500)
+            let as:any = document.querySelectorAll('.oj-menu-item')
+
+            const eventOpts = { bubbles: true, view: window };
+            as[1].dispatchEvent(new MouseEvent('mouseover', eventOpts));
+            eventClick(as[1])
+
+            // 重置
+            clearTimeout(timer)
+            clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+            timer = setTimeout(() => {
+              download()
+            }, ruleForm.intervalTime * 1000 || 20000)
+            cutDownNumTimer = setInterval(() => {
+              cutDownNum.value--
+              if (cutDownNum.value < 0) {
+                clearInterval(cutDownNumTimer)
               }
-            } else {
-              resolve(false)
+            }, 1000)
+
             }
-          } else {
-            resolve(false)
-          }
+          }, 2000)
+        }else{
+          ElMessage({
+            message: '自动下载已关闭.',
+            type: 'info',
+          })
+          ctx.emit('onOffHandle', false)
         }
-      })
-    }
-
-    const downloadHandle = () => {
-      clearTimeout(timer)
-      clearInterval(timer2)
-      clearTimeout(timer4)
-      let frame_menu: any = document.querySelector('frame[name="frame_menu"]')
-
-      let frame_menu_bill_btn = frame_menu.contentWindow.document.querySelector('li#RRAAC.current_sub')
-      // if (frame_menu_bill_btn) {
-        // 点击左侧导航按钮
-        // frame_menu_bill_btn.click()
-        // frame_menu_bill_btn.dispatchEvent(new Event('click'))
-
-        // 选择表单
-        timer2 = setInterval(() => {
-          let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
-          let sel_fldacctno = frame_txn.contentWindow.document.querySelector(
-            'form[name="frmmain"] select[name="fldacctno"]',
-          )
-          if (sel_fldacctno) {
-            clearInterval(timer2)
-            let sel_fldacctno_ops = frame_txn.contentWindow.document.querySelectorAll(
-              'form[name="frmmain"] select[name="fldacctno"] option',
-            )
-            let lastVal = sel_fldacctno_ops[sel_fldacctno_ops.length - 1]['value']
-            // 选择帐号
-            sel_fldacctno.value = lastVal
-            sel_fldacctno.dispatchEvent(new Event('change'))
-           
-
-            setTimeout(() => {
-               // 选择条数
-            let fldsearch = frame_txn.contentWindow.document.querySelector(
-              'form[name="frmmain"] select#fldsearch',
-            )
-            console.log('fldsearch',fldsearch);
-            if(fldsearch){
-             
-              fldsearch.value = 10  //当天
-              // fldsearch.value = 1
-              fldsearch.dispatchEvent(new Event('change'))
-            }
-            
-              // 选择条数
-              // let fldnooftxn = frame_txn.contentWindow.document.querySelector(
-              //   'form[name="frmmain"] input[name="fldnooftxn"]',
-              // )
-              // fldnooftxn.value = 5000
-
-              let fldsubmit = frame_txn.contentWindow.document.querySelector(
-                'form[name="frmmain"] input[name="fldsubmit"]',
-              )
-              console.log('下载按钮',fldsubmit);
-              // fldsubmit.click()
-              fldsubmit.dispatchEvent(new Event('click'))
-              timer4 = setTimeout(() => {
-                console.log('timer4 setTimeout');
-                timer3 = setInterval(() => {
-                  console.log('检查下载类型是否存在 ');
-                  let fldsearchformat = frame_txn.contentWindow.document.querySelector(
-                    'form[name="frmmain"] select[name="fldsearchformat"]',
-                  )
-                  console.log('选择下载类型',fldsearchformat);
-                  if (fldsearchformat) {
-                    clearInterval(timer3)
-                    fldsearchformat.value = '05'
-                    fldsearchformat.dispatchEvent(new Event('change'))
-                    setTimeout(() => {
-                      let fldseaflddownloadrchformat = frame_txn.contentWindow.document.querySelector(
-                      'form[name="frmmain"] input[name="flddownload"]',
-                    )
-                    console.log('点击下载按钮',fldseaflddownloadrchformat);
-                    // fldseaflddownloadrchformat.click()
-                    fldseaflddownloadrchformat.dispatchEvent(new Event('click'))
-                    }, 1000);
-
-                    clearInterval(cutDownNumTimer)
-                    cutDownNum.value = ruleForm.intervalTime
-
-                    timer = setTimeout(() => {
-                      downloadHandle()
-                    }, ruleForm.intervalTime * 1000 || 20000)
-
-                    cutDownNumTimer = setInterval(() => {
-                      cutDownNum.value--
-                      let frame_top: any = document.querySelector('frame[name="frame_top"]')
-                      if (frame_top) {
-                        let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
-                        if (welcome_note) {
-                          welcome_note.innerText = `下载中：${cutDownNum.value}s`
-                        }
-                      }
-
-                      if (cutDownNum.value <= 0) {
-                        clearInterval(cutDownNumTimer)
-                      }
-                    }, 1000)
-                  }
-                }, 1000)
-              }, 2000)
-            }, 3000)
-          }
-        }, 1000)
-      // }
-    }
-
-    const initBtn = () => {
-      let frame_top: any = document.querySelector('frame[name="frame_top"]')
-      if (frame_top) {
-        let welcome_note = frame_top.contentWindow.document.querySelector('.topbarlogo')
-        let div = document.createElement('div')
-        div.id = 'xzbtn'
-        div.innerText = '复制当前窗口'
-        div.style.background = 'red'
-        div.style.color = '#fff'
-        div.style.width = '100px'
-        div.style.height = '30px'
-        div.style.lineHeight = '30px'
-        div.style.textAlign = 'center'
-        div.style.borderRadius = '6px'
-        div.style.cursor = 'pointer'
-
-        welcome_note.appendChild(div)
-        div.addEventListener('click', () => {
-          copyWin()
-        })
-      }
     }
 
     // 与后台通信
     onMounted(async () => {
-      console.log('onMounted')
-      let frame_txn: any = document.querySelector('frame[name="frame_txn"]')
-      let onOff = false
-      if (frame_txn) {
-        console.log('frame_txn: ', frame_txn)
-
-        timertop = setInterval(async () => {
-          let result = await watchPage()
-          if (result) {
-            console.log('在account')
-            if (onOff) return
-            onOff = true
-            setTimeout(() => {
-              downloadHandle()
-            }, 5000);
-          } else {
-            onOff = false
-            console.log('未在account')
-            clearTimeout(timer)
-            clearInterval(timer2)
-            clearTimeout(timer3)
-            clearTimeout(timer4)
-            clearInterval(cutDownNumTimer)
-
-            let frame_top: any = document.querySelector('frame[name="frame_top"]')
-            if (frame_top) {
-              let welcome_note = frame_top.contentWindow.document.querySelector('#xzbtn')
-              if (welcome_note) {
-                welcome_note.innerText = `复制当前窗口`
-              }
-            }
-          }
-          // else {
-          //   onOff = false
-          //   clearTimeout(timer)
-          //   clearInterval(cutDownNumTimer)
-          // }
-        }, 1000)
-
-        setTimeout(() => {
-          initBtn()
-        }, 5000)
-      }
-
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 20

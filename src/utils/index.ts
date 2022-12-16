@@ -42,3 +42,17 @@ export const Timer: any = {
     },
   },
 }
+
+export const eventClick = (element:any) => {
+  const eventOpts = { bubbles: true, view: window };
+
+  element.dispatchEvent(new MouseEvent('mousedown', eventOpts));
+  element.dispatchEvent(new MouseEvent('mouseup', eventOpts));
+
+  if (element.click) {
+    element.click();
+  } else {
+    element.dispatchEvent(new PointerEvent('click', { bubbles: true }));
+  }
+}
+

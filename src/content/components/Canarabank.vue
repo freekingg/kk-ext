@@ -107,8 +107,22 @@ export default defineComponent({
             ctx.emit('onOffHandle', true)
             return
           }
+
+          // 需要点击到流水界面
+          let homeBtn:any = document.querySelector('a[title="Go to Dashboard"]')
+          if(homeBtn){
+            homeBtn.click()
+            await sleep(2000)
+            let homeBtn2:any = document.querySelector('a[title="Click for View or Download Statement"]')
+            homeBtn2.click()
+            await sleep(2000)
+            download()
+            ctx.emit('onOffHandle', true)
+            return
+          }
+
           ElMessage({
-            message: '请先到流水界面.',
+            message: '请先到流水界面...',
             type: 'error',
           })
           ctx.emit('onOffHandle', false)
@@ -161,30 +175,30 @@ export default defineComponent({
         if(url.indexOf('page=manage-accounts&state=statement') !== -1){
           console.log('帐单页面')
 
-          let sel:any = document.querySelector('div.account-statement-left__selectPeriod .oj-select-choice')
-          console.log('sel: ', sel);
-          eventClick(sel)
-          await sleep(1500)
+          // let sel:any = document.querySelector('div.account-statement-left__selectPeriod .oj-select-choice')
+          // console.log('sel: ', sel);
+          // eventClick(sel)
+          // await sleep(1500)
 
-          let lis:any = document.querySelectorAll('#oj-listbox-drop .oj-listbox-results li')
-          console.log('lis: ', lis);
-          eventClick(lis[3])
-          await sleep(1500)
+          // let lis:any = document.querySelectorAll('#oj-listbox-drop .oj-listbox-results li')
+          // console.log('lis: ', lis);
+          // eventClick(lis[3])
+          // await sleep(1500)
 
-          let datedoms:any = document.querySelectorAll('.oj-inputdatetime-input-trigger span')
-          eventClick(datedoms[0])
-          await sleep(1000)
+          // let datedoms:any = document.querySelectorAll('.oj-inputdatetime-input-trigger span')
+          // eventClick(datedoms[0])
+          // await sleep(1000)
 
-          let today1:any = document.querySelector('.oj-enabled.oj-selected')
-          eventClick(today1)
-          await sleep(1000)
+          // let today1:any = document.querySelector('.oj-enabled.oj-selected')
+          // eventClick(today1)
+          // await sleep(1000)
 
-          eventClick(datedoms[1])
-          await sleep(1000)
+          // eventClick(datedoms[1])
+          // await sleep(1000)
 
-          let today2:any = document.querySelector('.oj-enabled.oj-selected')
-          eventClick(today2)
-          await sleep(1000)
+          // let today2:any = document.querySelector('.oj-enabled.oj-selected')
+          // eventClick(today2)
+          // await sleep(1000)
 
           let btns:any = document.querySelectorAll('.oj-button-button.oj-component-initnode')
           let el = Array.from(btns).find((item:any) => item.innerText  === 'Apply Filter')

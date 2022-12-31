@@ -36,6 +36,7 @@ import KotakCor from './components/KotakCor.vue'
 import Ujjivancor from './components/Ujjivancor.vue'
 import Boi from './components/Boi.vue'
 import Esaf from './components/Esaf.vue'
+import EquitasCor from './components/EquitasCor.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -56,6 +57,7 @@ export default defineComponent({
     Ujjivancor,
     Boi,
     Esaf,
+    EquitasCor,
     View,
     ElIcon,
   },
@@ -143,6 +145,11 @@ export default defineComponent({
         type: 'Esaf',
         typeName: 'Esaf Personal',
         matches: ['netbanking.esafbank.com'],
+      },
+      {
+        type: 'EquitasCor',
+        typeName: 'Equitas Cor',
+        matches: ['inet.equitasbank.com'],
       },
     ]
 

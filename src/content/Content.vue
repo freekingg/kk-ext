@@ -37,6 +37,7 @@ import Ujjivancor from './components/Ujjivancor.vue'
 import Boi from './components/Boi.vue'
 import Esaf from './components/Esaf.vue'
 import EquitasCor from './components/EquitasCor.vue'
+import Freecharge from './components/Freecharge.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -58,6 +59,7 @@ export default defineComponent({
     Boi,
     Esaf,
     EquitasCor,
+    Freecharge,
     View,
     ElIcon,
   },
@@ -150,6 +152,12 @@ export default defineComponent({
         type: 'EquitasCor',
         typeName: 'Equitas Cor',
         matches: ['inet.equitasbank.com'],
+      },
+      {
+        type: 'Freecharge',
+        typeName: 'freecharge',
+        matches: ['www.freecharge.in'],
+        // injectJs: ['js/xlsx.full.min.js'],
       },
     ]
 

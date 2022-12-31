@@ -16,7 +16,8 @@
     "@types/chrome": "0.0.193",
     "axios": "^0.27.2",
     "element-plus": "^2.2.8",
-    "vue": "^3.2.37"
+    "vue": "^3.2.37",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.12",

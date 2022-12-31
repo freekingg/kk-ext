@@ -211,6 +211,7 @@ export default defineComponent({
     }
 
     const getAllList = async () => {
+      await sleep(5000)
       let list: any = await getList(params.value)
       gn.value++
       if (list.length) {

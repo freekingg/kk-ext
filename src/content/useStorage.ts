@@ -4,7 +4,7 @@ export default function useStorage() {
   * ローカルストレージにオブジェクトを保存
   * @param obj ローカルストレージに保存するオブジェクト
   */
-  const setLocalStorage = <T>(obj: T) => {
+  const setLocalStorage = (obj: any) => {
     return new Promise((resolve) => {
       chrome.storage.local.set(obj, () => {
         // @ts-ignore
@@ -29,7 +29,7 @@ export default function useStorage() {
   * ローカルストレージにオブジェクトを保存
   * @param obj ローカルストレージに保存するオブジェクト
   */
-       const setSyncStorage = <T>(obj: T) => {
+       const setSyncStorage = (obj: any) => {
         return new Promise((resolve) => {
           chrome.storage.sync.set(obj, () => {
             // @ts-ignore

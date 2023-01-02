@@ -2,12 +2,13 @@
   <div id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px; display: inline-block">此网站下载流水需要在流水界面 <br /></p>
+      <p style="font-size: 14px; display: inline-block">此网站支持接口模式下载 <br /></p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
+          <span>{{ currentStatus }}</span>
           <img :src="runGifSrc" v-if="onOff" />
         </template>
         <!-- <template #sub-title>
@@ -76,6 +77,7 @@ export default defineComponent({
     const cutDownNum = ref(20)
     const settingVisible = ref(false)
     const params = ref({})
+    const currentStatus = ref(<any>'')
     // const transList = ref(<any>[])
 
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
@@ -88,7 +90,7 @@ export default defineComponent({
 
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
-    const gn = ref(0)
+    const gn = ref(1)
 
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
@@ -113,6 +115,7 @@ export default defineComponent({
         clearInterval(timer4)
         clearInterval(timer5)
         transList = []
+        gn.value = 1
         if (newValue) {
           let profile: any = document.querySelector('.profile-details')
           if (profile) {
@@ -197,82 +200,140 @@ export default defineComponent({
           credentials: 'include',
         })
           .then((res) => {
-            return res.json()
+            let json = null
+            try {
+              json = res.json()
+            } catch (error) {
+              console.log('error: ', error)
+            }
+            return json
           })
           .then((res) => {
-            console.log(res)
-            if (res.length) {
-              resolve(res)
+            if (res && res.length) {
+              resolve({ status: true, list: res })
             } else {
-              resolve([])
+              resolve({ status: true, list: [] })
             }
+          })
+          .catch((err) => {
+            console.log('err: ', err)
+            resolve({ status: false, list: [] })
           })
       })
     }
 
+    const downloadFile = async (flag: Boolean = true) => {
+      let newList = transList.map((item: any) => {
+        return {
+          ...item,
+          txnHistory: JSON.stringify(item.txnHistory),
+        }
+      })
+      const ws = utils.json_to_sheet(newList)
+      const wb = utils.book_new()
+      utils.book_append_sheet(wb, ws, 'Data')
+      writeFileXLSX(wb, 'FreechargeSheet.xlsx')
+      if (flag) {
+        // 重置
+        clearTimeout(timer)
+        clearInterval(cutDownNumTimer)
+        cutDownNum.value = ruleForm.intervalTime
+        timer = setTimeout(() => {
+          download()
+        }, ruleForm.intervalTime * 1000 || 20000)
+        cutDownNumTimer = setInterval(() => {
+          cutDownNum.value--
+          if (cutDownNum.value < 0) {
+            clearInterval(cutDownNumTimer)
+          }
+        }, 1000)
+      }
+    }
+
     const getAllList = async () => {
       await sleep(5000)
-      let list: any = await getList(params.value)
-      gn.value++
-      if (list.length) {
+      let { status, list }: any = await getList(params.value)
+
+      if (status) {
+        gn.value++
+        currentStatus.value = `当前下载进度：第 ${gn.value} 页,共 ${ruleForm.maxNum} 页`
         transList = [...list, ...transList]
+        if(list.length === 0){
+          console.log('只有一页', transList.length)
+          currentStatus.value = `当前下载进度：本轮下载完成`
+          downloadFile()
+          return
+        }
         let last = list[list.length - 1]
         params.value = {
           lastGlobalTxnId: last.globalTxnId,
           lastGlobalTxnType: last.globalTxnType,
         }
-        if (gn.value < ruleForm.maxNum) {
+
+
+        let maxNum: number = await getSyncStorage('maxNum')
+        ruleForm.maxNum = maxNum || 5
+        
+        if (gn.value <= ruleForm.maxNum) {
           getAllList()
         } else {
-          console.log('ok', transList)
-          let newList = transList.map((item:any) => {
-            return {
-              ...item,
-              txnHistory:JSON.stringify(item.txnHistory)
-            }
-          })
-          const ws = utils.json_to_sheet(newList)
-          const wb = utils.book_new()
-          utils.book_append_sheet(wb, ws, 'Data')
-          writeFileXLSX(wb, 'SheetJSVueAoO.xlsx')
-
-          // 重置
-          clearTimeout(timer)
-          clearInterval(cutDownNumTimer)
-          cutDownNum.value = ruleForm.intervalTime
-          timer = setTimeout(() => {
-            download()
-          }, ruleForm.intervalTime * 1000 || 20000)
-          cutDownNumTimer = setInterval(() => {
-            cutDownNum.value--
-            if (cutDownNum.value < 0) {
-              clearInterval(cutDownNumTimer)
-            }
-          }, 1000)
+          console.log('本轮拉取完成,共', transList.length)
+          currentStatus.value = `当前下载进度：本轮下载完成`
+          downloadFile()
         }
+      } else {
+        ruleForm.maxNum = 10
+        getAllList()
+
+        // let newList = transList.map((item:any) => {
+        //     return {
+        //       ...item,
+        //       txnHistory:JSON.stringify(item.txnHistory)
+        //     }
+        //   })
+        //   const ws = utils.json_to_sheet(newList)
+        //   const wb = utils.book_new()
+        //   utils.book_append_sheet(wb, ws, 'Data')
+        //   writeFileXLSX(wb, 'SheetJSVueAoO.xlsx')
+
+        // 重置
+        // clearTimeout(timer)
+        // clearInterval(cutDownNumTimer)
+        // cutDownNum.value = ruleForm.intervalTime
+        // timer = setTimeout(() => {
+        //   download()
+        // }, ruleForm.intervalTime * 1000 || 20000)
+        // cutDownNumTimer = setInterval(() => {
+        //   cutDownNum.value--
+        //   if (cutDownNum.value < 0) {
+        //     clearInterval(cutDownNumTimer)
+        //   }
+        // }, 1000)
       }
     }
 
     const download = async () => {
       if (!props.onOff) return
-      let lis: any = document.querySelectorAll('.primary-list li')
-      if (lis.length) {
-        gn.value = 0
-        transList = []
-        // lis[6].click()
-        // await sleep(3000)
-        // lis[7].click()
+      let navs: any = document.querySelectorAll('.primary-list li')
+      currentStatus.value = null
+      gn.value = 1
+      transList = []
 
-        let initList: any = await getList()
-        if (initList.length) {
-          transList = [...initList]
-          console.log('transList.value: ', transList)
-          let last = initList[initList.length - 1]
+      if (navs && navs.length) {
+        currentStatus.value = `当前下载进度：第 ${gn.value} 页,共 ${ruleForm.maxNum} 页`
+        let { status, list }: any = await getList()
+        if (status && list.length) {
+          transList = [...list]
+          // downloadFile(false)
+          let last = list[list.length - 1]
           params.value = {
             lastGlobalTxnId: last.globalTxnId,
             lastGlobalTxnType: last.globalTxnType,
           }
           getAllList()
+        } else {
+          await sleep(3000)
+          download()
         }
       }
     }
@@ -297,6 +358,7 @@ export default defineComponent({
       cutDownNum,
       submitForm,
       resetForm,
+      currentStatus,
       dialogHelpVisible,
       ...toRefs(state),
     }

@@ -68,6 +68,7 @@ export default defineComponent({
   emits: ['onOffHandle'],
   setup(props: any, ctx) {
     const cutDownNum = ref(20)
+    const checkNum = ref(0)
     const settingVisible = ref(false)
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
     const state = reactive({
@@ -158,55 +159,165 @@ export default defineComponent({
 
     const download = async () => {
       if (!props.onOff) return
+      checkNum.value = 0
       let nav1: any = document.querySelector('li#Dashboard_li')
       if (nav1) {
         nav1.click()
         timer1 = setInterval(async () => {
+          checkNum.value += 1
+          if(checkNum.value > 15){
+            clearTimeout(timer)
+            clearInterval(cutDownNumTimer)
+            clearInterval(timer1)
+            clearInterval(timer2)
+            clearInterval(timer3)
+            clearInterval(timer4)
+            clearInterval(timer5)
+            download()
+            return
+          }
           let section_row_24_ul: any = document.querySelector('#section_row_24_ul')
           if (section_row_24_ul) {
             clearInterval(timer1)
+            checkNum.value = 0
             await sleep(2000)
+            if (!props.onOff) return
 
             timer5 = setInterval(async () => {
+              if (!props.onOff) {
+                clearInterval(timer5)
+                return
+              }
+              checkNum.value += 1
+              if(checkNum.value > 15){
+                clearTimeout(timer)
+                clearInterval(timer1)
+                clearInterval(timer2)
+                clearInterval(timer3)
+                clearInterval(timer4)
+                clearInterval(timer5)
+                download()
+                return
+              }
               let section_column_30_li: any = document.querySelector('#section_column_30_li')
               if (section_column_30_li) {
                 clearInterval(timer5)
+                checkNum.value = 0
                 await sleep(2000)
+                if (!props.onOff) return
                 // section_column_30_li.click()
                 eventClick(document.querySelector('#section_column_30_li'))
                 await sleep(2000)
+                if (!props.onOff) return
                 timer4 = setInterval(async () => {
+                  if (!props.onOff) {
+                    clearInterval(timer4)
+                    return
+                  }
+                  checkNum.value += 1
+                  if(checkNum.value > 15){
+                    clearTimeout(timer)
+                    clearInterval(timer1)
+                    clearInterval(timer2)
+                    clearInterval(timer3)
+                    clearInterval(timer4)
+                    clearInterval(timer5)
+                    download()
+                    return
+                  }
                   let acctList__accountno_0: any = document.querySelector('#acctList__accountno_0')
                   if (acctList__accountno_0) {
                     clearInterval(timer4)
+                    checkNum.value = 0
                     await sleep(2000)
                     eventClick(document.querySelector('#acctList__accountno_0'))
                     timer2 = setInterval(async () => {
+                      if (!props.onOff) {
+                        clearInterval(timer2)
+                        checkNum.value = 0
+                        return
+                      }
+                      checkNum.value += 1
+                      if(checkNum.value > 15){
+                        clearTimeout(timer)
+                        clearInterval(timer1)
+                        clearInterval(timer2)
+                        clearInterval(timer3)
+                        clearInterval(timer4)
+                        clearInterval(timer5)
+                        download()
+                        return
+                      }
                       let element_button_1: any = document.querySelector('#element_button_1')
                       if (element_button_1) {
                         clearInterval(timer2)
+                        checkNum.value = 0
                         await sleep(3000)
                         eventClick(document.querySelector('#element_button_1'))
                         timer3 = setInterval(async () => {
+                          if (!props.onOff) {
+                            clearInterval(timer3)
+                            return
+                          }
+                          checkNum.value += 1
+                          if(checkNum.value > 15){
+                            clearTimeout(timer)
+                            clearInterval(timer1)
+                            clearInterval(timer2)
+                            clearInterval(timer3)
+                            clearInterval(timer4)
+                            clearInterval(timer5)
+                            download()
+                            return
+                          }
                           let report_duration_radio_option_today_lbl: any = document.querySelector(
                             '#report_duration_radio_option_today_lbl',
                           )
                           if (report_duration_radio_option_today_lbl) {
                             clearInterval(timer3)
+                            checkNum.value = 0
                             eventClick(
                               document.querySelector('#report_duration_radio_option_today_lbl'),
                             )
                             await sleep(3000)
+                            if (!props.onOff) {
+                              return
+                            }
                             // let element_button_1: any = document.querySelector('#element_button_1')
                             // element_button_1.click()
 
                             let element_button_3: any = document.querySelector('#element_button_3')
                             element_button_3.click()
+                            await sleep(3000)
+                            let popup_content: any = document.querySelector('#popup_content')
+                            if(popup_content){
+                              clearTimeout(timer)
+                              clearInterval(timer1)
+                              clearInterval(timer2)
+                              clearInterval(timer3)
+                              clearInterval(timer4)
+                              clearInterval(timer5)
+                              ctx.emit('onOffHandle', false)
+                              return
+                            }
                             // 重置
                             clearTimeout(timer)
                             clearInterval(cutDownNumTimer)
+                            checkNum.value = 0
                             cutDownNum.value = ruleForm.intervalTime
                             timer = setTimeout(() => {
+                              let popup_content: any = document.querySelector('#popup_content')
+                            if(popup_content){
+                              clearTimeout(timer)
+                              clearInterval(cutDownNumTimer)
+                              clearInterval(timer1)
+                              clearInterval(timer2)
+                              clearInterval(timer3)
+                              clearInterval(timer4)
+                              clearInterval(timer5)
+                              ctx.emit('onOffHandle', false)
+                              return
+                            }
                               download()
                             }, ruleForm.intervalTime * 1000 || 20000)
                             cutDownNumTimer = setInterval(() => {

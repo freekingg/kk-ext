@@ -38,6 +38,9 @@
         <el-form-item label="上报接口" prop="reportUrl">
           <el-input v-model="ruleForm.reportUrl" />
         </el-form-item>
+        <el-form-item label="请求间隔(s)" prop="spaceTime">
+          <el-input type="number" v-model="ruleForm.spaceTime" />
+        </el-form-item>
         <el-form-item label="请求参数">
           <el-input v-model="data" type="textarea" disabled />
         </el-form-item>
@@ -94,6 +97,7 @@ export default defineComponent({
 
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
+      spaceTime: 3,
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
@@ -101,6 +105,7 @@ export default defineComponent({
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
+      spaceTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
@@ -251,16 +256,16 @@ export default defineComponent({
     }
 
     const getAllList = async () => {
-      await sleep(5000)
+      let spaceTime = ruleForm.spaceTime || 3
+      await sleep(spaceTime * 1000)
       let { status, list }: any = await getList(params.value)
-
       if (status) {
         gn.value++
         currentStatus.value = `当前下载进度：第 ${gn.value} 页,共 ${ruleForm.maxNum} 页`
         transList = [...list, ...transList]
         if(list.length === 0){
-          console.log('只有一页', transList.length)
-          currentStatus.value = `当前下载进度：本轮下载完成`
+          console.log('没有数据了，', transList.length)
+          currentStatus.value = `当前下载进度：第 ${gn.value} 页,本轮提前下载完成`
           downloadFile()
           return
         }
@@ -274,7 +279,7 @@ export default defineComponent({
         let maxNum: number = await getSyncStorage('maxNum')
         ruleForm.maxNum = maxNum || 5
         
-        if (gn.value <= ruleForm.maxNum) {
+        if (gn.value <= ruleForm.maxNum && props.onOff) {
           getAllList()
         } else {
           console.log('本轮拉取完成,共', transList.length)
@@ -284,36 +289,15 @@ export default defineComponent({
       } else {
         ruleForm.maxNum = 10
         getAllList()
-
-        // let newList = transList.map((item:any) => {
-        //     return {
-        //       ...item,
-        //       txnHistory:JSON.stringify(item.txnHistory)
-        //     }
-        //   })
-        //   const ws = utils.json_to_sheet(newList)
-        //   const wb = utils.book_new()
-        //   utils.book_append_sheet(wb, ws, 'Data')
-        //   writeFileXLSX(wb, 'SheetJSVueAoO.xlsx')
-
-        // 重置
-        // clearTimeout(timer)
-        // clearInterval(cutDownNumTimer)
-        // cutDownNum.value = ruleForm.intervalTime
-        // timer = setTimeout(() => {
-        //   download()
-        // }, ruleForm.intervalTime * 1000 || 20000)
-        // cutDownNumTimer = setInterval(() => {
-        //   cutDownNum.value--
-        //   if (cutDownNum.value < 0) {
-        //     clearInterval(cutDownNumTimer)
-        //   }
-        // }, 1000)
       }
     }
 
     const download = async () => {
-      if (!props.onOff) return
+      if (!props.onOff) {
+        clearTimeout(timer)
+        clearInterval(cutDownNumTimer)
+        return
+      }
       let navs: any = document.querySelectorAll('.primary-list li')
       currentStatus.value = null
       gn.value = 1
@@ -341,9 +325,13 @@ export default defineComponent({
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
+      let _spaceTime: number = await getSyncStorage('spaceTime')
       let maxNum: number = await getSyncStorage('maxNum')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 20
+      ruleForm.spaceTime = _spaceTime || 3
+
+      
       ruleForm.reportUrl = _reportUrl || ''
       ruleForm.maxNum = maxNum || 5
     })

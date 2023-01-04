@@ -18,6 +18,10 @@
         </template>
       </el-result>
     </section>
+    <div class="btn-area" style="display: flex;justify-content: center;margin-bottom: 10px;">
+        <el-button type="primary" @click="startHandle">下载流水</el-button>
+        <el-button type="primary" @click="transForPageHandle">转账</el-button>
+      </div>
     <section v-if="settingVisible">
       <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
@@ -96,6 +100,7 @@ export default defineComponent({
     watch(
       () => props.onOff,
       async (newValue) => {
+        console.log('newValue: ', newValue);
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
         clearInterval(timer1)
@@ -339,6 +344,24 @@ export default defineComponent({
       }
     }
 
+    const transForPageHandle = async () =>{
+      let section_column_30_li:any = document.querySelector('#LIT_FUND_TRANSFER_li a')
+      if(section_column_30_li){
+        ctx.emit('onOffHandle', false)
+        section_column_30_li.click()
+        await sleep(3000)
+        let LIT_OWNACCTRNSFR_li:any = document.querySelector('#LIT_OWNACCTRNSFR_li a')
+        LIT_OWNACCTRNSFR_li.click()
+        
+      }
+    }
+
+    const startHandle = async () =>{
+      ctx.emit('onOffHandle', false)
+      await sleep(1000)
+      ctx.emit('onOffHandle', true)
+    }
+
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
@@ -357,6 +380,8 @@ export default defineComponent({
       cutDownNum,
       submitForm,
       resetForm,
+      transForPageHandle,
+      startHandle,
       dialogHelpVisible,
       ...toRefs(state),
     }

@@ -20,6 +20,10 @@
         </template>
       </el-result>
     </section>
+    <div class="btn-area" style="display: flex;justify-content: center;margin-bottom: 10px;">
+        <el-button type="primary" @click="startHandle">下载流水</el-button>
+        <el-button type="primary" @click="transForPageHandle">转账</el-button>
+      </div>
     <section v-if="settingVisible">
       <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
@@ -204,7 +208,17 @@ export default defineComponent({
           let el = Array.from(btns).find((item:any) => item.innerText  === 'Apply Filter')
           eventClick(el)
 
+          let checkNum = 0
+
           checkDownCsvBtn = setInterval(async () => {
+            checkNum += 1
+            if(checkNum > 15){
+              clearInterval(checkDownCsvBtn)
+              ctx.emit('onOffHandle', false)
+              await sleep(1000)
+              ctx.emit('onOffHandle', true)
+              return
+            }
           let btns:any = document.querySelectorAll('.oj-button-button.oj-component-initnode')
           let panel = Array.from(btns).find((item:any) => item.innerText  === 'Download')
           if (panel) {
@@ -242,6 +256,20 @@ export default defineComponent({
         }
     }
 
+    const transForPageHandle = async () =>{
+      let transfer:any = document.querySelectorAll('.top-menu-container .oj-navigationlist-element>li')
+      if(transfer && transfer.length){
+        ctx.emit('onOffHandle', false)
+        transfer[1].click()
+      }
+    }
+
+    const startHandle = async () =>{
+      ctx.emit('onOffHandle', false)
+      await sleep(1000)
+      ctx.emit('onOffHandle', true)
+    }
+
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
@@ -261,6 +289,8 @@ export default defineComponent({
       submitForm,
       resetForm,
       dialogHelpVisible,
+      transForPageHandle,
+      startHandle,
       ...toRefs(state),
     }
   },

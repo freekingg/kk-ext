@@ -34,10 +34,8 @@ export default defineManifest({
     "webRequest",
     "declarativeNetRequest",
     "tabs",
+    "activeTab",
     "storage",
     "contextMenus"
-  ],
-  "host_permissions": [
-    "*://*.axisbank.co.in/*",
   ]
 })

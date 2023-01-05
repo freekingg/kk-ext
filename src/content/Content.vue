@@ -38,6 +38,7 @@ import Boi from './components/Boi.vue'
 import Esaf from './components/Esaf.vue'
 import EquitasCor from './components/EquitasCor.vue'
 import Freecharge from './components/Freecharge.vue'
+import Amazon from './components/Amazon.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -60,6 +61,7 @@ export default defineComponent({
     Esaf,
     EquitasCor,
     Freecharge,
+    Amazon,
     View,
     ElIcon,
   },
@@ -157,7 +159,11 @@ export default defineComponent({
         type: 'Freecharge',
         typeName: 'freecharge',
         matches: ['www.freecharge.in'],
-        // injectJs: ['js/xlsx.full.min.js'],
+      },
+      {
+        type: 'Amazon',
+        typeName: 'amazon',
+        matches: ['www.amazon.in'],
       },
     ]
 

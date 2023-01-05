@@ -15,7 +15,8 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.contextMenus.onClicked.addListener((menu)=>{
   getCurrentTab().then((tab)=>{
     if(tab && tab.id){
-      chrome.tabs.duplicate(tab.id);
+      // chrome.tabs.duplicate(tab.id);
+      chrome.windows.create({url: tab.url, type: "popup"});
     }
     });
 })

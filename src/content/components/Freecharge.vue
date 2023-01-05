@@ -2,13 +2,13 @@
   <div id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px; display: inline-block">此网站支持接口模式下载 <br /></p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <span>{{ currentStatus }}</span>
+          <p>{{ currentStatus }}</p>
+          <p style="color: darkgoldenrod;">{{ current2Status }}</p>
           <img :src="runGifSrc" v-if="onOff" />
         </template>
         <!-- <template #sub-title>
@@ -35,15 +35,18 @@
         <el-form-item label="下载页数" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.maxNum" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
+        <!-- <el-form-item label="上报接口" prop="reportUrl">
           <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="请求间隔(s)" prop="spaceTime">
           <el-input type="number" v-model="ruleForm.spaceTime" />
         </el-form-item>
-        <el-form-item label="请求参数">
-          <el-input v-model="data" type="textarea" disabled />
+        <el-form-item label="同时下载全流水">
+          <el-checkbox v-model="ruleForm.downloadAll" label="是" size="large" />
         </el-form-item>
+        <!-- <el-form-item label="请求参数">
+          <el-input v-model="data" type="textarea" disabled />
+        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -60,15 +63,9 @@ import useStorage from '../useStorage'
 import { sleep, Timer, eventClick } from '../../utils/index'
 import { writeFileXLSX, utils } from 'xlsx'
 
-let timer: any = null
-let timer1: any = null
-let timer2: any = null
-let timer3: any = null
-let timer4: any = null
-let timer5: any = null
+let downloadTimer: any = null
+let downloadTimerTotal: any = null
 let cutDownNumTimer: any = null
-let checkDownCsvBtn: any = null
-let transList: any = []
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
   props: {
@@ -79,21 +76,25 @@ export default defineComponent({
   setup(props: any, ctx) {
     const cutDownNum = ref(20)
     const settingVisible = ref(false)
-    const params = ref({})
     const currentStatus = ref(<any>'')
-    // const transList = ref(<any>[])
+    const current2Status = ref(<any>'')
 
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
     const state = reactive({
-      currentTab: null,
+      currentTab: 1,
       files: {},
+      pageNum:1,
+      pageNumTotal:1,
+      params:{},
+      paramsTotal:{},
+      recordList:<any>[],
+      recordListTotal:<any>[]
     })
 
     const { setSyncStorage, getSyncStorage } = useStorage()
 
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
-    const gn = ref(1)
 
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
@@ -102,6 +103,7 @@ export default defineComponent({
       name: 'Hello',
       data: {},
       maxNum: 5,
+      downloadAll: true,
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
@@ -112,19 +114,22 @@ export default defineComponent({
     watch(
       () => props.onOff,
       async (newValue) => {
-        clearTimeout(timer)
+        clearTimeout(downloadTimer)
+        clearTimeout(downloadTimerTotal)
         clearInterval(cutDownNumTimer)
-        clearInterval(timer1)
-        clearInterval(timer2)
-        clearInterval(timer3)
-        clearInterval(timer4)
-        clearInterval(timer5)
-        transList = []
-        gn.value = 1
+        state.recordList = []
+        state.recordListTotal = []
+        state.pageNum = 1
+        state.pageNumTotal = 1
         if (newValue) {
           let profile: any = document.querySelector('.profile-details')
           if (profile) {
             download()
+            if(ruleForm.downloadAll){
+              setTimeout(() => {
+                downloadTotal()
+             }, 5000);
+            }
             ctx.emit('onOffHandle', true)
             return
           }
@@ -133,19 +138,12 @@ export default defineComponent({
             type: 'error',
           })
           ctx.emit('onOffHandle', false)
-        } else if (!newValue) {
+        } else {
           setSyncStorage({ onOff: false })
           ElMessage({
             message: '[任务已经关闭].',
             type: 'info',
           })
-        } else {
-          setSyncStorage({ onOff: false })
-          ElMessage({
-            message: '[启动失败]：请下载一次流水操作csv.',
-            type: 'error',
-          })
-          ctx.emit('onOffHandle', false)
         }
       },
     )
@@ -227,8 +225,8 @@ export default defineComponent({
       })
     }
 
-    const downloadFile = async (flag: Boolean = true) => {
-      let newList = transList.map((item: any) => {
+    const downloadFile = async (list:any=[], flag: Boolean = true) => {
+      let newList = list.map((item: any) => {
         return {
           ...item,
           txnHistory: JSON.stringify(item.txnHistory),
@@ -238,39 +236,37 @@ export default defineComponent({
       const wb = utils.book_new()
       utils.book_append_sheet(wb, ws, 'Data')
       writeFileXLSX(wb, 'FreechargeSheet.xlsx')
-      if (flag) {
-        // 重置
-        clearTimeout(timer)
-        clearInterval(cutDownNumTimer)
-        cutDownNum.value = ruleForm.intervalTime
-        timer = setTimeout(() => {
-          download()
-        }, ruleForm.intervalTime * 1000 || 20000)
-        cutDownNumTimer = setInterval(() => {
-          cutDownNum.value--
-          if (cutDownNum.value < 0) {
-            clearInterval(cutDownNumTimer)
-          }
-        }, 1000)
-      }
     }
 
     const getAllList = async () => {
       let spaceTime = ruleForm.spaceTime || 3
       await sleep(spaceTime * 1000)
-      let { status, list }: any = await getList(params.value)
+      let { status, list }: any = await getList(state.params)
       if (status) {
-        gn.value++
-        currentStatus.value = `当前下载进度：第 ${gn.value} 页,共 ${ruleForm.maxNum} 页`
-        transList = [...list, ...transList]
+        state.pageNum++
+        currentStatus.value = `实时下载进度：第 ${state.pageNum} 页,共 ${ruleForm.maxNum} 页`
+        state.recordList = [...list, ...state.recordList]
         if(list.length === 0){
-          console.log('没有数据了，', transList.length)
-          currentStatus.value = `当前下载进度：第 ${gn.value} 页,本轮提前下载完成`
-          downloadFile()
+          console.log('没有数据了，', state.recordList.length)
+          currentStatus.value = `实时下载进度：第 ${state.pageNum} 页,本轮提前下载完成`
+          downloadFile(state.recordList)
+          // 重置
+          clearTimeout(downloadTimer)
+          clearInterval(cutDownNumTimer)
+          cutDownNum.value = ruleForm.intervalTime
+          downloadTimer = setTimeout(() => {
+            download()
+          }, ruleForm.intervalTime * 1000 || 20000)
+          cutDownNumTimer = setInterval(() => {
+            cutDownNum.value--
+            if (cutDownNum.value < 0) {
+              clearInterval(cutDownNumTimer)
+            }
+          }, 1000)
           return
         }
         let last = list[list.length - 1]
-        params.value = {
+        state.params = {
           lastGlobalTxnId: last.globalTxnId,
           lastGlobalTxnType: last.globalTxnType,
         }
@@ -279,12 +275,25 @@ export default defineComponent({
         let maxNum: number = await getSyncStorage('maxNum')
         ruleForm.maxNum = maxNum || 5
         
-        if (gn.value <= ruleForm.maxNum && props.onOff) {
+        if (state.pageNum <= ruleForm.maxNum && props.onOff) {
           getAllList()
         } else {
-          console.log('本轮拉取完成,共', transList.length)
-          currentStatus.value = `当前下载进度：本轮下载完成`
-          downloadFile()
+          console.log('本轮拉取完成,共', state.recordList.length)
+          currentStatus.value = `实时下载进度：本轮下载完成`
+          downloadFile(state.recordList)
+          // 重置
+          clearTimeout(downloadTimer)
+          clearInterval(cutDownNumTimer)
+          cutDownNum.value = ruleForm.intervalTime
+          downloadTimer = setTimeout(() => {
+            download()
+          }, ruleForm.intervalTime * 1000 || 20000)
+          cutDownNumTimer = setInterval(() => {
+            cutDownNum.value--
+            if (cutDownNum.value < 0) {
+              clearInterval(cutDownNumTimer)
+            }
+          }, 1000)
         }
       } else {
         ruleForm.maxNum = 10
@@ -292,25 +301,66 @@ export default defineComponent({
       }
     }
 
+    const getTotalList = async () => {
+      let spaceTime = ruleForm.spaceTime || 3
+      await sleep(spaceTime * 1000)
+      let { status, list }: any = await getList(state.paramsTotal)
+      if (status) {
+        state.pageNumTotal++
+        current2Status.value = `总流水下载进度：第 ${state.pageNumTotal} 页`
+        state.recordListTotal = [...list, ...state.recordListTotal]
+        if(list.length === 0){
+          console.log(`全流水没数据了,共${state.pageNumTotal}页`, state.recordListTotal.length)
+          current2Status.value = `总流水下载完成：共下载 ${state.pageNumTotal} 页`
+          downloadFile(state.recordListTotal)
+          // 重置
+          clearTimeout(downloadTimerTotal)
+          downloadTimerTotal = setTimeout(() => {
+            downloadTotal()
+          }, ruleForm.intervalTime * 1000 || 20000)
+          return
+        }
+        let last = list[list.length - 1]
+        state.paramsTotal = {
+          lastGlobalTxnId: last.globalTxnId,
+          lastGlobalTxnType: last.globalTxnType,
+        }
+
+        let maxNum: number = 500
+        if (state.pageNumTotal <= maxNum && props.onOff && ruleForm.downloadAll) {
+          getTotalList()
+        } else {
+          console.log(`全流水下载完成,共${state.pageNumTotal}页`, state.recordListTotal.length)
+          current2Status.value = `总流水下载完成：第 ${state.pageNumTotal} 页`
+          downloadFile(state.recordListTotal)
+          // 重置
+        clearTimeout(downloadTimerTotal)
+        downloadTimerTotal = setTimeout(() => {
+          downloadTotal()
+        }, ruleForm.intervalTime * 1000 || 20000)
+        }
+      } else {
+        getTotalList()
+      }
+    }
+
     const download = async () => {
       if (!props.onOff) {
-        clearTimeout(timer)
+        clearTimeout(downloadTimer)
         clearInterval(cutDownNumTimer)
         return
       }
       let navs: any = document.querySelectorAll('.primary-list li')
       currentStatus.value = null
-      gn.value = 1
-      transList = []
-
+      state.pageNum = 1
+      state.recordList = []
       if (navs && navs.length) {
-        currentStatus.value = `当前下载进度：第 ${gn.value} 页,共 ${ruleForm.maxNum} 页`
+        currentStatus.value = `实时下载进度：第 ${state.pageNum} 页,共 ${ruleForm.maxNum} 页`
         let { status, list }: any = await getList()
         if (status && list.length) {
-          transList = [...list]
-          // downloadFile(false)
+          state.recordList = [...list]
           let last = list[list.length - 1]
-          params.value = {
+          state.params = {
             lastGlobalTxnId: last.globalTxnId,
             lastGlobalTxnType: last.globalTxnType,
           }
@@ -322,18 +372,49 @@ export default defineComponent({
       }
     }
 
+    const downloadTotal = async () => {
+      if (!props.onOff || !ruleForm.downloadAll) {
+        clearTimeout(downloadTimerTotal)
+        return
+      }
+      let navs: any = document.querySelectorAll('.primary-list li')
+      current2Status.value = null
+      state.pageNumTotal = 1
+      state.recordListTotal = []
+
+      if (navs && navs.length) {
+        current2Status.value = `总流水下载进度：第 ${state.pageNumTotal} 页`
+        let { status, list }: any = await getList()
+        if (status && list.length) {
+          state.recordListTotal = [...list]
+          let last = list[list.length - 1]
+          state.paramsTotal = {
+            lastGlobalTxnId: last.globalTxnId,
+            lastGlobalTxnType: last.globalTxnType,
+          }
+          getTotalList()
+        } else {
+          await sleep(3000)
+          downloadTotal()
+        }
+      }
+    }
+
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _spaceTime: number = await getSyncStorage('spaceTime')
       let maxNum: number = await getSyncStorage('maxNum')
       let _reportUrl: any = await getSyncStorage('reportUrl')
-      ruleForm.intervalTime = _intervalTime || 20
-      ruleForm.spaceTime = _spaceTime || 3
+      let downloadAll: any = await getSyncStorage('downloadAll')
+      console.log('downloadAll: ', downloadAll);
 
       
+      ruleForm.intervalTime = _intervalTime || 20
+      ruleForm.spaceTime = _spaceTime || 3
       ruleForm.reportUrl = _reportUrl || ''
       ruleForm.maxNum = maxNum || 5
+      ruleForm.downloadAll = downloadAll ? true : false
     })
     return {
       settingVisible,
@@ -347,6 +428,7 @@ export default defineComponent({
       submitForm,
       resetForm,
       currentStatus,
+      current2Status,
       dialogHelpVisible,
       ...toRefs(state),
     }

@@ -18,10 +18,10 @@
         </template>
       </el-result>
     </section>
-    <div class="btn-area" style="display: flex;justify-content: center;margin-bottom: 10px;">
-        <el-button type="primary" @click="startHandle">下载流水</el-button>
-        <el-button type="primary" @click="transForPageHandle">转账</el-button>
-      </div>
+    <div class="btn-area" style="display: flex; justify-content: center; margin-bottom: 10px">
+      <el-button type="primary" @click="startHandle">下载流水</el-button>
+      <el-button type="primary" @click="transForPageHandle">转账</el-button>
+    </div>
     <section v-if="settingVisible">
       <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
@@ -100,7 +100,7 @@ export default defineComponent({
     watch(
       () => props.onOff,
       async (newValue) => {
-        console.log('newValue: ', newValue);
+        console.log('newValue: ', newValue)
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
         clearInterval(timer1)
@@ -170,7 +170,7 @@ export default defineComponent({
         nav1.click()
         timer1 = setInterval(async () => {
           checkNum.value += 1
-          if(checkNum.value > 15){
+          if (checkNum.value > 15) {
             clearTimeout(timer)
             clearInterval(cutDownNumTimer)
             clearInterval(timer1)
@@ -194,7 +194,7 @@ export default defineComponent({
                 return
               }
               checkNum.value += 1
-              if(checkNum.value > 15){
+              if (checkNum.value > 15) {
                 clearTimeout(timer)
                 clearInterval(timer1)
                 clearInterval(timer2)
@@ -220,7 +220,7 @@ export default defineComponent({
                     return
                   }
                   checkNum.value += 1
-                  if(checkNum.value > 15){
+                  if (checkNum.value > 15) {
                     clearTimeout(timer)
                     clearInterval(timer1)
                     clearInterval(timer2)
@@ -243,7 +243,7 @@ export default defineComponent({
                         return
                       }
                       checkNum.value += 1
-                      if(checkNum.value > 15){
+                      if (checkNum.value > 15) {
                         clearTimeout(timer)
                         clearInterval(timer1)
                         clearInterval(timer2)
@@ -265,7 +265,7 @@ export default defineComponent({
                             return
                           }
                           checkNum.value += 1
-                          if(checkNum.value > 15){
+                          if (checkNum.value > 15) {
                             clearTimeout(timer)
                             clearInterval(timer1)
                             clearInterval(timer2)
@@ -295,15 +295,22 @@ export default defineComponent({
                             element_button_3.click()
                             await sleep(3000)
                             let popup_content: any = document.querySelector('#popup_content')
-                            if(popup_content){
-                              clearTimeout(timer)
-                              clearInterval(timer1)
-                              clearInterval(timer2)
-                              clearInterval(timer3)
-                              clearInterval(timer4)
-                              clearInterval(timer5)
-                              ctx.emit('onOffHandle', false)
-                              return
+                            if (popup_content) {
+                              let popup_ok: any = document.querySelector('#popup_ok')
+                              if (popup_ok) {
+                                popup_ok.click()
+                              }
+                            }
+                            await sleep(1000)
+
+                            let waitRow:any = document.querySelectorAll('#grid_row_4_download_status_main_div:not(.dispnone)')
+                            if(waitRow.length){
+                              let ls:any = document.querySelectorAll('#grid_row_4_download_status_main_div:not(.dispnone) #fgp_downloadstatusList_ul li:not(.dispnone)')
+                              let statuxDom:any = ls[0].querySelector('span span:nth-child(3) p')
+                              if(statuxDom && statuxDom.innerText === 'Completed'){
+                                statuxDom.click()
+                                await sleep(1000)
+                              }
                             }
                             // 重置
                             clearTimeout(timer)
@@ -312,17 +319,12 @@ export default defineComponent({
                             cutDownNum.value = ruleForm.intervalTime
                             timer = setTimeout(() => {
                               let popup_content: any = document.querySelector('#popup_content')
-                            if(popup_content){
-                              clearTimeout(timer)
-                              clearInterval(cutDownNumTimer)
-                              clearInterval(timer1)
-                              clearInterval(timer2)
-                              clearInterval(timer3)
-                              clearInterval(timer4)
-                              clearInterval(timer5)
-                              ctx.emit('onOffHandle', false)
-                              return
-                            }
+                              if (popup_content) {
+                                let popup_ok: any = document.querySelector('#popup_ok')
+                                if (popup_ok) {
+                                  popup_ok.click()
+                                }
+                              }
                               download()
                             }, ruleForm.intervalTime * 1000 || 20000)
                             cutDownNumTimer = setInterval(() => {
@@ -344,19 +346,18 @@ export default defineComponent({
       }
     }
 
-    const transForPageHandle = async () =>{
-      let section_column_30_li:any = document.querySelector('#LIT_FUND_TRANSFER_li a')
-      if(section_column_30_li){
+    const transForPageHandle = async () => {
+      let section_column_30_li: any = document.querySelector('#LIT_FUND_TRANSFER_li a')
+      if (section_column_30_li) {
         ctx.emit('onOffHandle', false)
         section_column_30_li.click()
         await sleep(3000)
-        let LIT_OWNACCTRNSFR_li:any = document.querySelector('#LIT_OWNACCTRNSFR_li a')
+        let LIT_OWNACCTRNSFR_li: any = document.querySelector('#LIT_OWNACCTRNSFR_li a')
         LIT_OWNACCTRNSFR_li.click()
-        
       }
     }
 
-    const startHandle = async () =>{
+    const startHandle = async () => {
       ctx.emit('onOffHandle', false)
       await sleep(1000)
       ctx.emit('onOffHandle', true)

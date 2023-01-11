@@ -39,6 +39,7 @@ import Esaf from './components/Esaf.vue'
 import EquitasCor from './components/EquitasCor.vue'
 import Freecharge from './components/Freecharge.vue'
 import Amazon from './components/Amazon.vue'
+import Bobi from './components/Bobi.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -62,6 +63,7 @@ export default defineComponent({
     EquitasCor,
     Freecharge,
     Amazon,
+    Bobi,
     View,
     ElIcon,
   },
@@ -164,6 +166,11 @@ export default defineComponent({
         type: 'Amazon',
         typeName: 'amazon',
         matches: ['www.amazon.in'],
+      },
+      {
+        type: 'Bobi',
+        typeName: 'bobi',
+        matches: ['feba.bobibanking.com'],
       },
     ]
 

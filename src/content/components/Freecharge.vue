@@ -32,7 +32,7 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="下载页数" prop="intervalTime">
+        <el-form-item label="下载页数" prop="maxNum">
           <el-input type="number" v-model="ruleForm.maxNum" />
         </el-form-item>
         <!-- <el-form-item label="上报接口" prop="reportUrl">
@@ -108,6 +108,7 @@ export default defineComponent({
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
       spaceTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
+      maxNum: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
@@ -271,9 +272,13 @@ export default defineComponent({
           lastGlobalTxnType: last.globalTxnType,
         }
 
-
-        let maxNum: number = await getSyncStorage('maxNum')
+        let maxNum: number = 5
+       try {
+        maxNum = await getSyncStorage('maxNum')
         ruleForm.maxNum = maxNum || 5
+       } catch (error) {
+        ruleForm.maxNum = 5
+       }
         
         if (state.pageNum <= ruleForm.maxNum && props.onOff) {
           getAllList()
@@ -404,7 +409,14 @@ export default defineComponent({
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _spaceTime: number = await getSyncStorage('spaceTime')
-      let maxNum: number = await getSyncStorage('maxNum')
+      let maxNum: number = 5
+      try {
+        maxNum = await getSyncStorage('maxNum')
+      } catch (error) {
+        console.log('error: ', error);
+        maxNum = 5
+      }
+      console.log('maxNum: ', maxNum);
       let _reportUrl: any = await getSyncStorage('reportUrl')
       let downloadAll: any = await getSyncStorage('downloadAll')
       console.log('downloadAll: ', downloadAll);

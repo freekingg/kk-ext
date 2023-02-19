@@ -39,9 +39,9 @@
       </el-form>
     </section>
     <div class="btn-area" style="display: flex;justify-content: center;margin-bottom: 10px;">
-        <el-button type="primary" @click="startHandle">下载流水</el-button>
-        <el-button type="primary" @click="transForPageHandle">转账</el-button>
-      </div>
+      <el-button type="primary" @click="startHandle">下载流水</el-button>
+      <el-button type="primary" @click="transForPageHandle">转账</el-button>
+    </div>
     <el-dialog v-model="dialogHelpVisible" title="Tips" width="30%">
       <div>
         <strong>使用方法</strong>
@@ -106,6 +106,7 @@ export default defineComponent({
     watch(
       () => props.onOff,
       (newValue) => {
+        console.log('newValue: ', newValue);
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
         clearInterval(checkDownTimer)
@@ -148,7 +149,7 @@ export default defineComponent({
 
     // 检查流水页面
     const watchBillPage = () => {
-      let HREF_Space: any = document.querySelector('#HREF_Space')
+      let HREF_Space: any = document.querySelector('.headertext_name')
       if (HREF_Space) {
         return true
       } else {
@@ -179,7 +180,7 @@ export default defineComponent({
     const checkBlockOverlay = () => {
       return new Promise((resolve) => {
         let timer = setInterval(() => {
-          let blockOverlay: any = document.querySelector('.blockOverlay')
+          let blockOverlay: any = document.querySelector('.blockUI')
           if (!blockOverlay) {
             clearInterval(timer)
             resolve(true)
@@ -196,59 +197,49 @@ export default defineComponent({
       clearInterval(checkLiushuiPage)
       clearInterval(checkoutBlockOverlayTimer)
 
+      await checkBlockOverlay()
+
       const liushuiHandle = async () => {
         //打开条件搜索框
-        let filterIcon: any = document.getElementById(
-          'PageConfigurationMaster_COAUX3W__1:SearchPanel_Stage3_Extended_midAligned19.SubSection1.collapsibleImage',
-        )
+        let filterIcon: any = document.querySelector('input[name="TransactionHistoryFG.FROM_TXN_DATE_submit"]+.picker-icon')
+        await sleep(1000)
         filterIcon.click()
         await sleep(1000)
 
         // 选择日期
-        let dayDom: any = document.getElementById(
-          'PageConfigurationMaster_COAUX3W__1:SearchPanel_Stage3_Extended_midAligned19.Rb5.C1',
-        )
-        let dayBtn: any = dayDom.querySelector('input')
+        let dayBtn: any = document.querySelector('.picker__today')
         dayBtn.click()
         await sleep(500)
 
-        // 选择日期下拉
-        let dayDom2: any = document.getElementById(
-          'PageConfigurationMaster_COAUX3W__1:SearchPanel_Stage3_Extended_midAligned19.Rb6.C1',
-        )
-        let dayBtn2: any = dayDom2.querySelector('.icon-dropdown.autocomplete-icon')
-        dayBtn2.click()
+        let enterBtn: any = document.querySelector('.picker__close')
+        enterBtn.click()
         await sleep(500)
-
-        let ss: any = document.querySelectorAll('.autocomplete-values-list')
-        let lis = ss[5].querySelectorAll('li')
-        // let indexs = Array.from(lis).findIndex((item: any) => item.innerText === 'Last 1 Month') //Today Last 1 Month
-        let indexs = Array.from(lis).findIndex((item: any) => item.innerText === 'Today') //Today Last 1 Month
-        lis[indexs].click()
-        await sleep(500)
+        
 
         // 点击查询按钮
-        let b: any = document.getElementById(
-          'PageConfigurationMaster_COAUX3W__1:SearchPanel_Stage3_Extended_midAligned19.Rb13.C5',
-        )
-        eventClick(b.querySelector('i'))
+        let b: any = document.querySelector('input[name="Action.SEARCH"]')
+        b.click()
         await sleep(3000)
 
         
         checkoutBlockOverlayTimer = setInterval(() => {
-          let blockOverlay: any = document.querySelector('.blockOverlay')
+          let blockOverlay: any = document.querySelector('.blockUI')
           if (!blockOverlay) {
             clearInterval(checkoutBlockOverlayTimer)
 
             // 点击下载按钮
-            let xlsBtn: any = document.querySelector('.icon-HW_formbtn_img_xls input')
-            xlsBtn.click()
+            let xlsBtn: any = document.querySelector('input[title="Download as XLS"]')
+            if(xlsBtn){
+              xlsBtn.click()
+            }
 
             // 重置
             clearTimeout(timer)
             clearInterval(cutDownNumTimer)
             cutDownNum.value = ruleForm.intervalTime
             timer = setTimeout(() => {
+              // let parent_DASHAT:any = document.querySelector('#parent_DASHAT a')
+              // parent_DASHAT.click()
               download()
             }, ruleForm.intervalTime * 1000 || 20000)
             cutDownNumTimer = setInterval(() => {
@@ -260,40 +251,23 @@ export default defineComponent({
           }
         }, 1000)
       }
+      await sleep(1000)
+
+      // let parent_DASHAT:any = document.querySelector('#parent_DASHAT a')
+      // parent_DASHAT.click()
 
       // 是否在流水界面
-      let AccountStatement: any = document.getElementById(
-        'PageConfigurationMaster_COAUX3W__1:PgHeading.Ra1.C2',
-      )
-      if (AccountStatement && AccountStatement.innerText === 'Account Statement') {
+      let AccountStatement: any = document.querySelector('input[name="Action.SEARCH"]')
+      let ac:any = document.querySelector('a[title="A/C Statement"]')
+      await sleep(1000)
+      if (AccountStatement) {
         // 流水界面
         liushuiHandle()
-      } else if (AccountStatement && AccountStatement.innerText === 'My Operative Accounts') {
-        let moreBtn: any = document.querySelector('.auto-width-dropdown.more')
-        moreBtn && moreBtn.click()
-        await sleep(500)
-
-        let menuSideArrowImageForMenuChoicess: any = document.querySelectorAll(
-          '.menuSideArrowImageForMenuChoices a',
-        )
-        menuSideArrowImageForMenuChoicess[0].click()
-
-        checkLiushuiPage = setInterval(() => {
-          let AccountStatement: any = document.getElementById(
-            'PageConfigurationMaster_COAUX3W__1:PgHeading.Ra1.C2',
-          )
-          if (AccountStatement && AccountStatement.innerText === 'Account Statement') {
-            clearInterval(checkLiushuiPage)
-            liushuiHandle()
-          }
-        }, 1000)
+      }else if(ac){
+        ac.click()
       } else {
-        let parent_CACTS: any = document.querySelector('#parent_CACTS .sub-container')
-        parent_CACTS.style.display = 'block'
-
-        let lis: any = document.querySelectorAll('#wrapper_CACTS #UL_CACTS li')
-        let lisa: any = lis[0].querySelector('a')
-        lisa.click()
+        let parent_DASHAT:any = document.querySelector('#parent_DASHAT a')
+        parent_DASHAT.click()
       }
     }
 
@@ -317,11 +291,14 @@ export default defineComponent({
       ctx.emit('onOffHandle', true)
     }
     const transForPageHandle = async () =>{
-      let transfer:any = document.querySelector('#parent_DASHAT a')
+      let transfer:any = document.querySelector('#ID_RTXNUI')
       if(transfer){
         setSyncStorage({ mode: 'transer' })
-        ctx.emit('onOffHandle', false)
         transfer.click()
+        await sleep(1000)
+        let transfer2:any = document.querySelector('#Make-Payments_Make-Payments')
+        ctx.emit('onOffHandle', false)
+        transfer2.click()
 
         // let checkoutTransTimer = setInterval(()=>{
         //   let lis:any = document.querySelectorAll('.stage3_menuIdTextlink li')

@@ -40,6 +40,8 @@ import EquitasCor from './components/EquitasCor.vue'
 import Freecharge from './components/Freecharge.vue'
 import Amazon from './components/Amazon.vue'
 import Bobi from './components/Bobi.vue'
+import Idbi from './components/Idbi.vue'
+import Icici from './components/Icici.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -64,6 +66,8 @@ export default defineComponent({
     Freecharge,
     Amazon,
     Bobi,
+    Idbi,
+    Icici,
     View,
     ElIcon,
   },
@@ -171,6 +175,16 @@ export default defineComponent({
         type: 'Bobi',
         typeName: 'bobi',
         matches: ['feba.bobibanking.com'],
+      },
+      {
+        type: 'Idbi',
+        typeName: 'IDBI saving',
+        matches: ['inet.idbibank.co.in'],
+      },
+      {
+        type: 'Icici',
+        typeName: 'Icici',
+        matches: ['cibnext.icicibank.com'],
       },
     ]
 

@@ -350,12 +350,13 @@ export default defineComponent({
     }
 
     const download = async () => {
+      console.log(props.onOff);
       if (!props.onOff) {
         clearTimeout(downloadTimer)
         clearInterval(cutDownNumTimer)
         return
       }
-      let navs: any = document.querySelectorAll('.primary-list li')
+      let navs: any = document.querySelectorAll('.primary-list a')
       currentStatus.value = null
       state.pageNum = 1
       state.recordList = []
@@ -382,7 +383,7 @@ export default defineComponent({
         clearTimeout(downloadTimerTotal)
         return
       }
-      let navs: any = document.querySelectorAll('.primary-list li')
+      let navs: any = document.querySelectorAll('.primary-list a')
       current2Status.value = null
       state.pageNumTotal = 1
       state.recordListTotal = []

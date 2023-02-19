@@ -268,6 +268,7 @@ export default defineComponent({
       //   console.log(state.currentTab);
       // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
+      console.log('_intervalTime: ', _intervalTime);
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 30
       ruleForm.reportUrl = _reportUrl || ''

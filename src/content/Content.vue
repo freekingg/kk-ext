@@ -42,6 +42,7 @@ import Amazon from './components/Amazon.vue'
 import Bobi from './components/Bobi.vue'
 import Idbi from './components/Idbi.vue'
 import Icici from './components/Icici.vue'
+import IdfcCor from './components/IdfcCor.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -68,6 +69,7 @@ export default defineComponent({
     Bobi,
     Idbi,
     Icici,
+    IdfcCor,
     View,
     ElIcon,
   },
@@ -186,14 +188,20 @@ export default defineComponent({
         typeName: 'Icici',
         matches: ['cibnext.icicibank.com'],
       },
+      {
+        type: 'IdfcCor',
+        typeName: 'Idfc Cor',
+        matches: ['my.idfcfirstbank.com'],
+        injectJs: ['js/idfc.js'],
+      },
     ]
 
     /**
      * 接收消息
      */
     const onMessage = (e: any) => {
-      console.log('content接收到了后台的消息', e)
       if (e.actionType) {
+        console.log('content接收到了后台的消息', e)
         state.data = JSON.stringify(e.data)
         if (e.actionType) {
           ElMessage({

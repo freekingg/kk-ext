@@ -21,6 +21,7 @@ export default defineManifest({
     {
       matches: ['*://*/*'],
       js: ['src/content/index.ts'],
+      "run_at": "document_end"
     },
   ],
   web_accessible_resources: [

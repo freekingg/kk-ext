@@ -162,6 +162,7 @@ export default defineComponent({
         type: 'EquitasCor',
         typeName: 'Equitas Cor',
         matches: ['inet.equitasbank.com'],
+        injectJs: ['js/EquitasCorp.js'],
       },
       {
         type: 'Freecharge',
@@ -202,6 +203,12 @@ export default defineComponent({
     const onMessage = (e: any) => {
       if (e.actionType) {
         console.log('content接收到了后台的消息', e)
+
+        if(e.actionType === 'equitas'){
+          state.data = JSON.stringify(e.data)
+          return
+        }
+
         state.data = JSON.stringify(e.data)
         if (e.actionType) {
           ElMessage({

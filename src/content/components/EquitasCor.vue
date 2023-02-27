@@ -1,12 +1,14 @@
 <template>
   <div id="kk-container">
-    <div style="display: flex; align-items: center; width: 350px">
+    <div style="width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px; display: inline-block">此网站下载流水需要在流水界面 <br /></p>
+      <p style="font-size: 14px">此网站支持接口下载流水 <br /></p>
+      <br />
+      <p style="font-size: 14px; color: red">一定要到达流水界面一次,才可以自动执行下载 <br /></p>
     </div>
-    <section class="run-status">
+    <section class="run-status" v-if="true">
       <!-- <img :src="runGifSrc"> -->
-      <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
+      <el-result icon="info" :title="onOff ? '运行中' : '未启动'">
         <template #icon>
           <img :src="runGifSrc" v-if="onOff" />
         </template>
@@ -18,10 +20,10 @@
         </template>
       </el-result>
     </section>
-    <div class="btn-area" style="display: flex; justify-content: center; margin-bottom: 10px">
+    <!-- <div class="btn-area" style="display: flex; justify-content: center; margin-bottom: 10px">
       <el-button type="primary" @click="startHandle">下载流水</el-button>
       <el-button type="primary" @click="transForPageHandle">转账</el-button>
-    </div>
+    </div> -->
     <section v-if="settingVisible">
       <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
@@ -35,11 +37,8 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
-          <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
-        <el-form-item label="请求参数">
-          <el-input v-model="data" type="textarea" disabled />
+        <el-form-item label="分页条数" prop="pgLimit">
+          <el-input type="number" v-model="ruleForm.pgLimit" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -50,19 +49,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
+import { defineComponent, ref, onMounted, toRaw, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
-import { sleep, Timer, eventClick } from '../../utils/index'
 let timer: any = null
-let timer1: any = null
-let timer2: any = null
-let timer3: any = null
-let timer4: any = null
-let timer5: any = null
+let delayTimer: any = null
 let cutDownNumTimer: any = null
-let checkDownCsvBtn: any = null
+
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
   props: {
@@ -85,12 +79,16 @@ export default defineComponent({
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
 
-    const ruleForm = reactive({
+    const ruleForm: any = reactive({
       intervalTime: 20, //爬取间隔时间
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
       accNumber: '', //accNumber
+      kk: null,
+      pgLimit: 500,
+      pgNum: 1,
+      dataList: [],
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
@@ -98,44 +96,261 @@ export default defineComponent({
     })
 
     watch(
-      () => props.onOff,
+      () => props.data,
       async (newValue) => {
-        console.log('newValue: ', newValue)
-        clearTimeout(timer)
-        clearInterval(cutDownNumTimer)
-        clearInterval(timer1)
-        clearInterval(timer2)
-        clearInterval(timer3)
-        clearInterval(timer4)
-        clearInterval(timer5)
-        if (newValue) {
-          let nav1: any = document.querySelector('li#Dashboard_li')
-          if (nav1) {
-            download()
-            ctx.emit('onOffHandle', true)
-            return
-          }
+        let newProps = JSON.parse(newValue)
+        console.log('newValue: ', newProps)
+        if (newProps.type === 'updatePaams') {
           ElMessage({
-            message: '请先登录...',
+            message: '请求参数已更新.可以进行下载了',
+            type: 'success',
+          })
+          ElMessage({
+            message: '请求参数已更新.可以进行下载了',
+            type: 'success',
+          })
+          ElMessage({
+            message: '请求参数已更新.可以进行下载了',
+            type: 'success',
+          })
+          ElMessage({
+            message: '请求参数已更新.可以进行下载了',
+            type: 'success',
+          })
+        }
+
+        if (newProps.type === 'error') {
+          ElMessage({
+            message: '出错了，请查看控制台或者刷新页面',
             type: 'error',
           })
-          ctx.emit('onOffHandle', false)
-        } else if (!newValue) {
-          setSyncStorage({ onOff: false })
           ElMessage({
-            message: '[任务已经关闭].',
-            type: 'info',
+            message: '出错了，请查看控制台或者刷新页面',
+            type: 'error',
           })
-        } else {
-          setSyncStorage({ onOff: false })
           ElMessage({
-            message: '[启动失败]：请下载一次流水操作csv.',
+            message: '出错了，请查看控制台或者刷新页面',
+            type: 'error',
+          })
+          ElMessage({
+            message: '出错了，请查看控制台或者刷新页面',
             type: 'error',
           })
           ctx.emit('onOffHandle', false)
         }
       },
     )
+
+    watch(
+      () => props.onOff,
+      async (newValue) => {
+        // console.log('newValue: ', newValue)
+        let kk = localStorage.getItem('kk')
+
+        clearTimeout(timer)
+        clearInterval(cutDownNumTimer)
+        clearInterval(delayTimer)
+
+        if (newValue) {
+          if (kk) {
+            // 构造数据
+            const cEvt = new CustomEvent('equitasEvent', {
+              detail: {
+                type: 'download',
+                data: toRaw(ruleForm),
+              },
+            })
+            document.dispatchEvent(cEvt)
+            ctx.emit('onOffHandle', true)
+            return
+          }
+          ElMessage({
+            message: '先点击到下载流水界面一次...',
+            type: 'error',
+          })
+          // 构造数据
+          const cEvt = new CustomEvent('equitasEvent', {
+            detail: {
+              type: 'stop',
+              data: toRaw(ruleForm),
+            },
+          })
+          document.dispatchEvent(cEvt)
+          ctx.emit('onOffHandle', false)
+        } else if (!newValue) {
+          ElMessage({
+            message: '[任务已经关闭].',
+            type: 'info',
+          })
+           // 构造数据
+           const cEvt = new CustomEvent('equitasEvent', {
+            detail: {
+              type: 'stop',
+              data: toRaw(ruleForm),
+            },
+          })
+          document.dispatchEvent(cEvt)
+        } else {
+          ElMessage({
+            message: '先点击到下载流水界面一次.',
+            type: 'error',
+          })
+          ctx.emit('onOffHandle', false)
+           // 构造数据
+           const cEvt = new CustomEvent('equitasEvent', {
+            detail: {
+              type: 'stop',
+              data: toRaw(ruleForm),
+            },
+          })
+          document.dispatchEvent(cEvt)
+        }
+      },
+    )
+
+    const getPage = () => {
+      const kkwin: any = window
+      let kk = localStorage.getItem('kk')
+      let local = null
+      if (kk) {
+        local = JSON.parse(kk)
+      }
+
+      var myDate = new Date()
+      function add(n: any) {
+        if (n <= 9) {
+          return `0${n}`
+        }
+        return n
+      }
+      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+      var myToday = add(myDate.getDate()) //获取当前日(1-31)
+      var myHour = add(myDate.getHours()) //获取当前日(1-31)
+      var myMillsi = add(myDate.getMilliseconds()) //获取当前日(1-31)
+      var mySecond = add(myDate.getSeconds()) //获取当前日(1-31)
+      let today = `${myYear}-${myMonth}-${myToday}`
+      let timestamp = `${today}T${myHour}:${myMillsi}:${mySecond}.607Z`
+
+      let req = {
+        appzillonHeader: {
+          appId: local.appId,
+          sessionId: local.sessionId,
+          deviceId: local.deviceId,
+          requestKey: local.requestKey,
+          userId: local.userId,
+          screenId: local.screenId,
+          status: 'success',
+          source: 'APPZILLON',
+          interfaceId: 'viewAccountStatement',
+          os: 'WEBCONTAINER',
+          origination: '',
+          ip: 'X.X.X.X',
+          browserName: 'Chrome',
+          browserVersion: '110',
+          requestID: 'ACC',
+          async: 'false',
+          clientNonce: local.clientNonce,
+          serverNonce: local.serverNonce,
+        },
+        appzillonBody: {
+          getDigiAccountStatementRequest: {
+            msgBdy: {
+              acctId: local.account_no,
+              frDt: '2023-02-05',
+              toDt: '2023-02-05',
+              lastBalanceAmount: 0,
+              nbOfTxns: ruleForm.pgLimit,
+              pgNum: ruleForm.pgNum,
+            },
+            msgHdr: {
+              msgId: 'SERVER_TXN_REF_NO',
+              cnvId: 'SERVER_TXN_REF_NO',
+              extRefId: 'SERVER_TXN_REF_NO',
+              bizObjId: 'SERVER_TXN_REF_NO',
+              appId: 'FOSC',
+              timestamp: timestamp,
+              authInfo: { brnchId: '9999', usrId: 'CORPUSER' },
+            },
+          },
+        },
+      }
+
+      console.log('分页请求数据', req)
+
+      fetch('https://inet.equitasbank.com/EquitasCorp/AppzillonWeb', {
+        headers: {
+          accept: '*/*',
+          'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+          actionid: 'SERVERREQUEST',
+          appid: local.appId,
+          'content-type': 'application/json; charset=UTF-8',
+          owasp_csrftoken: localStorage.getItem('csrf'),
+          requestkey: local.appId,
+          screenid: 'Sa_AccStatement',
+          'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "Google Chrome";v="110"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin',
+          sessionidfromhttp: localStorage.getItem('sessionidfromhttp'),
+          signedin: '',
+          'x-requested-with': 'XMLHttpRequest',
+        } as any,
+        referrer: 'https://inet.equitasbank.com/EquitasCorp/',
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        body: kkwin.kencryptRequest(JSON.stringify(req)),
+        // "body": "8Ykx1JY1anuoeCvUAXrWfg==~P/lAHmjZ3UYptH5+iA/ToCcaBUi8KpdyeZwN5POpw1WtZFW8rWJqfw2YTfaPcegLE3WjbmSTX+yHSH7gDX1pGot5ReEq7ncnfagV4f9YTCYL3PgI+Gi/CmrPksp5B9csFxtCUikuTO+gspRrG7hrp8x3pFgiYdfAHqq3oSW2b4jw+FMDjIp5H2lrxkLV0OPzT/ln2ivJSnVfmZqT7G3G02+cf1wDTF1qLOSFL58gv6soATVSAaPcNF+GrcLo3mo1PXXq3IvSJvJc9Qmo0Lx4hGiR0Fz7bnpBgUiKjgn04HO8SLvGp9qVVcQEJj5jvNDshz3UOHnKbu330IO+x2zkRaL8nR4A8XnsWphvbtYKW9PduCuVE8o0Hz8dGhqiyzCU7TUNG6gOjcZul1younUcVxq1zxhnrUEkSAm02l5hJI8lc9O6es8Yxmpp2d6JqaVLULOieYf68TvC+Uo6uaHPtlZJo1JLvs1sE9CrPxXDcNvIHOt5PPr8phXVR+0lp+eGW74b8efSFbdMgD5oJOGJsjtbgHHOevJvPg4KOuxj2lx8yQ3YIblxrRg0LBZHooWkgeYRa+yGblWWDOnO9+Q2RsqUGfMNyfr5NBjZ49d2eWrsPU/Mde5NMwI/FKuheF+gOs/z5NNyK03t8XHO2uqDo8fuKPg/aLvN4wZe4ClTIZoBUwAZ/fIzvLsaxydkse256RzRMMiXfjNlRwoVar6dL3+PmUp1ghX6f9IYPHICUZVqR/3ZmXzwAg9TO5p1PMLPTsXXi2jaJnUALN2AefwzBG367CUsEgjxDqI6Qljc6FVGuyzFrP0phVSY2gIQSyOq89nV+b9biVm21voDuD5gX40fBmaZKSbJXeDalDCtifJEQHD042loj0i0BEaEnbZuFTT96Hu3QTehqclfe9c8Ebg1rmIzpICm5NkTsfg9EL0oc7qr9xJZlkZ8DYV+vN9OLbo+11Gp234K/+nVEQR/b5n3TzeUFBbIdDGxAWHOIhiKxEiB1sddKNvuhSZe4iW2K7eA3L80Wt6lbKn46+IeIhU9/hFSo/y5AdMytnI9AYBL99LviyAzIfpQOsOWVFLIf3FCuxXgTWPjtg/reEwn207iZBUVw78K7Mpm2VXLkw9rp8iI1HmPfq/9gtqNgonZ4OP5YqiWE/relL9HVwtmcsuNFy014VuNxW4X1NZBdaoOHFJQSVQiDG46H4arVL/fNgO0Fl9OajlBOEv31aM3pQ==",
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+      })
+        .then((response) => response.text())
+        .then((res) => {
+          let result = kkwin.kdecryptResponse(res)
+          console.log('请求分页: ', result)
+          if (result) {
+            try {
+              let res = JSON.parse(result)
+              console.log('分页数据返回: ', res)
+              let LastPgInd = res.appzillonBody.getDigiAccountStatementResponse.msgBdy.LastPgInd
+              let account: any = res.appzillonBody.getDigiAccountStatementResponse.msgBdy.account
+              if (LastPgInd === 'N') {
+                ruleForm.pgNum += 1
+                if (account.length) {
+                  ruleForm.dataList.push(...account)
+                  setTimeout(() => {
+                    getPage()
+                  }, 1000)
+                }
+              } else {
+                ruleForm.dataList.push(...account)
+                let resultList = JSON.parse(JSON.stringify(ruleForm.dataList))
+                console.log('下载完成了', resultList)
+                kkwin.data2Excel(resultList)
+                ruleForm.pgNum = 1
+                ruleForm.dataList = []
+                checkNum.value = 0
+                cutDownNum.value = ruleForm.intervalTime
+                delayTimer = setTimeout(() => {
+                  console.log(`等待${ruleForm.intervalTime}秒再下一轮`)
+                  getPage()
+                }, ruleForm.intervalTime * 1000)
+                cutDownNumTimer = setInterval(() => {
+                  cutDownNum.value--
+                  if (cutDownNum.value < 0) {
+                    clearInterval(cutDownNumTimer)
+                  }
+                }, 1000)
+              }
+              // ToExcel(res.appzillonBody.getDigiAccountStatementResponse.file,(res.appzillonBody.getDigiAccountStatementResponse.fileName || 'equitas'))
+            } catch (error) {
+              console.log('error: ', error)
+            }
+          }
+        })
+    }
 
     const submitForm = async (formEl: any) => {
       if (!formEl) return
@@ -162,213 +377,13 @@ export default defineComponent({
       dialogHelpVisible.value = true
     }
 
-    const download = async () => {
-      if (!props.onOff) return
-      checkNum.value = 0
-      let nav1: any = document.querySelector('li#Dashboard_li')
-      if (nav1) {
-        nav1.click()
-        timer1 = setInterval(async () => {
-          checkNum.value += 1
-          if (checkNum.value > 15) {
-            clearTimeout(timer)
-            clearInterval(cutDownNumTimer)
-            clearInterval(timer1)
-            clearInterval(timer2)
-            clearInterval(timer3)
-            clearInterval(timer4)
-            clearInterval(timer5)
-            download()
-            return
-          }
-          let section_row_24_ul: any = document.querySelector('#section_row_24_ul')
-          if (section_row_24_ul) {
-            clearInterval(timer1)
-            checkNum.value = 0
-            await sleep(2000)
-            if (!props.onOff) return
-
-            timer5 = setInterval(async () => {
-              if (!props.onOff) {
-                clearInterval(timer5)
-                return
-              }
-              checkNum.value += 1
-              if (checkNum.value > 15) {
-                clearTimeout(timer)
-                clearInterval(timer1)
-                clearInterval(timer2)
-                clearInterval(timer3)
-                clearInterval(timer4)
-                clearInterval(timer5)
-                download()
-                return
-              }
-              let section_column_30_li: any = document.querySelector('#section_column_30_li')
-              if (section_column_30_li) {
-                clearInterval(timer5)
-                checkNum.value = 0
-                await sleep(2000)
-                if (!props.onOff) return
-                // section_column_30_li.click()
-                eventClick(document.querySelector('#section_column_30_li'))
-                await sleep(2000)
-                if (!props.onOff) return
-                timer4 = setInterval(async () => {
-                  if (!props.onOff) {
-                    clearInterval(timer4)
-                    return
-                  }
-                  checkNum.value += 1
-                  if (checkNum.value > 15) {
-                    clearTimeout(timer)
-                    clearInterval(timer1)
-                    clearInterval(timer2)
-                    clearInterval(timer3)
-                    clearInterval(timer4)
-                    clearInterval(timer5)
-                    download()
-                    return
-                  }
-                  let acctList__accountno_0: any = document.querySelector('#acctList__accountno_0')
-                  if (acctList__accountno_0) {
-                    clearInterval(timer4)
-                    checkNum.value = 0
-                    await sleep(2000)
-                    eventClick(document.querySelector('#acctList__accountno_0'))
-                    timer2 = setInterval(async () => {
-                      if (!props.onOff) {
-                        clearInterval(timer2)
-                        checkNum.value = 0
-                        return
-                      }
-                      checkNum.value += 1
-                      if (checkNum.value > 15) {
-                        clearTimeout(timer)
-                        clearInterval(timer1)
-                        clearInterval(timer2)
-                        clearInterval(timer3)
-                        clearInterval(timer4)
-                        clearInterval(timer5)
-                        download()
-                        return
-                      }
-                      let element_button_1: any = document.querySelector('#element_button_1')
-                      if (element_button_1) {
-                        clearInterval(timer2)
-                        checkNum.value = 0
-                        await sleep(3000)
-                        eventClick(document.querySelector('#element_button_1'))
-                        timer3 = setInterval(async () => {
-                          if (!props.onOff) {
-                            clearInterval(timer3)
-                            return
-                          }
-                          checkNum.value += 1
-                          if (checkNum.value > 15) {
-                            clearTimeout(timer)
-                            clearInterval(timer1)
-                            clearInterval(timer2)
-                            clearInterval(timer3)
-                            clearInterval(timer4)
-                            clearInterval(timer5)
-                            download()
-                            return
-                          }
-                          let report_duration_radio_option_today_lbl: any = document.querySelector(
-                            '#report_duration_radio_option_today_lbl',
-                          )
-                          if (report_duration_radio_option_today_lbl) {
-                            clearInterval(timer3)
-                            checkNum.value = 0
-                            eventClick(
-                              document.querySelector('#report_duration_radio_option_today_lbl'),
-                            )
-                            await sleep(3000)
-                            if (!props.onOff) {
-                              return
-                            }
-                            // let element_button_1: any = document.querySelector('#element_button_1')
-                            // element_button_1.click()
-
-                            let element_button_3: any = document.querySelector('#element_button_3')
-                            element_button_3.click()
-                            await sleep(3000)
-                            let popup_content: any = document.querySelector('#popup_content')
-                            if (popup_content) {
-                              let popup_ok: any = document.querySelector('#popup_ok')
-                              if (popup_ok) {
-                                popup_ok.click()
-                              }
-                            }
-                            await sleep(1000)
-
-                            let waitRow:any = document.querySelectorAll('#grid_row_4_download_status_main_div:not(.dispnone)')
-                            if(waitRow.length){
-                              let ls:any = document.querySelectorAll('#grid_row_4_download_status_main_div:not(.dispnone) #fgp_downloadstatusList_ul li:not(.dispnone)')
-                              let statuxDom:any = ls[0].querySelector('span span:nth-child(3) p')
-                              if(statuxDom && statuxDom.innerText === 'Completed'){
-                                statuxDom.click()
-                                await sleep(1000)
-                              }
-                            }
-                            // 重置
-                            clearTimeout(timer)
-                            clearInterval(cutDownNumTimer)
-                            checkNum.value = 0
-                            cutDownNum.value = ruleForm.intervalTime
-                            timer = setTimeout(() => {
-                              let popup_content: any = document.querySelector('#popup_content')
-                              if (popup_content) {
-                                let popup_ok: any = document.querySelector('#popup_ok')
-                                if (popup_ok) {
-                                  popup_ok.click()
-                                }
-                              }
-                              download()
-                            }, ruleForm.intervalTime * 1000 || 20000)
-                            cutDownNumTimer = setInterval(() => {
-                              cutDownNum.value--
-                              if (cutDownNum.value < 0) {
-                                clearInterval(cutDownNumTimer)
-                              }
-                            }, 1000)
-                          }
-                        }, 1000)
-                      }
-                    }, 1000)
-                  }
-                }, 1000)
-              }
-            }, 1000)
-          }
-        }, 1000)
-      }
-    }
-
-    const transForPageHandle = async () => {
-      let section_column_30_li: any = document.querySelector('#LIT_FUND_TRANSFER_li a')
-      if (section_column_30_li) {
-        ctx.emit('onOffHandle', false)
-        section_column_30_li.click()
-        await sleep(3000)
-        let LIT_OWNACCTRNSFR_li: any = document.querySelector('#LIT_OWNACCTRNSFR_li a')
-        LIT_OWNACCTRNSFR_li.click()
-      }
-    }
-
-    const startHandle = async () => {
-      ctx.emit('onOffHandle', false)
-      await sleep(1000)
-      ctx.emit('onOffHandle', true)
-    }
-
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
+      localStorage.removeItem('kk')
     })
     return {
       settingVisible,
@@ -381,8 +396,6 @@ export default defineComponent({
       cutDownNum,
       submitForm,
       resetForm,
-      transForPageHandle,
-      startHandle,
       dialogHelpVisible,
       ...toRefs(state),
     }

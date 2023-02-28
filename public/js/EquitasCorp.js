@@ -175,10 +175,10 @@ let getPage = () => {
         "getDigiAccountStatementRequest": {
           "msgBdy": {
             "acctId": local.account_no,
-            "frDt": today,
+            "frDt": ruleForm.date || today,
             // "frDt": "2023-02-05",
             // "toDt": "2023-02-05",
-            "toDt": today,
+            "toDt": ruleForm.date || today,
             "lastBalanceAmount": 0,
             "nbOfTxns": ruleForm.pgLimit,
             "pgNum": ruleForm.pgNum
@@ -233,11 +233,11 @@ let getPage = () => {
     if(result){
       try {
         let res = JSON.parse(result)
-        console.log('分页数据返回: ', res);
+        console.log('分页数据返回: 页码',ruleForm.pgNum, res);
         if(res.appzillonHeader && res.appzillonHeader.status === 'failure'){
           console.log('failure');
+          console.log(`等待${ruleForm.intervalTime}秒再下一轮`)
           delayTimer = setTimeout(() => {
-            console.log(`等待${ruleForm.intervalTime}秒再下一轮`)
             getPage()
           }, ruleForm.intervalTime * 1000);
           return
@@ -267,10 +267,13 @@ let getPage = () => {
           let resultList = JSON.parse(JSON.stringify(dataList))
           console.log('下载完成了', resultList)
           data2Excel(resultList)
-          ruleForm.pgNum = 1
+
+          if(ruleForm.pgNum > 1){
+            ruleForm.pgNum = ruleForm.pgNum - 1
+          }
           dataList = []
+          console.log(`等待${ruleForm.intervalTime}秒再下一轮`)
           delayTimer = setTimeout(() => {
-            console.log(`等待${ruleForm.intervalTime}秒再下一轮`)
             getPage()
           }, ruleForm.intervalTime * 1000);
         }

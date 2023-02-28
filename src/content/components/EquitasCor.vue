@@ -40,6 +40,9 @@
         <el-form-item label="分页条数" prop="pgLimit">
           <el-input type="number" v-model="ruleForm.pgLimit" />
         </el-form-item>
+        <el-form-item label="爬取日期" prop="date">
+          <el-input v-model="ruleForm.date" />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -84,6 +87,7 @@ export default defineComponent({
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      date: '',
       accNumber: '', //accNumber
       kk: null,
       pgLimit: 500,
@@ -92,7 +96,8 @@ export default defineComponent({
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
-      desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
+      pgLimit: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
+      date: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
     watch(
@@ -216,21 +221,9 @@ export default defineComponent({
         local = JSON.parse(kk)
       }
 
-      var myDate = new Date()
-      function add(n: any) {
-        if (n <= 9) {
-          return `0${n}`
-        }
-        return n
-      }
-      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
-      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
-      var myToday = add(myDate.getDate()) //获取当前日(1-31)
-      var myHour = add(myDate.getHours()) //获取当前日(1-31)
-      var myMillsi = add(myDate.getMilliseconds()) //获取当前日(1-31)
-      var mySecond = add(myDate.getSeconds()) //获取当前日(1-31)
-      let today = `${myYear}-${myMonth}-${myToday}`
-      let timestamp = `${today}T${myHour}:${myMillsi}:${mySecond}.607Z`
+      let dateObj:any = getDay()
+      let today = dateObj.today
+      let timestamp = `${today}T${dateObj.myHour}:${dateObj.myMillsi}:${dateObj.mySecond}.607Z`
 
       let req = {
         appzillonHeader: {
@@ -364,6 +357,24 @@ export default defineComponent({
       })
     }
 
+    const getDay = () =>{
+      var myDate = new Date()
+      function add(n: any) {
+        if (n <= 9) {
+          return `0${n}`
+        }
+        return n
+      }
+      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+      var myToday = add(myDate.getDate()) //获取当前日(1-31)
+      var myHour = add(myDate.getHours()) //获取当前日(1-31)
+      var myMillsi = add(myDate.getMilliseconds()) //获取当前日(1-31)
+      var mySecond = add(myDate.getSeconds()) //获取当前日(1-31)
+      let today = `${myYear}-${myMonth}-${myToday}`
+      return { myYear, myMonth, myToday, myHour, myMillsi, mySecond, today }
+    }
+
     const resetForm = (formEl: any) => {
       if (!formEl) return
       formEl.resetFields()
@@ -383,6 +394,10 @@ export default defineComponent({
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
+      let dateObj:any = getDay()
+      let today = dateObj.today
+      console.log('today: ', today);
+      ruleForm.date = today
       localStorage.removeItem('kk')
     })
     return {

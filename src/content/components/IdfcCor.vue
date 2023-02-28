@@ -230,23 +230,27 @@ export default defineComponent({
         mode: 'cors',
         credentials: 'include',
       })
-        .then((res) => {
-          // 这里解析body
-          return res.blob()
+        .then((res:any) => {
+          if (res.status.toString().charAt(0) === '2') {
+            return res.blob()
+          }
+          return false
         })
         .then((res) => {
           console.log('res: ', res)
-          // blob对象
-          const a = document.createElement('a')
-          const body: any = document.querySelector('body')
-          // 这里注意添加需要下载的文件后缀；
-          a.download = 'idfcCor.xlsx'
-          a.href = window.URL.createObjectURL(res)
-          a.style.display = 'none'
-          body.appendChild(a)
-          a.click()
-          body.removeChild(a)
-          window.URL.revokeObjectURL(a.href)
+          if(res){
+            // blob对象
+            const a = document.createElement('a')
+            const body: any = document.querySelector('body')
+            // 这里注意添加需要下载的文件后缀；
+            a.download = 'idfcCor.xlsx'
+            a.href = window.URL.createObjectURL(res)
+            a.style.display = 'none'
+            body.appendChild(a)
+            a.click()
+            body.removeChild(a)
+            window.URL.revokeObjectURL(a.href)
+          }
 
           // 重置
           clearTimeout(timer)

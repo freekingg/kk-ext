@@ -1,7 +1,6 @@
 <template>
   <main id="kk-container">
-    <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
+    <div style="width: 350px">
       <p style="font-size: 14px">此网站支持后台下载流水</p>
     </div>
     <section class="run-status">
@@ -28,11 +27,24 @@
         class="demo-ruleForm"
         status-icon
       >
+        <el-form-item label="自动刷新余额" prop="reportUrl">
+          <el-switch v-model="ruleForm.autoLick" size="large" @change="autoClickHandle" />
+          <el-popover
+            title="说明"
+            :width="200"
+            trigger="hover"
+            content="打开此开关，会自动点击刷新余额, 注意：需要转帐时需要把这个关闭"
+          >
+            <template #reference>
+              <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
+            </template>
+          </el-popover>
+        </el-form-item>
+        <el-form-item label="自动刷新间隔(s)" prop="autoLickTime">
+          <el-input type="number" v-model="ruleForm.autoLickTime" />
+        </el-form-item>
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
-        </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
-          <el-input v-model="ruleForm.reportUrl" />
         </el-form-item>
         <el-form-item label="请求参数">
           <el-input v-model="data" type="textarea" disabled />
@@ -68,6 +80,7 @@ import useStorage from '../useStorage'
 let timer: any = null
 let cutDownNumTimer: any = null
 let getAccNumberTimer: any = null
+let autoClickTimer: any = null
 export default defineComponent({
   components: { QuestionFilled, ElIcon },
   props: {
@@ -88,11 +101,15 @@ export default defineComponent({
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
 
+    const autoClickFlag = ref(true)
+
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
+      autoLickTime: 20,
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      autoLick: false,
       accNumber: '', //accNumber
     })
     const rules = reactive({
@@ -109,7 +126,7 @@ export default defineComponent({
             console.log('parseProps:- ', parseProps)
             getAccNumberTimer = setInterval(() => {
               let value: any = document.querySelector('p[data-testid="AccountNumber"]')
-              console.log('检查accNumber',value);
+              console.log('检查accNumber', value)
               if (value) {
                 ruleForm.accNumber = value.innerText.replace(/\s/g, '')
                 console.log('ruleForm.accNumber: ', ruleForm.accNumber)
@@ -169,6 +186,61 @@ export default defineComponent({
       },
     )
 
+    const autoClickHandle = (value: Boolean) => {
+      console.log('value: ', value)
+      if (value) {
+        ElMessage({
+          message: '[开始自动切换刷新余额].',
+          type: 'success',
+        })
+        autoClickPage()
+      }else{
+        clearInterval(autoClickTimer)
+      }
+    }
+
+    const autoClickPage = () => {
+      if (!props.data) {
+        ElMessage({
+          message: '[启动失败]：请确认是否登录.',
+          type: 'error',
+        })
+        clearInterval(autoClickTimer)
+        return
+      }
+      if(!ruleForm.autoLick){
+        clearInterval(autoClickTimer)
+        return
+      }
+      let checkTimer:any = null
+      let delayTimer:any = null
+      let navas:any = document.querySelectorAll('.fVBSFn a')
+      if(navas.length){
+        autoClickTimer = setInterval(()=>{
+          clearInterval(delayTimer)
+          navas[0].click()
+          checkTimer = setInterval(()=>{
+           let load:any = document.querySelector('div[data-testid="web-loader-wrapper"]')
+           console.log('load: ', load);
+           if(!load){
+            clearInterval(checkTimer)
+            delayTimer = setTimeout(() => {
+              navas[1].click()
+            }, 2000);
+           }
+          },1000)
+
+          // if(autoClickFlag.value){
+          //   navas[0].click()
+          // }else{
+          //   navas[1].click()
+          // }
+          // autoClickFlag.value = !autoClickFlag.value
+
+        }, ruleForm.autoLickTime * 1000)
+      }
+    }
+
     const submitForm = async (formEl: any) => {
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
@@ -187,11 +259,11 @@ export default defineComponent({
       let parseProps = JSON.parse(props.data)
       console.log('parseProps:- ', parseProps)
 
-      function add(n:any){
-          if(n<=9){
-              return `0${n}`
-          }
-          return n
+      function add(n: any) {
+        if (n <= 9) {
+          return `0${n}`
+        }
+        return n
       }
 
       var myDate = new Date()
@@ -230,7 +302,7 @@ export default defineComponent({
         mode: 'cors',
         credentials: 'include',
       })
-        .then((res:any) => {
+        .then((res: any) => {
           if (res.status.toString().charAt(0) === '2') {
             return res.blob()
           }
@@ -238,7 +310,7 @@ export default defineComponent({
         })
         .then((res) => {
           console.log('res: ', res)
-          if(res){
+          if (res) {
             // blob对象
             const a = document.createElement('a')
             const body: any = document.querySelector('body')
@@ -305,8 +377,12 @@ export default defineComponent({
       //   console.log(state.currentTab);
       // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
+      let _autoLickTime: number = await getSyncStorage('autoLickTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       ruleForm.intervalTime = _intervalTime || 20
+      ruleForm.autoLickTime = _autoLickTime || 20
+
+      
       ruleForm.reportUrl = _reportUrl || ''
     })
     return {
@@ -316,6 +392,7 @@ export default defineComponent({
       ruleFormRef,
       ruleForm,
       rules,
+      autoClickHandle,
       cutDownNum,
       submitForm,
       resetForm,
@@ -340,5 +417,10 @@ export default defineComponent({
 }
 #kk-container :deep() .el-result__extra {
   margin-top: 10px;
+}
+</style>
+<style>
+.el-popover.el-popper {
+  z-index: 9999999 !important;
 }
 </style>

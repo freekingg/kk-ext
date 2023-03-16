@@ -43,6 +43,7 @@ import Bobi from './components/Bobi.vue'
 import Idbi from './components/Idbi.vue'
 import Icici from './components/Icici.vue'
 import IdfcCor from './components/IdfcCor.vue'
+import Msme from './components/Msme.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -70,6 +71,7 @@ export default defineComponent({
     Idbi,
     Icici,
     IdfcCor,
+    Msme,
     View,
     ElIcon,
   },
@@ -112,6 +114,7 @@ export default defineComponent({
         type: 'Iobp',
         typeName: 'IOBp',
         matches: ['www.iobnet.co.in'],
+        injectJs: ['js/iob.js'],
       },
       {
         type: 'Bandhan',
@@ -183,6 +186,7 @@ export default defineComponent({
         type: 'Idbi',
         typeName: 'IDBI saving',
         matches: ['inet.idbibank.co.in'],
+        
       },
       {
         type: 'Icici',
@@ -194,6 +198,11 @@ export default defineComponent({
         typeName: 'Idfc Cor',
         matches: ['my.idfcfirstbank.com'],
         injectJs: ['js/idfc.js'],
+      },
+      {
+        type: 'Msme',
+        typeName: 'Msme',
+        matches: ['yesmsmeonline.yesbank.in'],
       },
     ]
 
@@ -240,9 +249,12 @@ export default defineComponent({
       s.onload = function () {
         // s.remove();
       }
-      if (document.body || document.head) {
-        ;(document.body || document.head).appendChild(s)
+      if (document.head) {
+        ;(document.head).appendChild(s)
       }
+      // if (document.body || document.head) {
+      //   ;(document.body || document.head).appendChild(s)
+      // }
     }
 
     const initHandle = () => {

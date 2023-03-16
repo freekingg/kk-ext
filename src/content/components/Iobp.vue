@@ -20,6 +20,10 @@
         </template>
       </el-result>
     </section>
+    <div class="btn-area" style="display: flex; justify-content: center; margin-bottom: 10px">
+      <el-button type="primary" @click="startHandle">下载流水</el-button>
+      <el-button type="primary" @click="transForPageHandle">转账</el-button>
+    </div>
     <section v-if="settingVisible">
       <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
@@ -101,6 +105,38 @@ export default defineComponent({
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
+    const query = () => {
+      function add(n: any) {
+        if (n <= 9) {
+          return `0${n}`
+        }
+        return n
+      }
+      var myDate = new Date()
+      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+      var myToday = add(myDate.getDate()) //获取当前日(1-31)
+
+      let accountNo: any = document.querySelector('#accountNo')
+      if (accountNo) {
+        let accountNoOption: any = accountNo.querySelectorAll('option')
+        accountNo.value = accountNoOption[accountNoOption.length - 1].value
+      }
+
+      let fromDate: any = document.querySelector('#fromDate')
+      if (fromDate) {
+        fromDate.value = `${myMonth}/${myToday}/${myYear}`
+      }
+      let toDate: any = document.querySelector('#toDate')
+      if (toDate) {
+        toDate.value = `${myMonth}/${myToday}/${myYear}`
+      }
+
+      // 查询按钮
+      let accountstatement_view: any = document.querySelector('#accountstatement_view')
+      accountstatement_view.click()
+    }
+
     watch(
       () => props.onOff,
       async (newValue) => {
@@ -109,8 +145,17 @@ export default defineComponent({
         clearInterval(cutDownNumTimer)
         if (newValue) {
           setSyncStorage({ onOff: newValue })
-          let accountstatement_csvAcctStmt = document.querySelector('#accountstatement_csvAcctStmt')
 
+          let mode: any = await getSyncStorage('mode')
+          if (mode === 'download' && location.href.indexOf('menuname=Accounts') !== -1) {
+            let lis: any = document.querySelectorAll('#collapsible li')
+            if (lis.length) {
+              lis[2].querySelector('a').click()
+            }
+            return
+          }
+
+          let accountstatement_csvAcctStmt = document.querySelector('#accountstatement_csvAcctStmt')
           // 如果有csv下载按钮，直接进行下载
           if (accountstatement_csvAcctStmt) {
             ElMessage({
@@ -121,46 +166,29 @@ export default defineComponent({
             return
           }
 
-          // 如果有表单，则自动填充
-          let accountstatement: any = document.querySelector('#accountstatement')
-          if (accountstatement) {
-            function add(n: any) {
-              if (n <= 9) {
-                return `0${n}`
-              }
-              return n
-            }
-            var myDate = new Date()
-            var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
-            var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
-            var myToday = add(myDate.getDate()) //获取当前日(1-31)
-
-            let accountNo: any = document.querySelector('#accountNo')
-            if (accountNo) {
-              let accountNoOption: any = accountNo.querySelectorAll('option')
-              accountNo.value = accountNoOption[accountNoOption.length - 1].value
-            }
-
-            let fromDate: any = document.querySelector('#fromDate')
-            if (fromDate) {
-              fromDate.value = `${myMonth}/${myToday}/${myYear}`
-            }
-            let toDate: any = document.querySelector('#toDate')
-            if (toDate) {
-              toDate.value = `${myMonth}/${myToday}/${myYear}`
-            }
-
-            // 查询按钮
-            let accountstatement_view: any = document.querySelector('#accountstatement_view')
-            accountstatement_view.click()
+          let datagrid: any = document.querySelector('#datagrid')
+          if (datagrid && datagrid.innerText.indexOf('Nothing found') !== -1) {
+            cutdown()
             return
           }
 
-          if (location.href.indexOf('accountstatement.do?print=true') !== -1 && !accountstatement_csvAcctStmt) {
+          // 如果有表单，则自动填充
+          let accountstatement: any = document.querySelector('#accountstatement')
+          if (accountstatement) {
+            query()
+            return
+          }
+
+          if (
+            location.href.indexOf('accountstatement.do?print=true') !== -1 &&
+            !accountstatement_csvAcctStmt
+          ) {
             ElMessage({
               message: '[启动失败]：请确认是否有流水',
               type: 'error',
             })
+            ctx.emit('onOffHandle', false)
+            setSyncStorage({ onOff: false })
             return
           }
 
@@ -169,6 +197,7 @@ export default defineComponent({
             type: 'error',
           })
           ctx.emit('onOffHandle', false)
+          setSyncStorage({ onOff: false })
         } else if (!newValue) {
           setSyncStorage({ onOff: false })
           ElMessage({
@@ -186,6 +215,23 @@ export default defineComponent({
       },
     )
 
+    const startHandle = async () => {
+      setSyncStorage({ mode: 'download' })
+      let main1: any = document.querySelector('#main1')
+      if (main1) {
+        setSyncStorage({ onOff: true })
+        main1.querySelector('a').click()
+      }
+    }
+    const transForPageHandle = async () => {
+      let main2: any = document.querySelector('#main2')
+      if (main2) {
+        setSyncStorage({ mode: 'transer' })
+        ctx.emit('onOffHandle', false)
+        main2.querySelector('a').click()
+      }
+    }
+
     const submitForm = async (formEl: any) => {
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
@@ -198,116 +244,38 @@ export default defineComponent({
       })
     }
 
+    const cutdown = () => {
+      // 重置
+      clearTimeout(timer)
+      clearInterval(cutDownNumTimer)
+      cutDownNum.value = ruleForm.intervalTime
+      timer = setTimeout(() => {
+        query()
+      }, ruleForm.intervalTime * 1000 || 20000)
+      cutDownNumTimer = setInterval(() => {
+        cutDownNum.value--
+        if (cutDownNum.value < 0) {
+          clearInterval(cutDownNumTimer)
+        }
+      }, 1000)
+    }
+
     const download = async () => {
       if (!props.onOff) return
 
-      let dataForm: any = {}
-      let accountstatement_csvAcctStmt = document.querySelector('#accountstatement_csvAcctStmt')
-      if (accountstatement_csvAcctStmt) {
-        let accountstatement: any = document.querySelector('#accountstatement')
-        let accountstatementInput = accountstatement.querySelectorAll('#accountstatement input')
-        let accountstatementSel = accountstatement.querySelectorAll('#accountstatement select')
-        for (const iterator of accountstatementInput) {
-          if (iterator.name) {
-            dataForm[iterator.name] = iterator.value
-          }
-        }
-        for (const iterator of accountstatementSel) {
-          if (iterator.name) {
-            dataForm[iterator.name] = iterator.value
-          }
-        }
+      let accountstatement_excelAcctStmt: any = document.querySelector(
+        '#accountstatement_excelAcctStmt',
+      )
+      if (accountstatement_excelAcctStmt) {
+        accountstatement_excelAcctStmt.click()
+        cutdown()
       } else {
         ElMessage({
-          message: '[启动失败]：请确认是否在流水界面.',
+          message: '[失败]：请确认是否在流水界面.',
           type: 'error',
         })
         return
       }
-
-      let parseProps = {
-        fromDt: dataForm.fromDt,
-        toDt: dataForm.toDt,
-        'action:csvAcctStmt': 'CSV',
-        handleId: '',
-        csrftokenid: dataForm.csrftokenid,
-        accountNo: 'select',
-      }
-      console.log('parseProps: ', parseProps)
-
-      let body = `accountNo=select&fromDt=${parseProps.fromDt}&toDt=${parseProps.toDt}&action%3AcsvAcctStmt=CSV&handleId=&csrftokenid=ACA02B6BB57F417493B71DEBAF8C3930`
-
-      fetch('https://www.iobnet.co.in/ibanking/accountstatement.do', {
-        headers: {
-          accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'accept-language': 'zh-CN,zh;q=0.9,en-CA;q=0.8,en;q=0.7,ja-JP;q=0.6,ja;q=0.5',
-          'cache-control': 'max-age=0',
-          'content-type': 'application/x-www-form-urlencoded',
-          'sec-ch-ua': '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"macOS"',
-          'sec-fetch-dest': 'document',
-          'sec-fetch-mode': 'navigate',
-          'sec-fetch-site': 'same-origin',
-          'sec-fetch-user': '?1',
-          'upgrade-insecure-requests': '1',
-        },
-        referrer: 'https://www.iobnet.co.in/ibanking/accountstatement.do',
-        referrerPolicy: 'strict-origin-when-cross-origin',
-        body,
-        method: 'POST',
-        mode: 'cors',
-        credentials: 'include',
-      })
-        .then((res) => {
-          // 这里解析body
-          return res.blob()
-        })
-        .then((res) => {
-          // blob对象
-          const a = document.createElement('a')
-          const body: any = document.querySelector('body')
-          // 这里注意添加需要下载的文件后缀；
-          a.download = 'iobp.csv'
-          a.href = window.URL.createObjectURL(res)
-          a.style.display = 'none'
-          body.appendChild(a)
-          a.click()
-          body.removeChild(a)
-          window.URL.revokeObjectURL(a.href)
-
-          // 重置
-          clearTimeout(timer)
-          clearInterval(cutDownNumTimer)
-          cutDownNum.value = ruleForm.intervalTime
-          timer = setTimeout(() => {
-            download()
-          }, ruleForm.intervalTime * 1000 || 20000)
-          cutDownNumTimer = setInterval(() => {
-            cutDownNum.value--
-            if (cutDownNum.value < 0) {
-              clearInterval(cutDownNumTimer)
-            }
-          }, 1000)
-        })
-        .catch((err) => {
-          console.log('下载出错: ', err)
-          clearTimeout(timer)
-          clearInterval(cutDownNumTimer)
-          ElMessage({
-            message: '[下载出错]：请刷新浏览器重新操作.',
-            type: 'error',
-          })
-        })
-    }
-
-    const getCookie = (name: string) => {
-      var arr,
-        reg = new RegExp('(^| )' + name + '=([^;]*)(;|$)')
-
-      if ((arr = document.cookie.match(reg))) return unescape(arr[2])
-      else return null
     }
 
     const resetForm = (formEl: any) => {
@@ -346,6 +314,8 @@ export default defineComponent({
       ruleFormRef,
       ruleForm,
       rules,
+      startHandle,
+      transForPageHandle,
       cutDownNum,
       helpHandle,
       dialogHelpVisible,

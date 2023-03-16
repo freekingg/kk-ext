@@ -114,7 +114,6 @@ export default defineComponent({
         type: 'Iobp',
         typeName: 'IOBp',
         matches: ['www.iobnet.co.in'],
-        injectJs: ['js/iob.js'],
       },
       {
         type: 'Bandhan',

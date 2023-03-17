@@ -195,6 +195,31 @@ export default defineComponent({
       })
     }
 
+    const research = async () => {
+      let ra1: any = document.querySelectorAll(
+        'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+      )
+      if (ra1) {
+        ra1[1].click()
+      }
+
+      let lastdaysel: any = document.querySelector('select[name="TransactionHistoryFG.TXN_PERIOD"]')
+      lastdaysel.value = '01'
+
+      let fromamount: any = document.querySelector('input[name="TransactionHistoryFG.FROM_AMOUNT"]')
+      let _step: number = (await getSyncStorage('step')) || 0
+      console.log('_step: ', _step)
+      let keyong = limits.value.filter((item: any) => item.min && item.max)
+      fromamount.value = keyong[_step]['min']
+      let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
+      tomount.value = keyong[_step]['max']
+      console.log('当前下载..', _step, keyong[_step]['min'], keyong[_step]['max'])
+      let searchBtn: any = document.querySelector('#SEARCH')
+      setTimeout(() => {
+        searchBtn.click()
+      }, 3000)
+    }
+
     const download = async () => {
       if (!props.onOff) return
       if (!watchBillPage()) {
@@ -208,20 +233,50 @@ export default defineComponent({
         clearInterval(checkDownTimer)
         // csv=3
 
+        let _step: number = (await getSyncStorage('step')) || 0
+        console.log('_step: ', _step)
+        let cur = +_step + 1
+        let keyong = limits.value.filter((item: any) => item.min && item.max)
+        console.log('keyong: ', keyong.length)
+
         if (dwt) {
           dwt.value = 3
           let okButton: any = document.querySelector(
             'form[name="TransactionHistoryFG"] .HW_formbtn #okButton',
           )
-          okButton.click()
+          if (cur >= keyong.length) {
+
+            setSyncStorage({ step: 0 })
+            setTimeout(() => {
+              // 重置
+              clearTimeout(timer)
+              clearInterval(cutDownNumTimer)
+              cutDownNum.value = ruleForm.intervalTime
+              timer = setTimeout(() => {
+                // download()
+
+                let searchBtn: any = document.querySelector('#SEARCH')
+                console.log('点击查询按钮')
+                research()
+              }, ruleForm.intervalTime * 1000 || 20000)
+              cutDownNumTimer = setInterval(() => {
+                cutDownNum.value--
+                if (cutDownNum.value < 0) {
+                  clearInterval(cutDownNumTimer)
+                }
+              }, 1000)
+            }, 5000)
+            return
+          } else {
+            okButton.click()
+            setTimeout(() => {
+              research()
+            }, 3000)
+            setSyncStorage({ step: cur })
+          }
+          
+          return
         }
-
-        let _step: number = await getSyncStorage('step')
-        console.log('_step: ', _step)
-        let cur = +_step + 1
-
-        let keyong = limits.value.filter((item: any) => item.min && item.max)
-        console.log('keyong: ', keyong.length);
 
         if (+_step >= keyong.length) {
           setSyncStorage({ step: 0 })
@@ -251,7 +306,7 @@ export default defineComponent({
           let fromamount: any = document.querySelector(
             'input[name="TransactionHistoryFG.FROM_AMOUNT"]',
           )
-          let _step: number = await getSyncStorage('step')
+          let _step: number = (await getSyncStorage('step')) || 0
           fromamount.value = keyong[_step]['min']
           let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
           tomount.value = keyong[_step]['max']
@@ -265,32 +320,7 @@ export default defineComponent({
         }
       } else {
         console.log('下载一个文件')
-        let ra1: any = document.querySelectorAll(
-          'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
-        )
-        if (ra1) {
-          ra1[1].click()
-        }
-
-        let lastdaysel: any = document.querySelector(
-          'select[name="TransactionHistoryFG.TXN_PERIOD"]',
-        )
-        lastdaysel.value = '01'
-
-        let fromamount: any = document.querySelector(
-          'input[name="TransactionHistoryFG.FROM_AMOUNT"]',
-        )
-        let _step: number = await getSyncStorage('step')
-        console.log('_step: ', _step)
-        let keyong = limits.value.filter((item: any) => item.min && item.max)
-        fromamount.value = keyong[_step]['min']
-        let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
-        tomount.value = keyong[_step]['max']
-        console.log('当前下载..', _step,keyong[_step]['min'], keyong[_step]['max'])
-        let searchBtn: any = document.querySelector('#SEARCH')
-        setTimeout(() => {
-          searchBtn.click()
-        }, 3000)
+        research()
       }
       // },1000)
     }

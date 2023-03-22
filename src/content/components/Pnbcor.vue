@@ -208,12 +208,12 @@ export default defineComponent({
 
       let fromamount: any = document.querySelector('input[name="TransactionHistoryFG.FROM_AMOUNT"]')
       let _step: number = (await getSyncStorage('step')) || 0
-      console.log('_step: ', _step)
+      console.log('research_step: ', _step)
       let keyong = limits.value.filter((item: any) => item.min && item.max)
-      fromamount.value = keyong[_step]['min']
+      fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length-1]['min']
       let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
-      tomount.value = keyong[_step]['max']
-      console.log('当前下载..', _step, keyong[_step]['min'], keyong[_step]['max'])
+      tomount.value =  keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length-1]['max']
+      console.log('当前下载..', _step, fromamount.value,  tomount.value)
       let searchBtn: any = document.querySelector('#SEARCH')
       setTimeout(() => {
         searchBtn.click()
@@ -229,22 +229,23 @@ export default defineComponent({
       // checkDownTimer =  setInterval(()=>{
       let dwt: any = document.getElementById('TransactionHistoryFG.OUTFORMAT')
       let errorlink1: any = document.getElementById('errorlink1')
+     
+      // 有下载按钮和查询结果
       if (dwt || errorlink1) {
         clearInterval(checkDownTimer)
         // csv=3
 
         let _step: number = (await getSyncStorage('step')) || 0
-        console.log('_step: ', _step)
         let cur = +_step + 1
         let keyong = limits.value.filter((item: any) => item.min && item.max)
-        console.log('keyong: ', keyong.length)
-
+        console.log('cur', cur);
         if (dwt) {
           dwt.value = 3
           let okButton: any = document.querySelector(
             'form[name="TransactionHistoryFG"] .HW_formbtn #okButton',
           )
-          if (cur >= keyong.length) {
+          if (_step > keyong.length) {
+            console.log(_step, '===',keyong.length);
 
             setSyncStorage({ step: 0 })
             setTimeout(() => {
@@ -256,7 +257,6 @@ export default defineComponent({
                 // download()
 
                 let searchBtn: any = document.querySelector('#SEARCH')
-                console.log('点击查询按钮')
                 research()
               }, ruleForm.intervalTime * 1000 || 20000)
               cutDownNumTimer = setInterval(() => {
@@ -290,7 +290,6 @@ export default defineComponent({
               // download()
 
               let searchBtn: any = document.querySelector('#SEARCH')
-              console.log('点击查询按钮')
               if (searchBtn) {
                 searchBtn.click()
               }
@@ -310,7 +309,7 @@ export default defineComponent({
           fromamount.value = keyong[_step]['min']
           let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
           tomount.value = keyong[_step]['max']
-          console.log('当前下载.', _step, keyong[_step]['min'], keyong[_step]['max'])
+          console.log('当前下载2.', _step, keyong[_step]['min'], keyong[_step]['max'])
 
           let searchBtn: any = document.querySelector('#SEARCH')
           setSyncStorage({ step: cur })
@@ -319,7 +318,7 @@ export default defineComponent({
           }, 3000)
         }
       } else {
-        console.log('下载一个文件')
+        console.log('第一次')
         research()
       }
       // },1000)
@@ -362,6 +361,9 @@ export default defineComponent({
         { min: 10001, max: 50000 },
         { min: 50001, max: 100000 },
       ]
+      console.log(limits.value);
+      let keyong = limits.value.filter((item: any) => item.min && item.max)
+        console.log('keyong: ', keyong.length)
 
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''

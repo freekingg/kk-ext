@@ -35,6 +35,9 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
+        <el-form-item label="账户下标" prop="intervalTime">
+          <el-input type="number" v-model="ruleForm.index" />
+        </el-form-item>
 
         <el-form-item
           label="金额范围"
@@ -71,7 +74,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, reactive, toRefs, watch, toRaw } from 'vue'
-import { ElMessage, ElIcon } from 'element-plus'
+import { ElMessage, ElIcon, formContextKey } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
 let timer: any = null
@@ -103,6 +106,7 @@ export default defineComponent({
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      index: 1,
       accNumber: '', //accNumber
     })
 
@@ -196,28 +200,41 @@ export default defineComponent({
     }
 
     const research = async () => {
-      let ra1: any = document.querySelectorAll(
-        'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+      let account: any = document.querySelector(
+        'select[name="TransactionHistoryFG.INITIATOR_ACCOUNT"]',
       )
-      if (ra1) {
-        ra1[1].click()
-      }
+      let accountOptions: any = account.querySelectorAll('option')
+      account.value = accountOptions[(+ruleForm.index) - 1]['value']
+      console.log('account', accountOptions[(+ruleForm.index) - 1]['value']);
 
-      let lastdaysel: any = document.querySelector('select[name="TransactionHistoryFG.TXN_PERIOD"]')
-      lastdaysel.value = '01'
+      setTimeout(async () => {
+        let ra1: any = document.querySelectorAll(
+          'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+        )
+        if (ra1) {
+          ra1[1].click()
+        }
 
-      let fromamount: any = document.querySelector('input[name="TransactionHistoryFG.FROM_AMOUNT"]')
-      let _step: number = (await getSyncStorage('step')) || 0
-      console.log('research_step: ', _step)
-      let keyong = limits.value.filter((item: any) => item.min && item.max)
-      fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length-1]['min']
-      let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
-      tomount.value =  keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length-1]['max']
-      console.log('当前下载..', _step, fromamount.value,  tomount.value)
-      let searchBtn: any = document.querySelector('#SEARCH')
-      setTimeout(() => {
-        searchBtn.click()
-      }, 3000)
+        let lastdaysel: any = document.querySelector(
+          'select[name="TransactionHistoryFG.TXN_PERIOD"]',
+        )
+        lastdaysel.value = '01'
+
+        let fromamount: any = document.querySelector(
+          'input[name="TransactionHistoryFG.FROM_AMOUNT"]',
+        )
+        let _step: number = (await getSyncStorage('step')) || 0
+        console.log('research_step: ', _step)
+        let keyong = limits.value.filter((item: any) => item.min && item.max)
+        fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length - 1]['min']
+        let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
+        tomount.value = keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length - 1]['max']
+        console.log('当前下载..', _step, fromamount.value, tomount.value)
+        let searchBtn: any = document.querySelector('#SEARCH')
+        setTimeout(() => {
+          searchBtn.click()
+        }, 3000)
+      }, 1000)
     }
 
     const download = async () => {
@@ -229,7 +246,7 @@ export default defineComponent({
       // checkDownTimer =  setInterval(()=>{
       let dwt: any = document.getElementById('TransactionHistoryFG.OUTFORMAT')
       let errorlink1: any = document.getElementById('errorlink1')
-     
+
       // 有下载按钮和查询结果
       if (dwt || errorlink1) {
         clearInterval(checkDownTimer)
@@ -238,14 +255,14 @@ export default defineComponent({
         let _step: number = (await getSyncStorage('step')) || 0
         let cur = +_step + 1
         let keyong = limits.value.filter((item: any) => item.min && item.max)
-        console.log('cur', cur);
+        console.log('cur', cur)
         if (dwt) {
           dwt.value = 3
           let okButton: any = document.querySelector(
             'form[name="TransactionHistoryFG"] .HW_formbtn #okButton',
           )
           if (_step > keyong.length) {
-            console.log(_step, '===',keyong.length);
+            console.log(_step, '===', keyong.length)
 
             setSyncStorage({ step: 0 })
             setTimeout(() => {
@@ -274,7 +291,7 @@ export default defineComponent({
             }, 3000)
             setSyncStorage({ step: cur })
           }
-          
+
           return
         }
 
@@ -344,6 +361,7 @@ export default defineComponent({
       //   console.log(state.currentTab);
       // });
       let _intervalTime: number = await getSyncStorage('intervalTime')
+      let _index: number = await getSyncStorage('index')
 
       let _reportUrl: any = await getSyncStorage('reportUrl')
       let onOff: any = (await getSyncStorage('onOff')) || false
@@ -361,12 +379,13 @@ export default defineComponent({
         { min: 10001, max: 50000 },
         { min: 50001, max: 100000 },
       ]
-      console.log(limits.value);
+      console.log(limits.value)
       let keyong = limits.value.filter((item: any) => item.min && item.max)
-        console.log('keyong: ', keyong.length)
+      console.log('keyong: ', keyong.length)
 
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
+      ruleForm.index = _index || 1
       cutDownNum.value = ruleForm.intervalTime
     })
     return {

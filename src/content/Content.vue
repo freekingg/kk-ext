@@ -23,6 +23,7 @@ import { View } from '@element-plus/icons-vue'
 
 import Default from './components/Default.vue'
 import AxisbankPrime from './components/AxisbankPrime.vue'
+import AUBank from './components/AUBank.vue'
 import AxisbankIdx from './components/AxisbankIdx.vue'
 import Indusnet from './components/Indusnet.vue'
 import Pnbcor from './components/Pnbcor.vue'
@@ -72,6 +73,7 @@ export default defineComponent({
     Icici,
     IdfcCor,
     Msme,
+    AUBank,
     View,
     ElIcon,
   },
@@ -203,6 +205,12 @@ export default defineComponent({
         typeName: 'Msme',
         matches: ['yesmsmeonline.yesbank.in'],
       },
+      {
+        type: 'AUBank',
+        typeName: 'AUBank',
+        matches: ['cib.aubank.in'],
+        injectJs: ['js/xlsx.full.min.js', 'js/au.js'],
+      },
     ]
 
     /**
@@ -213,6 +221,11 @@ export default defineComponent({
         console.log('content接收到了后台的消息', e)
 
         if(e.actionType === 'equitas'){
+          state.data = JSON.stringify(e.data)
+          return
+        }
+
+        if(e.actionType === 'aubank'){
           state.data = JSON.stringify(e.data)
           return
         }
@@ -251,9 +264,11 @@ export default defineComponent({
       if (document.head) {
         ;(document.head).appendChild(s)
       }
-      // if (document.body || document.head) {
+      // setTimeout(()=>{
+      //   if (document.body || document.head) {
       //   ;(document.body || document.head).appendChild(s)
       // }
+      // },5000)
     }
 
     const initHandle = () => {

@@ -45,6 +45,7 @@ import Idbi from './components/Idbi.vue'
 import Icici from './components/Icici.vue'
 import IdfcCor from './components/IdfcCor.vue'
 import Msme from './components/Msme.vue'
+import Paytm from './components/Paytm.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -74,6 +75,7 @@ export default defineComponent({
     IdfcCor,
     Msme,
     AUBank,
+    Paytm,
     View,
     ElIcon,
   },
@@ -210,6 +212,12 @@ export default defineComponent({
         typeName: 'AUBank',
         matches: ['cib.aubank.in'],
         injectJs: ['js/xlsx.full.min.js', 'js/au.js'],
+      },
+      {
+        type: 'Paytm',
+        typeName: 'Paytm',
+        injectJs: ['js/paytm.js'],
+        matches: ['netbanking.paytmbank.com'],
       },
     ]
 

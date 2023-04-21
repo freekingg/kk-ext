@@ -125,7 +125,7 @@ export default defineComponent({
             let parseProps = JSON.parse(newValue)
             console.log('parseProps:- ', parseProps)
             getAccNumberTimer = setInterval(() => {
-              let value: any = document.querySelector('p[data-testid="AccountNumber"]')
+              let value: any = document.querySelector('p[data-testid="account-number"]')
               console.log('检查accNumber', value)
               if (value) {
                 ruleForm.accNumber = value.innerText.replace(/\s/g, '')
@@ -214,7 +214,7 @@ export default defineComponent({
       }
       let checkTimer:any = null
       let delayTimer:any = null
-      let navas:any = document.querySelectorAll('.fVBSFn a')
+      let navas:any = document.querySelectorAll('div[data-testid="PrimaryNavigation"] a')
       if(navas.length){
         autoClickTimer = setInterval(()=>{
           clearInterval(delayTimer)

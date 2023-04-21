@@ -1,7 +1,11 @@
 <template>
   <main id="kk-container">
     <div style="width: 350px">
-      <p style="font-size: 14px">此网站支持后台下载流水</p>
+      <p style="font-size: 12px">
+        此网站支持后台下载流水 <br>
+        登录后，点击开关即可自动下载 <br>
+      </p>
+      <p style="font-size: 12px">登录后，点击开关即可自动下载</p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->

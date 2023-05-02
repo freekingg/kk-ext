@@ -111,7 +111,7 @@ export default defineComponent({
       {
         type: 'Pnbcor',
         typeName: 'PNBcor',
-        matches: ['internetbanking.netpnb.com'],
+        matches: ['internetbanking.netpnb.com','internetbanking.pnbibanking.in'],
         injectJs: ['js/injected.js'],
       },
       {
@@ -168,7 +168,7 @@ export default defineComponent({
         type: 'EquitasCor',
         typeName: 'Equitas Cor',
         matches: ['inet.equitasbank.com'],
-        injectJs: ['js/EquitasCorp.js'],
+        injectJs: ['js/xlsx.full.min.js','js/EquitasCorp.js'],
       },
       {
         type: 'Freecharge',

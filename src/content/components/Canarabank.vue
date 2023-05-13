@@ -3,7 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站下载流水需要在流水界面 <br />
+        此网站下载流水需要在流水界面下载csv格式的文件 <br />
       </p>
     </div>
     <section class="run-status">

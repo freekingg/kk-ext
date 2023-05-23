@@ -229,12 +229,12 @@ export default defineComponent({
         fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length - 1]['min']
         let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
         tomount.value = keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length - 1]['max']
-        console.log('当前下载..', _step, fromamount.value, tomount.value)
+        console.log('当前下载.....', _step, fromamount.value, tomount.value)
         let searchBtn: any = document.querySelector('#SEARCH')
         setTimeout(() => {
           searchBtn.click()
-        }, 3000)
-      }, 1000)
+        }, 6000)
+      }, 5000)
     }
 
     const download = async () => {
@@ -288,7 +288,7 @@ export default defineComponent({
             okButton.click()
             setTimeout(() => {
               research()
-            }, 3000)
+            }, 6000)
             setSyncStorage({ step: cur })
           }
 

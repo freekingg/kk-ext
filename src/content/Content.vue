@@ -46,6 +46,7 @@ import Icici from './components/Icici.vue'
 import IdfcCor from './components/IdfcCor.vue'
 import Msme from './components/Msme.vue'
 import Paytm from './components/Paytm.vue'
+import Shivalik from './components/shivalik.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -76,6 +77,7 @@ export default defineComponent({
     Msme,
     AUBank,
     Paytm,
+    Shivalik,
     View,
     ElIcon,
   },
@@ -188,8 +190,12 @@ export default defineComponent({
       {
         type: 'Idbi',
         typeName: 'IDBI saving',
-        matches: ['inet.idbibank.co.in'],
-        
+        matches: ['inet.idbibank.co.in','corp.idbibank.co.in'],
+      },
+      {
+        type: 'Shivalik',
+        typeName: 'shivalik',
+        matches: ['shivalikinternetbanking.com'],
       },
       {
         type: 'Icici',

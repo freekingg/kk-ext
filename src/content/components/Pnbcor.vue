@@ -253,7 +253,15 @@ export default defineComponent({
         // csv=3
 
         let _step: number = (await getSyncStorage('step')) || 0
-        let cur = +_step + 1
+
+
+        let cur = +_step
+        if(errorlink1){
+          console.log('errorlink1: ', errorlink1);
+          cur = +_step
+        }else{
+          cur = +_step+ 1
+        }
         let keyong = limits.value.filter((item: any) => item.min && item.max)
         console.log('cur', cur)
         if (dwt) {

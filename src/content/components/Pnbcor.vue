@@ -2,10 +2,9 @@
   <main id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
       <p style="font-size: 14px; display: inline-block">
-        -、此网站需要打开流水界面进行下载 <br />
         1、流水界面,打开插件开关，此时会自动下载 <br />
-        2、插件会自动按金额区间依次进行下载 <br />
-        3、全流水下载：清空所有金额，只留第一个1-100000 <br />
+        2、插件会自动按开关的金额区间依次进行下载 <br />
+        3、全流水：可以只打开一个区间，金额从最小到最大 <br />
       </p>
     </div>
     <section class="run-status">
@@ -46,7 +45,12 @@
           :key="index"
         >
           <el-input v-model="item.min" style="width: 100px" /> -
-          <el-input v-model="item.max" style="width: 100px; margin-left: 4px" />
+          <el-input v-model="item.max" style="width: 100px; margin-left: 4px; margin-right: 4px" />
+          <el-switch
+            v-model="item.onOff"
+            active-color="#13ce66"
+            inactive-color="#ff4949">
+          </el-switch>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -111,13 +115,18 @@ export default defineComponent({
     })
 
     const limits: any = ref([
-      { min: 100, max: 300 },
-      { min: 301, max: 700 },
-      { min: 701, max: 1500 },
-      { min: 1501, max: 3000 },
-      { min: 3001, max: 10000 },
-      { min: 10001, max: 50000 },
-      { min: 50001, max: 100000 },
+      { min: 100, max: 200, onOff: true },
+      { min: 201, max: 600, onOff: false },
+      { min: 601, max: 1000, onOff: false },
+      { min: 1001, max: 1500, onOff: false },
+      { min: 1501, max: 2500, onOff: false },
+      { min: 2501, max: 4000, onOff: false },
+      { min: 4001, max: 6000, onOff: false },
+      { min: 6001, max: 8000, onOff: false },
+      { min: 8001, max: 10000, onOff: false },
+      { min: 10001, max: 25000, onOff: false },
+      { min: 25001, max: 50000, onOff: false },
+      { min: 50001, max: 100000, onOff: false },
     ])
 
     const rules = reactive({
@@ -175,14 +184,6 @@ export default defineComponent({
       } else {
         return false
       }
-
-      // let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
-      // let ra1 = document.querySelector('#dwnldDetailsCaption')
-      // if (inputs.length && ra1) {
-      //   return true
-      // } else {
-      //   return false
-      // }
     }
 
     const submitForm = async (formEl: any) => {
@@ -204,8 +205,8 @@ export default defineComponent({
         'select[name="TransactionHistoryFG.INITIATOR_ACCOUNT"]',
       )
       let accountOptions: any = account.querySelectorAll('option')
-      account.value = accountOptions[(+ruleForm.index) - 1]['value']
-      console.log('account', accountOptions[(+ruleForm.index) - 1]['value']);
+      account.value = accountOptions[+ruleForm.index - 1]['value']
+      console.log('account', accountOptions[+ruleForm.index - 1]['value'])
 
       setTimeout(async () => {
         let ra1: any = document.querySelectorAll(
@@ -225,7 +226,7 @@ export default defineComponent({
         )
         let _step: number = (await getSyncStorage('step')) || 0
         console.log('research_step: ', _step)
-        let keyong = limits.value.filter((item: any) => item.min && item.max)
+        let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
         fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length - 1]['min']
         let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
         tomount.value = keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length - 1]['max']
@@ -254,15 +255,14 @@ export default defineComponent({
 
         let _step: number = (await getSyncStorage('step')) || 0
 
-
         let cur = +_step
-        if(errorlink1){
-          console.log('errorlink1: ', errorlink1);
+        if (errorlink1) {
+          console.log('errorlink1: ', errorlink1)
           cur = +_step
-        }else{
-          cur = +_step+ 1
+        } else {
+          cur = +_step + 1
         }
-        let keyong = limits.value.filter((item: any) => item.min && item.max)
+        let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
         console.log('cur', cur)
         if (dwt) {
           dwt.value = 3
@@ -364,6 +364,7 @@ export default defineComponent({
 
     // 与后台通信
     onMounted(async () => {
+      // chrome.storage.sync.clear()
       // chrome.runtime.sendMessage({ type: "POPUP_INIT" }, async tab => {
       //   state.currentTab = await tab;
       //   console.log(state.currentTab);
@@ -379,16 +380,21 @@ export default defineComponent({
 
       let _limits: number = await getSyncStorage('limits')
       limits.value = _limits || [
-        { min: 100, max: 300 },
-        { min: 301, max: 700 },
-        { min: 701, max: 1500 },
-        { min: 1501, max: 3000 },
-        { min: 3001, max: 10000 },
-        { min: 10001, max: 50000 },
-        { min: 50001, max: 100000 },
+        { min: 100, max: 200, onOff: true },
+        { min: 201, max: 600, onOff: false },
+        { min: 601, max: 1000, onOff: false },
+        { min: 1001, max: 1500, onOff: false },
+        { min: 1501, max: 2500, onOff: false },
+        { min: 2501, max: 4000, onOff: false },
+        { min: 4001, max: 6000, onOff: false },
+        { min: 6001, max: 8000, onOff: false },
+        { min: 8001, max: 10000, onOff: false },
+        { min: 10001, max: 25000, onOff: false },
+        { min: 25001, max: 50000, onOff: false },
+        { min: 50001, max: 100000, onOff: false },
       ]
       console.log(limits.value)
-      let keyong = limits.value.filter((item: any) => item.min && item.max)
+      let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
       console.log('keyong: ', keyong.length)
 
       ruleForm.intervalTime = _intervalTime || 20
@@ -420,13 +426,21 @@ export default defineComponent({
   display: flex;
   justify-content: center;
 }
+#kk-container{
+  max-height: 72vh;
+  overflow: auto;
+}
 #kk-container :deep() .el-result {
   padding-top: 0;
+  padding-bottom: 5px;
 }
 #kk-container :deep() .el-result__title {
   margin-top: 10px;
 }
 #kk-container :deep() .el-result__extra {
   margin-top: 10px;
+}
+.demo-ruleForm{
+  padding-right: 8px;
 }
 </style>

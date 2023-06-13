@@ -46,6 +46,7 @@ import Icici from './components/Icici.vue'
 import IdfcCor from './components/IdfcCor.vue'
 import Msme from './components/Msme.vue'
 import Paytm from './components/Paytm.vue'
+import Hdfc from './components/Hdfc.vue'
 import Shivalik from './components/shivalik.vue'
 
 
@@ -78,6 +79,7 @@ export default defineComponent({
     AUBank,
     Paytm,
     Shivalik,
+    Hdfc,
     View,
     ElIcon,
   },
@@ -113,7 +115,7 @@ export default defineComponent({
       {
         type: 'Pnbcor',
         typeName: 'PNBcor',
-        matches: ['internetbanking.netpnb.com','internetbanking.pnbibanking.in'],
+        matches: ['internetbanking.netpnb.com','internetbanking.pnbibanking.in','internetbanking.pnbibanking.in'],
         injectJs: ['js/injected.js'],
       },
       {
@@ -224,6 +226,11 @@ export default defineComponent({
         typeName: 'Paytm',
         injectJs: ['js/paytm.js'],
         matches: ['netbanking.paytmbank.com'],
+      },
+      {
+        type: 'Hdfc',
+        typeName: 'Hdfc',
+        matches: ['netportal.hdfcbank.com'],
       },
     ]
 

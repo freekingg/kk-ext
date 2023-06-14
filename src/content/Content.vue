@@ -230,6 +230,7 @@ export default defineComponent({
       {
         type: 'Hdfc',
         typeName: 'Hdfc',
+        injectJs:['js/feature-hdfc-common-utility.js'],
         matches: ['netportal.hdfcbank.com'],
       },
     ]
@@ -247,6 +248,11 @@ export default defineComponent({
         }
 
         if(e.actionType === 'aubank'){
+          state.data = JSON.stringify(e.data)
+          return
+        }
+
+        if(e.actionType === 'hdfc'){
           state.data = JSON.stringify(e.data)
           return
         }

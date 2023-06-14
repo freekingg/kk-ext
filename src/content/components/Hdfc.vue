@@ -3,7 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block; margin: 0">
-        此网站支持不后台下载流水，需要停留在流水界面,直接点开始即可
+        此网站支持不后台下载流水，需要停留在流水界面(personal>save>accounts),直接点开始即可
       </p>
     </div>
     <section class="run-status">
@@ -67,6 +67,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
+import { writeFileXLSX, utils } from 'xlsx'
 import { sleep, Timer } from '../../utils/index'
 let timer: any = null
 let cutDownNumTimer: any = null
@@ -90,6 +91,8 @@ export default defineComponent({
 
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
+    const outEncryptValue = ref('')
+    const reqBody = ref({})
 
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
@@ -104,6 +107,36 @@ export default defineComponent({
     })
 
     watch(
+      () => props.data,
+      async (newValue) => {
+        let newProps = JSON.parse(newValue)
+        if (newProps.type === 'hdfcList') {
+          console.log(newProps.data)
+          if (newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs) {
+            downloadFile(newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs)
+          }
+        }
+
+        if (newProps.type === 'updateHdfcOutEncryptValue') {
+          if (newProps.outEncryptValue) {
+            console.log('outEncryptValue: ', newProps.outEncryptValue)
+            outEncryptValue.value = newProps.outEncryptValue
+          }
+        }
+
+        if (newProps.type === 'updateHdfcParms') {
+          reqBody.value = newProps.data
+          console.log('请求参数已更新.可以进行下载了')
+          setSyncStorage({ reqBody: newProps.data })
+          ElMessage({
+            message: '请求参数已更新.可以进行下载了',
+            type: 'success',
+          })
+        }
+      },
+    )
+
+    watch(
       () => props.onOff,
       async (newValue) => {
         clearTimeout(timer)
@@ -111,6 +144,9 @@ export default defineComponent({
         clearInterval(checkDownCsvBtn)
         if (newValue) {
           setSyncStorage({ onOff: newValue })
+
+          // downloadForApi()
+          // return
           let downloadBtn = document.querySelector('.data-download')
           console.log('downloadBtn: ', downloadBtn)
           // 如果有下载按钮，
@@ -119,7 +155,8 @@ export default defineComponent({
               message: '[任务执行成功].',
               type: 'success',
             })
-            download()
+            download2()
+            // download()
             return
           } else {
             ElMessage({
@@ -147,6 +184,20 @@ export default defineComponent({
       },
     )
 
+    const downloadFile = async (list: any = []) => {
+      // let newList = list.map((item: any) => {
+      //   return {
+      //     ...item,
+      //     txnHistory: JSON.stringify(item.txnHistory),
+      //   }
+      // })
+      if (!list.length) return
+      const ws = utils.json_to_sheet(list)
+      const wb = utils.book_new()
+      utils.book_append_sheet(wb, ws, 'Data')
+      writeFileXLSX(wb, 'hdfc.xlsx')
+    }
+
     const submitForm = async (formEl: any) => {
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
@@ -159,6 +210,92 @@ export default defineComponent({
       })
     }
 
+    const downloadForApi = async () => {
+      if (!props.onOff) return
+      fetch('https://netportal.hdfcbank.com/services/proxy/current/viewAccountStmtCASADtls', {
+        headers: {
+          accept: 'application/json',
+          'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+          channelindicator: 'NB',
+          'content-type': 'application/json',
+          fldappid: 'RS',
+          inencryptvalue: outEncryptValue.value,
+          parentflag: 'Y',
+          'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin',
+        },
+        referrer: 'https://netportal.hdfcbank.com/personal/save/accounts',
+        referrerPolicy: 'strict-origin',
+        body: JSON.stringify(reqBody.value),
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+      }).then((result) => {
+        result
+          .json()
+          .then((result) => {
+            console.log('result: ', result)
+            const cEvt = new CustomEvent('hdfcEvent', {
+              detail: {
+                type: 'jiemi',
+                data: result,
+              },
+            })
+            document.dispatchEvent(cEvt)
+            // 重置
+            // clearTimeout(timer)
+            // clearInterval(cutDownNumTimer)
+            // cutDownNum.value = ruleForm.intervalTime
+            // timer = setTimeout(() => {
+            //   downloadForApi()
+            // }, ruleForm.intervalTime * 1000 || 20000)
+            // cutDownNumTimer = setInterval(() => {
+            //   cutDownNum.value--
+            //   if (cutDownNum.value < 0) {
+            //     clearInterval(cutDownNumTimer)
+            //   }
+            // }, 1000)
+          })
+          .catch((err) => {
+            console.log('err: ', err)
+          })
+      })
+    }
+
+    const download2 = async () => {
+      if (!props.onOff) return
+      await sleep(1500)
+      let selectConrl: any = document.querySelector(
+        '.accounts-statement-style hdfc-dropdown .input-box .dropdown .btn.btn-default.form-control',
+      )
+      if (selectConrl) {
+        selectConrl.click()
+        await sleep(1500)
+
+        let currentMonth: any = document.querySelector('#ui-select-choices-row-0-1')
+        if (currentMonth) {
+          currentMonth.click()
+          await sleep(3000)
+          // 重置
+          clearTimeout(timer)
+          clearInterval(cutDownNumTimer)
+          cutDownNum.value = ruleForm.intervalTime
+          timer = setTimeout(() => {
+            download2()
+          }, ruleForm.intervalTime * 1000 || 20000)
+          cutDownNumTimer = setInterval(() => {
+            cutDownNum.value--
+            if (cutDownNum.value < 0) {
+              clearInterval(cutDownNumTimer)
+            }
+          }, 1000)
+        }
+      }
+    }
     const download = async () => {
       if (!props.onOff) return
       await sleep(1500)
@@ -186,7 +323,9 @@ export default defineComponent({
           if (selectConrl2) {
             selectConrl2.click()
             await sleep(1000)
-            let sc:any = document.querySelectorAll('.ui-select-bootstrap>.ui-select-choices, .ui-select-bootstrap>.ui-select-no-choice')
+            let sc: any = document.querySelectorAll(
+              '.ui-select-bootstrap>.ui-select-choices, .ui-select-bootstrap>.ui-select-no-choice',
+            )
             let lis: any = sc[2].querySelectorAll('li>div')
             lis[3].click()
             await sleep(1000)
@@ -235,6 +374,10 @@ export default defineComponent({
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
+
+      reqBody.value = await getSyncStorage('reqBody')
+      reqBody.value = await getSyncStorage('reqBody')
+      console.log('reqBody.value: ', reqBody.value)
     })
     return {
       settingVisible,

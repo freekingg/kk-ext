@@ -142,6 +142,7 @@ export default defineComponent({
     }
 
     const research = async () => {
+      if (!props.onOff) return
       // 选择账户下标
       let account: any = document.querySelector(
         'select[name="OpMiniStatementFG.INITIATOR_ACCOUNT"]',

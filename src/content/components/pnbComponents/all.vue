@@ -203,6 +203,7 @@ export default defineComponent({
     }
 
     const research = async () => {
+      if (!props.onOff) return
       let account: any = document.querySelector(
         'select[name="TransactionHistoryFG.INITIATOR_ACCOUNT"]',
       )

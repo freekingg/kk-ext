@@ -111,7 +111,6 @@ export default defineComponent({
       async (newValue) => {
         let newProps = JSON.parse(newValue)
         if (newProps.type === 'hdfcList') {
-          console.log(newProps.data)
           if (newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs) {
             downloadFile(newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs)
           }
@@ -121,6 +120,7 @@ export default defineComponent({
           if (newProps.outEncryptValue) {
             console.log('outEncryptValue: ', newProps.outEncryptValue)
             outEncryptValue.value = newProps.outEncryptValue
+            setSyncStorage({ outEncryptValue: newProps.outEncryptValue })
           }
         }
 
@@ -145,8 +145,8 @@ export default defineComponent({
         if (newValue) {
           setSyncStorage({ onOff: newValue })
 
-          // downloadForApi()
-          // return
+          downloadForApi()
+          return
           let downloadBtn = document.querySelector('.data-download')
           console.log('downloadBtn: ', downloadBtn)
           // 如果有下载按钮，
@@ -239,6 +239,10 @@ export default defineComponent({
           .json()
           .then((result) => {
             console.log('result: ', result)
+            if (result?.outEncryptValue) {
+              outEncryptValue.value = result.outEncryptValue
+              setSyncStorage({ outEncryptValue: result.outEncryptValue })
+            }
             const cEvt = new CustomEvent('hdfcEvent', {
               detail: {
                 type: 'jiemi',
@@ -247,18 +251,18 @@ export default defineComponent({
             })
             document.dispatchEvent(cEvt)
             // 重置
-            // clearTimeout(timer)
-            // clearInterval(cutDownNumTimer)
-            // cutDownNum.value = ruleForm.intervalTime
-            // timer = setTimeout(() => {
-            //   downloadForApi()
-            // }, ruleForm.intervalTime * 1000 || 20000)
-            // cutDownNumTimer = setInterval(() => {
-            //   cutDownNum.value--
-            //   if (cutDownNum.value < 0) {
-            //     clearInterval(cutDownNumTimer)
-            //   }
-            // }, 1000)
+            clearTimeout(timer)
+            clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+            timer = setTimeout(() => {
+              downloadForApi()
+            }, ruleForm.intervalTime * 1000 || 20000)
+            cutDownNumTimer = setInterval(() => {
+              cutDownNum.value--
+              if (cutDownNum.value < 0) {
+                clearInterval(cutDownNumTimer)
+              }
+            }, 1000)
           })
           .catch((err) => {
             console.log('err: ', err)
@@ -376,8 +380,7 @@ export default defineComponent({
       cutDownNum.value = ruleForm.intervalTime
 
       reqBody.value = await getSyncStorage('reqBody')
-      reqBody.value = await getSyncStorage('reqBody')
-      console.log('reqBody.value: ', reqBody.value)
+      outEncryptValue.value = await getSyncStorage('outEncryptValue')
     })
     return {
       settingVisible,

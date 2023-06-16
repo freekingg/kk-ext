@@ -145,10 +145,9 @@ export default defineComponent({
         if (newValue) {
           setSyncStorage({ onOff: newValue })
 
-          downloadForApi()
-          return
+          // downloadForApi()
+          // return
           let downloadBtn = document.querySelector('.data-download')
-          console.log('downloadBtn: ', downloadBtn)
           // 如果有下载按钮，
           if (downloadBtn) {
             ElMessage({
@@ -238,7 +237,7 @@ export default defineComponent({
         result
           .json()
           .then((result) => {
-            console.log('result: ', result)
+            // console.log('result: ', result)
             if (result?.outEncryptValue) {
               outEncryptValue.value = result.outEncryptValue
               setSyncStorage({ outEncryptValue: result.outEncryptValue })

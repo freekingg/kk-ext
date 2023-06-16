@@ -3,14 +3,14 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block; margin: 0">
-        此网站支持不后台下载流水，需要停留在流水界面(Enquire>A/c Statement ),直接点开始即可
+        此网站直接接口后台下载，登录后,直接点开始即可
       </p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <img :src="runGifSrc" v-if="onOff" />
+          <img style="width: 100px;" :src="runGifSrc" v-if="onOff" />
         </template>
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
@@ -87,6 +87,7 @@ export default defineComponent({
     const { setSyncStorage, getSyncStorage } = useStorage()
 
     const ruleFormRef = ref()
+    const form1Params = ref('')
     const dialogHelpVisible = ref(false)
 
     const ruleForm = reactive({
@@ -109,32 +110,19 @@ export default defineComponent({
         clearInterval(checkDownBtnTimer)
         if (newValue) {
           setSyncStorage({ onOff: newValue })
-
-          // downloadForApi()
-          // return
-
-          let accountStatementForm1 =
-            document.querySelector('frame[name="main_part"]') &&
-            (
-              document.querySelector('frame[name="main_part"]') as any
-            ).contentWindow.document.querySelector('select[name="selAccttype"]')
-
-          // 如果有下载按钮，
-          if (accountStatementForm1) {
+          if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
+            request()
             ElMessage({
               message: '[任务执行成功].',
               type: 'success',
             })
-            download()
-            return
-          } else {
+          }else{
             ElMessage({
               message: '[请确认已经登录,并且在流水界面].',
               type: 'error',
             })
             setSyncStorage({ onOff: false })
             ctx.emit('onOffHandle', false)
-            return
           }
         } else if (!newValue) {
           setSyncStorage({ onOff: false })
@@ -163,6 +151,148 @@ export default defineComponent({
           console.log('error submit!', fields)
         }
       })
+    }
+
+    const downloadTxtFile = (content:any, fileName:any) => {
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.download = fileName;
+      link.href = window.URL.createObjectURL(blob);
+      link.click();
+    }
+
+    const request = () => {
+      if (!props.onOff) return
+      let params1 = form1Params.value
+      fetch('https://netbanking.hdfcbank.com/netbanking/entry', {
+        headers: {
+          accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+          'cache-control': 'max-age=0',
+          'content-type': 'application/x-www-form-urlencoded',
+          'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'frame',
+          'sec-fetch-mode': 'navigate',
+          'sec-fetch-site': 'same-origin',
+          'sec-fetch-user': '?1',
+          'upgrade-insecure-requests': '1',
+        },
+        referrer: 'https://netbanking.hdfcbank.com/netbanking/entry',
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        body: params1,
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+      })
+        .then((result) => {
+          result
+            .text()
+            .then((htmlString) => {
+
+              // 正则表达式模式
+              const inputTagRegex = /<input.*?>/g
+              const attributeRegex = /([^\s=]+)\s*=\s*"([^"]*)"/g
+
+              // 用正则表达式匹配HTML字符串中的所有input标签
+              let inputTags = htmlString.match(inputTagRegex) || []
+
+              // 遍历所有的input标签，提取它们的name和value属性
+              let inputs = inputTags.map((inputTag) => {
+                let input: any = {}
+                let attributes = inputTag.match(attributeRegex) || []
+
+                // 遍历所有的属性，提取name和value
+                attributes.forEach((attribute) => {
+                  let [_, name, value] = attribute.match(/([^\s=]+)\s*=\s*"([^"]*)"/) || []
+                  if (name) input[name] = value
+                })
+                return input
+              })
+              let fldRequestId = inputs.find((item) => item.name === 'fldRequestId')
+              console.log('fldRequestId: ', fldRequestId)
+              let fldSessionId = inputs.find((item) => item.name === 'fldSessionId')
+              console.log('fldSessionId: ', fldSessionId)
+
+              // 定义正则表达式模式
+              const variableRegex = /accounts\[count\]\s*=\s*"([^;"]*)"/g
+
+              // 使用正则表达式匹配字符串中的变量值
+              const match = variableRegex.exec(htmlString)
+              // 获取匹配到的变量值
+              const acc = match && match[1]
+              console.log('acc: ', acc)
+              if (fldRequestId) {
+                var myDate = new Date()
+                function add(n: any) {
+                  if (n <= 9) {
+                    return `0${n}`
+                  }
+                  return n
+                }
+
+                var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+                var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+                var myToday = add(myDate.getDate()) //获取当前日(1-31)
+                let today = `${myToday}/${myMonth}/${myYear}`
+
+                let body = `fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=02&fldSessionId=${fldSessionId.value}&fldRequestId=${fldRequestId.value}&fldAcctNo=${acc}&fldTxnType=A&fldNbrStmt=20&fldAccType=&fldAccBranch=&fldFromDate=${today}&fldToDate=${today}&selAccttype=SCA&selAcct=${acc}&radTxnType=C&cmbTxnType=A&cmbNbrStmt=20`
+                fetch('https://netbanking.hdfcbank.com/netbanking/entry', {
+                  headers: {
+                    accept:
+                      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+                    'cache-control': 'max-age=0',
+                    'content-type': 'application/x-www-form-urlencoded',
+                    'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'sec-fetch-dest': 'frame',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                  },
+                  referrer: 'https://netbanking.hdfcbank.com/netbanking/entry',
+                  referrerPolicy: 'strict-origin-when-cross-origin',
+                  body: body,
+                  method: 'POST',
+                  mode: 'cors',
+                  credentials: 'include',
+                })
+                  .then((result) => {
+                    result
+                      .text()
+                      .then((result) => {
+                        // console.log('result: ', result)
+
+                        downloadTxtFile(result,'hdfcOld.txt')
+
+                        // 重置
+                        clearTimeout(timer)
+                        clearInterval(cutDownNumTimer)
+                        cutDownNum.value = ruleForm.intervalTime
+                        timer = setTimeout(() => {
+                          request()
+                        }, ruleForm.intervalTime * 1000 || 20000)
+                        cutDownNumTimer = setInterval(() => {
+                          cutDownNum.value--
+                          if (cutDownNum.value < 0) {
+                            clearInterval(cutDownNumTimer)
+                          }
+                        }, 1000)
+
+                      })
+                      .catch((err) => {})
+                  })
+                  .catch((err) => {})
+              }
+            })
+            .catch((err) => {})
+        })
+        .catch((err) => {})
     }
 
     const download = async () => {
@@ -198,7 +328,6 @@ export default defineComponent({
       ).contentWindow.document.querySelector('select[name="selAcct"]')
       if (selAcct) {
         let options = selAcct.querySelectorAll('option')
-        console.log('options: ', options)
         selAcct.value = options[1]['value']
         selAcct.dispatchEvent(new Event('change'))
         await sleep(1000)
@@ -304,6 +433,26 @@ export default defineComponent({
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
+
+      if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
+        if (document.querySelector('frame[name="left_menu"]')) {
+          let left_menu_inputs = (
+            document.querySelector('frame[name="left_menu"]') as any
+          ).contentWindow.document.querySelectorAll('form[name="frmMenu"] input')
+          let form: any = ''
+          for (const item of left_menu_inputs) {
+            // form[item.name] = item.value
+            var name = item.name
+            var value = item.value
+            if(name === 'fldTxnId'){
+              value = 'SIN'
+            }
+            form += `${name}=${value}&`
+          }
+          form1Params.value = form
+          console.log('form1Params.value: ', form1Params.value)
+        }
+      }
     })
     return {
       settingVisible,

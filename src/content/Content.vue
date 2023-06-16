@@ -47,6 +47,7 @@ import IdfcCor from './components/IdfcCor.vue'
 import Msme from './components/Msme.vue'
 import Paytm from './components/Paytm.vue'
 import Hdfc from './components/Hdfc.vue'
+import HdfcOld from './components/HdfcOld.vue'
 import Shivalik from './components/shivalik.vue'
 
 
@@ -80,6 +81,7 @@ export default defineComponent({
     Paytm,
     Shivalik,
     Hdfc,
+    HdfcOld,
     View,
     ElIcon,
   },
@@ -233,11 +235,16 @@ export default defineComponent({
         injectJs:['js/feature-hdfc-common-utility.js'],
         matches: ['netportal.hdfcbank.com'],
       },
+      {
+        type: 'HdfcOld',
+        typeName: 'HdfcOld',
+        matches: ['netbanking.hdfcbank.com'],
+      },
     ]
 
     /**
      * 接收消息
-     */
+    */
     const onMessage = (e: any) => {
       if (e.actionType) {
         console.log('content接收到了后台的消息', e)

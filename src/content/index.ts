@@ -10,7 +10,12 @@ import 'element-plus/dist/index.css'
 
 let mountEl = document.createElement("div");
 mountEl.setAttribute("id", 'kkapp');
-document.body.appendChild(mountEl);
+if(document.querySelector('body')){
+  document.body.appendChild(mountEl);
+}else if(document.querySelector('html')){
+  (document.querySelector('html') as any).appendChild(mountEl);
+}
+
 
 const vm:any = createApp(Content).use(ElementPlus).mount(mountEl);
 

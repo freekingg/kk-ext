@@ -111,7 +111,10 @@ export default defineComponent({
         if (newValue) {
           setSyncStorage({ onOff: newValue })
           if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
+            // 接口形式
             request()
+            // 点击形式
+            // download()
             ElMessage({
               message: '[任务执行成功].',
               type: 'success',
@@ -385,13 +388,14 @@ export default defineComponent({
           let fldFormatType = (
             document.querySelector('frame[name="main_part"]') as any
           ).contentWindow.document.querySelector('select[name="fldFormatType"]')
+          console.log('fldFormatType',fldFormatType);
           if (fldFormatType) {
             fldFormatType.value = 'X'
             fldFormatType.dispatchEvent(new Event('change'))
             await sleep(1000)
           }
           download_stmt.click()
-          await sleep(1000)
+          await sleep(5000)
           let customSubmit = (
             document.querySelector('frame[name="main_part"]') as any
           ).contentWindow.document.querySelector('a[onclick="return customSubmit()"]')
@@ -434,7 +438,9 @@ export default defineComponent({
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
 
-      if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
+      setTimeout(() => {
+        if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
+        console.log(document.querySelector('frame[name="left_menu"]'));
         if (document.querySelector('frame[name="left_menu"]')) {
           let left_menu_inputs = (
             document.querySelector('frame[name="left_menu"]') as any
@@ -453,6 +459,7 @@ export default defineComponent({
           console.log('form1Params.value: ', form1Params.value)
         }
       }
+      }, 3000);
     })
     return {
       settingVisible,

@@ -10,11 +10,8 @@
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <img :src="runGifSrc" v-if="onOff" />
+          <img :src="runGifSrc" v-if="onOff" style="width: 100px;"/>
         </template>
-        <!-- <template #sub-title>
-          <img :src="runGifSrc" v-if="onOff">
-        </template> -->
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
         </template>
@@ -33,12 +30,12 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
+        <!-- <el-form-item label="上报接口" prop="reportUrl">
           <el-input v-model="ruleForm.reportUrl" />
         </el-form-item>
         <el-form-item label="请求参数">
           <el-input v-model="data" type="textarea" disabled />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -82,7 +79,7 @@ export default defineComponent({
   setup(props: any, ctx) {
     const cutDownNum = ref(30)
     const settingVisible = ref(false)
-    const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
+    const runGifSrc = ref(chrome.runtime.getURL('img/runing2.gif'))
     const state = reactive({
       currentTab: null,
     })
@@ -95,7 +92,7 @@ export default defineComponent({
     const reqBody = ref({})
 
     const ruleForm = reactive({
-      intervalTime: 20, //爬取间隔时间
+      intervalTime: 15, //爬取间隔时间
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
@@ -106,35 +103,35 @@ export default defineComponent({
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
-    watch(
-      () => props.data,
-      async (newValue) => {
-        let newProps = JSON.parse(newValue)
-        if (newProps.type === 'hdfcList') {
-          if (newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs) {
-            downloadFile(newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs)
-          }
-        }
+    // watch(
+    //   () => props.data,
+    //   async (newValue) => {
+    //     let newProps = JSON.parse(newValue)
+    //     if (newProps.type === 'hdfcList') {
+    //       if (newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs) {
+    //         downloadFile(newProps.data.AccountStatementResModel?.miniTransactionDetailsDTOs)
+    //       }
+    //     }
 
-        if (newProps.type === 'updateHdfcOutEncryptValue') {
-          if (newProps.outEncryptValue) {
-            console.log('outEncryptValue: ', newProps.outEncryptValue)
-            outEncryptValue.value = newProps.outEncryptValue
-            setSyncStorage({ outEncryptValue: newProps.outEncryptValue })
-          }
-        }
+    //     if (newProps.type === 'updateHdfcOutEncryptValue') {
+    //       if (newProps.outEncryptValue) {
+    //         console.log('outEncryptValue: ', newProps.outEncryptValue)
+    //         outEncryptValue.value = newProps.outEncryptValue
+    //         setSyncStorage({ outEncryptValue: newProps.outEncryptValue })
+    //       }
+    //     }
 
-        if (newProps.type === 'updateHdfcParms') {
-          reqBody.value = newProps.data
-          console.log('请求参数已更新.可以进行下载了')
-          setSyncStorage({ reqBody: newProps.data })
-          ElMessage({
-            message: '请求参数已更新.可以进行下载了',
-            type: 'success',
-          })
-        }
-      },
-    )
+    //     if (newProps.type === 'updateHdfcParms') {
+    //       reqBody.value = newProps.data
+    //       console.log('请求参数已更新.可以进行下载了')
+    //       setSyncStorage({ reqBody: newProps.data })
+    //       ElMessage({
+    //         message: '请求参数已更新.可以进行下载了',
+    //         type: 'success',
+    //       })
+    //     }
+    //   },
+    // )
 
     watch(
       () => props.onOff,
@@ -154,8 +151,8 @@ export default defineComponent({
               message: '[任务执行成功].',
               type: 'success',
             })
-            download2()
-            // download()
+            // downloadForApi()
+            downloadForClick()
             return
           } else {
             ElMessage({
@@ -209,67 +206,67 @@ export default defineComponent({
       })
     }
 
-    const downloadForApi = async () => {
-      if (!props.onOff) return
-      fetch('https://netportal.hdfcbank.com/services/proxy/current/viewAccountStmtCASADtls', {
-        headers: {
-          accept: 'application/json',
-          'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
-          channelindicator: 'NB',
-          'content-type': 'application/json',
-          fldappid: 'RS',
-          inencryptvalue: outEncryptValue.value,
-          parentflag: 'Y',
-          'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"Windows"',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-origin',
-        },
-        referrer: 'https://netportal.hdfcbank.com/personal/save/accounts',
-        referrerPolicy: 'strict-origin',
-        body: JSON.stringify(reqBody.value),
-        method: 'POST',
-        mode: 'cors',
-        credentials: 'include',
-      }).then((result) => {
-        result
-          .json()
-          .then((result) => {
-            // console.log('result: ', result)
-            if (result?.outEncryptValue) {
-              outEncryptValue.value = result.outEncryptValue
-              setSyncStorage({ outEncryptValue: result.outEncryptValue })
-            }
-            const cEvt = new CustomEvent('hdfcEvent', {
-              detail: {
-                type: 'jiemi',
-                data: result,
-              },
-            })
-            document.dispatchEvent(cEvt)
-            // 重置
-            clearTimeout(timer)
-            clearInterval(cutDownNumTimer)
-            cutDownNum.value = ruleForm.intervalTime
-            timer = setTimeout(() => {
-              downloadForApi()
-            }, ruleForm.intervalTime * 1000 || 20000)
-            cutDownNumTimer = setInterval(() => {
-              cutDownNum.value--
-              if (cutDownNum.value < 0) {
-                clearInterval(cutDownNumTimer)
-              }
-            }, 1000)
-          })
-          .catch((err) => {
-            console.log('err: ', err)
-          })
-      })
-    }
+    // const downloadForApi = async () => {
+    //   if (!props.onOff) return
+    //   fetch('https://netportal.hdfcbank.com/services/proxy/current/viewAccountStmtCASADtls', {
+    //     headers: {
+    //       accept: 'application/json',
+    //       'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+    //       channelindicator: 'NB',
+    //       'content-type': 'application/json',
+    //       fldappid: 'RS',
+    //       inencryptvalue: outEncryptValue.value,
+    //       parentflag: 'Y',
+    //       'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+    //       'sec-ch-ua-mobile': '?0',
+    //       'sec-ch-ua-platform': '"Windows"',
+    //       'sec-fetch-dest': 'empty',
+    //       'sec-fetch-mode': 'cors',
+    //       'sec-fetch-site': 'same-origin',
+    //     },
+    //     referrer: 'https://netportal.hdfcbank.com/personal/save/accounts',
+    //     referrerPolicy: 'strict-origin',
+    //     body: JSON.stringify(reqBody.value),
+    //     method: 'POST',
+    //     mode: 'cors',
+    //     credentials: 'include',
+    //   }).then((result) => {
+    //     result
+    //       .json()
+    //       .then((result) => {
+    //         // console.log('result: ', result)
+    //         if (result?.outEncryptValue) {
+    //           outEncryptValue.value = result.outEncryptValue
+    //           setSyncStorage({ outEncryptValue: result.outEncryptValue })
+    //         }
+    //         const cEvt = new CustomEvent('hdfcEvent', {
+    //           detail: {
+    //             type: 'jiemi',
+    //             data: result,
+    //           },
+    //         })
+    //         document.dispatchEvent(cEvt)
+    //         // 重置
+    //         clearTimeout(timer)
+    //         clearInterval(cutDownNumTimer)
+    //         cutDownNum.value = ruleForm.intervalTime
+    //         timer = setTimeout(() => {
+    //           downloadForApi()
+    //         }, ruleForm.intervalTime * 1000 || 20000)
+    //         cutDownNumTimer = setInterval(() => {
+    //           cutDownNum.value--
+    //           if (cutDownNum.value < 0) {
+    //             clearInterval(cutDownNumTimer)
+    //           }
+    //         }, 1000)
+    //       })
+    //       .catch((err) => {
+    //         console.log('err: ', err)
+    //       })
+    //   })
+    // }
 
-    const download2 = async () => {
+    const downloadForApi = async () => {
       if (!props.onOff) return
       await sleep(1500)
       let selectConrl: any = document.querySelector(
@@ -288,7 +285,7 @@ export default defineComponent({
           clearInterval(cutDownNumTimer)
           cutDownNum.value = ruleForm.intervalTime
           timer = setTimeout(() => {
-            download2()
+            downloadForApi()
           }, ruleForm.intervalTime * 1000 || 20000)
           cutDownNumTimer = setInterval(() => {
             cutDownNum.value--
@@ -299,7 +296,7 @@ export default defineComponent({
         }
       }
     }
-    const download = async () => {
+    const downloadForClick = async () => {
       if (!props.onOff) return
       await sleep(1500)
       let selectConrl: any = document.querySelector(
@@ -340,7 +337,7 @@ export default defineComponent({
             clearInterval(cutDownNumTimer)
             cutDownNum.value = ruleForm.intervalTime
             timer = setTimeout(() => {
-              download()
+              downloadForClick()
             }, ruleForm.intervalTime * 1000 || 20000)
             cutDownNumTimer = setInterval(() => {
               cutDownNum.value--

@@ -3,14 +3,14 @@
     <div style="display: flex; align-items: center; width: 350px">
       <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block; margin: 0">
-        此网站直接接口后台下载，登录后,直接点开始即可
+        此网站直接接口后台下载，登录后,直接点开始即可,如果有多帐号，需要在下面配置
       </p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <img style="width: 100px;" :src="runGifSrc" v-if="onOff" />
+          <img style="width: 100px" :src="runGifSrc" v-if="onOff" />
         </template>
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
@@ -30,11 +30,8 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
-          <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
-        <el-form-item label="请求参数">
-          <el-input v-model="data" type="textarea" disabled />
+        <el-form-item label="帐号">
+          <el-input v-model="ruleForm.subAccount" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -94,6 +91,7 @@ export default defineComponent({
       intervalTime: 20, //爬取间隔时间
       reportUrl: '', //上报接口地址
       name: 'Hello',
+      subAccount: '',
       data: {},
       accNumber: '', //accNumber
     })
@@ -119,7 +117,7 @@ export default defineComponent({
               message: '[任务执行成功].',
               type: 'success',
             })
-          }else{
+          } else {
             ElMessage({
               message: '[请确认已经登录,并且在流水界面].',
               type: 'error',
@@ -156,12 +154,12 @@ export default defineComponent({
       })
     }
 
-    const downloadTxtFile = (content:any, fileName:any) => {
-      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = window.URL.createObjectURL(blob);
-      link.click();
+    const downloadTxtFile = (content: any, fileName: any) => {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+      const link = document.createElement('a')
+      link.download = fileName
+      link.href = window.URL.createObjectURL(blob)
+      link.click()
     }
 
     const request = () => {
@@ -194,7 +192,6 @@ export default defineComponent({
           result
             .text()
             .then((htmlString) => {
-
               // 正则表达式模式
               const inputTagRegex = /<input.*?>/g
               const attributeRegex = /([^\s=]+)\s*=\s*"([^"]*)"/g
@@ -225,8 +222,12 @@ export default defineComponent({
               // 使用正则表达式匹配字符串中的变量值
               const match = variableRegex.exec(htmlString)
               // 获取匹配到的变量值
-              const acc = match && match[1]
-              console.log('acc: ', acc)
+              let acc = match && match[1]
+              if (ruleForm.subAccount) {
+                acc = ruleForm.subAccount.trim()
+              }
+              console.log('acc', acc)
+
               if (fldRequestId) {
                 var myDate = new Date()
                 function add(n: any) {
@@ -240,8 +241,62 @@ export default defineComponent({
                 var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
                 var myToday = add(myDate.getDate()) //获取当前日(1-31)
                 let today = `${myToday}/${myMonth}/${myYear}`
+                // 调查询接口
+                // let body = `fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=02&fldSessionId=${fldSessionId.value}&fldRequestId=${fldRequestId.value}&fldAcctNo=${acc}&fldTxnType=A&fldNbrStmt=20&fldAccType=&fldAccBranch=&fldFromDate=${today}&fldToDate=${today}&selAccttype=SCA&selAcct=${acc}&radTxnType=C&cmbTxnType=A&cmbNbrStmt=20`
+                // fetch('https://netbanking.hdfcbank.com/netbanking/entry', {
+                //   headers: {
+                //     accept:
+                //       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                //     'accept-language': 'zh,zh-CN;q=0.9,en;q=0.8,en-CA;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+                //     'cache-control': 'max-age=0',
+                //     'content-type': 'application/x-www-form-urlencoded',
+                //     'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                //     'sec-ch-ua-mobile': '?0',
+                //     'sec-ch-ua-platform': '"Windows"',
+                //     'sec-fetch-dest': 'frame',
+                //     'sec-fetch-mode': 'navigate',
+                //     'sec-fetch-site': 'same-origin',
+                //     'sec-fetch-user': '?1',
+                //     'upgrade-insecure-requests': '1',
+                //   },
+                //   referrer: 'https://netbanking.hdfcbank.com/netbanking/entry',
+                //   referrerPolicy: 'strict-origin-when-cross-origin',
+                //   body: body,
+                //   method: 'POST',
+                //   mode: 'cors',
+                //   credentials: 'include',
+                // })
+                //   .then((result) => {
+                //     result
+                //       .text()
+                //       .then((result) => {
+                //         // console.log('result: ', result)
 
-                let body = `fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=02&fldSessionId=${fldSessionId.value}&fldRequestId=${fldRequestId.value}&fldAcctNo=${acc}&fldTxnType=A&fldNbrStmt=20&fldAccType=&fldAccBranch=&fldFromDate=${today}&fldToDate=${today}&selAccttype=SCA&selAcct=${acc}&radTxnType=C&cmbTxnType=A&cmbNbrStmt=20`
+                //         downloadTxtFile(result, 'hdfcOld.txt')
+
+                //         // 重置
+                //         clearTimeout(timer)
+                //         clearInterval(cutDownNumTimer)
+                //         cutDownNum.value = ruleForm.intervalTime
+                //         timer = setTimeout(() => {
+                //           request()
+                //         }, ruleForm.intervalTime * 1000 || 20000)
+                //         cutDownNumTimer = setInterval(() => {
+                //           cutDownNum.value--
+                //           if (cutDownNum.value < 0) {
+                //             clearInterval(cutDownNumTimer)
+                //           }
+                //         }, 1000)
+                //       })
+                //       .catch((err) => {})
+                //   })
+                //   .catch((err) => {})
+
+                // 调下载接口
+                // fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=04&fldSessionId=843719614QYGBGJVMV&fldRequestId=843719614QYGBGJVMV1474125ESPN&fldAcctNo=&fldAcctNbr=50100429730781++&fldModule=CH&fldNbrStmt=20&fldToDate=01%2F07%2F2023&fldFromDate=01%2F07%2F2023&fldTxnType=A&fldRoleId=NOROLE&fldAcctBrn=NADESAR&l_dummy=&l_dummy=&l_dummy=&l_dummy=&l_dummy=&fldFormatType=X
+                let body2 = `fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=04&fldSessionId=${fldSessionId.value}&fldRequestId=${fldRequestId.value}&fldAcctNo=&fldAcctNbr=${acc}&fldModule=CH&fldNbrStmt=20&fldToDate=${today}&fldFromDate=${today}&fldTxnType=A&fldRoleId=NOROLE&fldAcctBrn=NADESAR&l_dummy=&l_dummy=&l_dummy=&l_dummy=&l_dummy=&fldFormatType=X`
+                console.log('body2: ', body2)
+                // let body = `fldAppId=RS&fldTxnId=SIN&fldScrnSeqNbr=02&fldSessionId=${fldSessionId.value}&fldRequestId=${fldRequestId.value}&fldAcctNo=${acc}&fldTxnType=A&fldNbrStmt=20&fldAccType=&fldAccBranch=&fldFromDate=${today}&fldToDate=${today}&selAccttype=SCA&selAcct=${acc}&radTxnType=C&cmbTxnType=A&cmbNbrStmt=20`
                 fetch('https://netbanking.hdfcbank.com/netbanking/entry', {
                   headers: {
                     accept:
@@ -260,37 +315,50 @@ export default defineComponent({
                   },
                   referrer: 'https://netbanking.hdfcbank.com/netbanking/entry',
                   referrerPolicy: 'strict-origin-when-cross-origin',
-                  body: body,
+                  body: body2,
                   method: 'POST',
                   mode: 'cors',
                   credentials: 'include',
                 })
-                  .then((result) => {
-                    result
-                      .text()
-                      .then((result) => {
-                        // console.log('result: ', result)
-
-                        downloadTxtFile(result,'hdfcOld.txt')
-
-                        // 重置
-                        clearTimeout(timer)
-                        clearInterval(cutDownNumTimer)
-                        cutDownNum.value = ruleForm.intervalTime
-                        timer = setTimeout(() => {
-                          request()
-                        }, ruleForm.intervalTime * 1000 || 20000)
-                        cutDownNumTimer = setInterval(() => {
-                          cutDownNum.value--
-                          if (cutDownNum.value < 0) {
-                            clearInterval(cutDownNumTimer)
-                          }
-                        }, 1000)
-
-                      })
-                      .catch((err) => {})
+                  .then((res) => {
+                    // 这里解析body
+                    return res.arrayBuffer()
                   })
-                  .catch((err) => {})
+                  .then((res) => {
+                    console.log('res: ', res)
+                    // blob对象
+                    const a = document.createElement('a')
+                    const body: any = document.querySelector('frameset')
+                    // 这里注意添加需要下载的文件后缀；
+                    a.download = 'hdfcOld.xls'
+                    a.href = window.URL.createObjectURL(
+                      new Blob([res], {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                      }),
+                    )
+                    a.style.display = 'none'
+                    body.appendChild(a)
+                    a.click()
+                    body.removeChild(a)
+                    window.URL.revokeObjectURL(a.href)
+
+                    // 重置
+                    clearTimeout(timer)
+                    clearInterval(cutDownNumTimer)
+                    cutDownNum.value = ruleForm.intervalTime
+                    timer = setTimeout(() => {
+                      request()
+                    }, ruleForm.intervalTime * 1000 || 20000)
+                    cutDownNumTimer = setInterval(() => {
+                      cutDownNum.value--
+                      if (cutDownNum.value < 0) {
+                        clearInterval(cutDownNumTimer)
+                      }
+                    }, 1000)
+                  })
+                  .catch((err) => {
+                    console.log('err: ', err)
+                  })
               }
             })
             .catch((err) => {})
@@ -388,7 +456,7 @@ export default defineComponent({
           let fldFormatType = (
             document.querySelector('frame[name="main_part"]') as any
           ).contentWindow.document.querySelector('select[name="fldFormatType"]')
-          console.log('fldFormatType',fldFormatType);
+          console.log('fldFormatType', fldFormatType)
           if (fldFormatType) {
             fldFormatType.value = 'X'
             fldFormatType.dispatchEvent(new Event('change'))
@@ -434,32 +502,34 @@ export default defineComponent({
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
+      let _subAccount: any = await getSyncStorage('subAccount')
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
+      ruleForm.subAccount = _subAccount || ''
       cutDownNum.value = ruleForm.intervalTime
 
       setTimeout(() => {
         if (location.href === 'https://netbanking.hdfcbank.com/netbanking/entry') {
-        console.log(document.querySelector('frame[name="left_menu"]'));
-        if (document.querySelector('frame[name="left_menu"]')) {
-          let left_menu_inputs = (
-            document.querySelector('frame[name="left_menu"]') as any
-          ).contentWindow.document.querySelectorAll('form[name="frmMenu"] input')
-          let form: any = ''
-          for (const item of left_menu_inputs) {
-            // form[item.name] = item.value
-            var name = item.name
-            var value = item.value
-            if(name === 'fldTxnId'){
-              value = 'SIN'
+          console.log(document.querySelector('frame[name="left_menu"]'))
+          if (document.querySelector('frame[name="left_menu"]')) {
+            let left_menu_inputs = (
+              document.querySelector('frame[name="left_menu"]') as any
+            ).contentWindow.document.querySelectorAll('form[name="frmMenu"] input')
+            let form: any = ''
+            for (const item of left_menu_inputs) {
+              // form[item.name] = item.value
+              var name = item.name
+              var value = item.value
+              if (name === 'fldTxnId') {
+                value = 'SIN'
+              }
+              form += `${name}=${value}&`
             }
-            form += `${name}=${value}&`
+            form1Params.value = form
+            console.log('form1Params.value: ', form1Params.value)
           }
-          form1Params.value = form
-          console.log('form1Params.value: ', form1Params.value)
         }
-      }
-      }, 3000);
+      }, 3000)
     })
     return {
       settingVisible,

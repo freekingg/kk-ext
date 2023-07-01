@@ -49,6 +49,7 @@ import Paytm from './components/Paytm.vue'
 import Hdfc from './components/Hdfc.vue'
 import HdfcOld from './components/HdfcOld.vue'
 import Shivalik from './components/shivalik.vue'
+import Rblbank from './components/rblbank.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -82,6 +83,7 @@ export default defineComponent({
     Shivalik,
     Hdfc,
     HdfcOld,
+    Rblbank,
     View,
     ElIcon,
   },
@@ -239,6 +241,11 @@ export default defineComponent({
         type: 'HdfcOld',
         typeName: 'HdfcOld',
         matches: ['netbanking.hdfcbank.com'],
+      },
+      {
+        type: 'Rblbank',
+        typeName: 'RBL corporate',
+        matches: ['online.rblbank.com'],
       },
     ]
 

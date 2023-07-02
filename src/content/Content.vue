@@ -43,6 +43,7 @@ import Amazon from './components/Amazon.vue'
 import Bobi from './components/Bobi.vue'
 import Idbi from './components/Idbi.vue'
 import Icici from './components/Icici.vue'
+import IciciBank2 from './components/Icici2.vue'
 import IdfcCor from './components/IdfcCor.vue'
 import Msme from './components/Msme.vue'
 import Paytm from './components/Paytm.vue'
@@ -76,6 +77,7 @@ export default defineComponent({
     Bobi,
     Idbi,
     Icici,
+    IciciBank2,
     IdfcCor,
     Msme,
     AUBank,
@@ -209,6 +211,12 @@ export default defineComponent({
         matches: ['cibnext.icicibank.com'],
       },
       {
+        type: 'IciciBank2',
+        typeName: 'IciciBank2 转账助手',
+        injectJs: ['js/icic2.js'],
+        matches: ['app.bankonnect.co'],
+      },
+      {
         type: 'IdfcCor',
         typeName: 'Idfc Cor',
         matches: ['my.idfcfirstbank.com'],
@@ -262,6 +270,11 @@ export default defineComponent({
         }
 
         if(e.actionType === 'aubank'){
+          state.data = JSON.stringify(e.data)
+          return
+        }
+
+        if(e.actionType === 'icic2'){
           state.data = JSON.stringify(e.data)
           return
         }

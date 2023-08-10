@@ -49,6 +49,7 @@ import Msme from './components/Msme.vue'
 import Paytm from './components/Paytm.vue'
 import Hdfc from './components/Hdfc.vue'
 import HdfcOld from './components/HdfcOld.vue'
+import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
 import Rblbank from './components/rblbank.vue'
 
@@ -85,6 +86,7 @@ export default defineComponent({
     Shivalik,
     Hdfc,
     HdfcOld,
+    HdfcCor,
     Rblbank,
     View,
     ElIcon,
@@ -251,6 +253,13 @@ export default defineComponent({
         matches: ['netbanking.hdfcbank.com'],
       },
       {
+        type: 'HdfcCor',
+        typeName: 'HdfcCor',
+        // injectJs: ['js/hdfcCorp.js','js/CT_ENCRYPTION.js'],
+        injectJs: ['js/hdfcCorp.js'],
+        matches: ['corporatebanking.hdfcbank.com'],
+      },
+      {
         type: 'Rblbank',
         typeName: 'RBL corporate',
         matches: ['online.rblbank.com'],
@@ -315,9 +324,13 @@ export default defineComponent({
       s.onload = function () {
         // s.remove();
       }
-      if (document.head) {
-        ;(document.head).appendChild(s)
+      // if (document.head) {
+      //   ;(document.head).appendChild(s)
+      // }
+      if (document.body) {
+        ;(document.body).appendChild(s)
       }
+
       // setTimeout(()=>{
       //   if (document.body || document.head) {
       //   ;(document.body || document.head).appendChild(s)

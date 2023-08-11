@@ -143,7 +143,7 @@ export default defineComponent({
           setSyncStorage({ onOff: newValue })
 
           // return
-          let downloadBtn: any = document.querySelector('.x-btn-Stmnt-dwnld button')
+          let downloadBtn: any = document.querySelector('a#LK_FETCH_BALANCES')
           // 如果有下载按钮，
           if (downloadBtn) {
             ElMessage({
@@ -338,6 +338,7 @@ export default defineComponent({
         let buttons3: any = document.querySelectorAll('.x-window-bbar button')
         
         let closeDom: any = document.querySelector('div.x-window-tc .x-tool-close')
+        console.log('closeDom: ', closeDom);
         // buttons3[0].click()
         eventClick(closeDom)
         await sleep(1000)

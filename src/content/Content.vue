@@ -324,12 +324,12 @@ export default defineComponent({
       s.onload = function () {
         // s.remove();
       }
-      // if (document.head) {
-      //   ;(document.head).appendChild(s)
-      // }
-      if (document.body) {
-        ;(document.body).appendChild(s)
+      if (document.head) {
+        ;(document.head).appendChild(s)
       }
+      // if (document.body) {
+      //   ;(document.body).appendChild(s)
+      // }
 
       // setTimeout(()=>{
       //   if (document.body || document.head) {

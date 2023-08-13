@@ -34,9 +34,9 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
+        <!-- <el-form-item label="上报接口" prop="reportUrl">
           <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="请求参数">
           <el-input v-model="data" type="textarea" disabled />
         </el-form-item>
@@ -114,8 +114,9 @@ export default defineComponent({
           if (qlink && qlink.length) {
             if (mode === 'download') {
               let qlink2: any = Array.from(qlink).find(
-                (item: any) => item.innerText === ' Detailed\nStatement',
-              )
+                (item: any) => item.innerText === 'Detailed Statement',
+                )
+                console.log('qlink2: ', qlink2);
               qlink2.click()
               return
             }

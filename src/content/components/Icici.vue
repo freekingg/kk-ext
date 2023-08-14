@@ -114,11 +114,24 @@ export default defineComponent({
           if (qlink && qlink.length) {
             if (mode === 'download') {
               let qlink2: any = Array.from(qlink).find(
-                (item: any) => item.innerText === 'Detailed Statement',
+                (item: any) =>
+                  item.innerText === 'Detailed Statement' ||
+                  item.innerText === ' Detailed\nStatement',
               )
-              console.log('qlink2: ', qlink2)
               if (qlink2) {
                 qlink2.click()
+              } else {
+                ElMessage({
+                  message: '[启动失败]：请在流水查询启动.',
+                  type: 'error',
+                })
+                ElMessage({
+                  message: '[启动失败]：请在流水查询启动.',
+                  type: 'error',
+                })
+                clearTimeout(timer)
+                clearInterval(cutDownNumTimer)
+                setSyncStorage({ onOff: false })
               }
               return
             }

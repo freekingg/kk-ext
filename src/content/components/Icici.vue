@@ -115,9 +115,11 @@ export default defineComponent({
             if (mode === 'download') {
               let qlink2: any = Array.from(qlink).find(
                 (item: any) => item.innerText === 'Detailed Statement',
-                )
-                console.log('qlink2: ', qlink2);
-              qlink2.click()
+              )
+              console.log('qlink2: ', qlink2)
+              if (qlink2) {
+                qlink2.click()
+              }
               return
             }
           }
@@ -211,16 +213,20 @@ export default defineComponent({
         todaybtn.click()
         await sleep(1000)
 
-        let startInput:any = document.getElementById('PageConfigurationMaster_CDESTW__1:TransactionHistoryFG.FROM_TXN_DATE')
+        let startInput: any = document.getElementById(
+          'PageConfigurationMaster_CDESTW__1:TransactionHistoryFG.FROM_TXN_DATE',
+        )
         const syn2 = startInput.value.indexOf('-')
         let format = 'DD/MM/YYYY'
-        if(syn2 !== -1){
+        if (syn2 !== -1) {
           format = 'DD-MM-YYYY'
         }
-        console.log('format: ', format);
+        console.log('format: ', format)
 
-        let endday = dayjs().add(2,'day').format(format)
-        let endInput:any = document.getElementById('PageConfigurationMaster_CDESTW__1:TransactionHistoryFG.TO_TXN_DATE')
+        let endday = dayjs().add(2, 'day').format(format)
+        let endInput: any = document.getElementById(
+          'PageConfigurationMaster_CDESTW__1:TransactionHistoryFG.TO_TXN_DATE',
+        )
         endInput.value = endday
 
         await sleep(1000)

@@ -1,9 +1,8 @@
 <template>
   <main id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站不支持后台下载流水，登录成功后，在转帐界面，点击开关即可自动下载
+        此网站可以多开网页，可以一个在流水界面下流水，另一个转账，（在标签上右键可以复制网页）
       </p>
     </div>
     <section class="run-status">

@@ -3,6 +3,7 @@ console.info('chrome-ext template-vue-ts background script')
 
 
 chrome.runtime.onInstalled.addListener(async () => {
+  console.log('contextMenus');
   const menus:any = {
     contexts: ["all"],
     id: 'copy',

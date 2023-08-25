@@ -1,9 +1,9 @@
 <template>
   <main id="kk-container">
     <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c" @click="helpHandle"><QuestionFilled /></el-icon>
       <p style="font-size: 14px; display: inline-block">
-        此网站支持后台下载流水，需要流水界面选择日期进行一次查询
+        1、<span style="color: red;">此网站支持后台下载流水</span> <br>
+        2、在Stagements页面选择more,再选择日期查询一次即可后台下载
       </p>
     </div>
     <section class="run-status">
@@ -32,12 +32,6 @@
       >
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
-        </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
-          <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
-        <el-form-item label="请求参数">
-          <el-input v-model="data" type="textarea" disabled />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -229,55 +223,14 @@ export default defineComponent({
           },
           referrer: 'https://corporate.bandhanbank.com/Corporatebanking/account/statement/start',
           referrerPolicy: 'same-origin',
-          body:body1,
+          body: body1,
           method: 'POST',
           mode: 'cors',
           credentials: 'include',
         },
-      ).then((res) => {
-        fetch('https://corporate.bandhanbank.com/Corporatebanking/report-statement/download', {
-          headers: {
-            accept: '*/*',
-            'accept-language': 'zh-CN,zh;q=0.9,en-CA;q=0.8,en;q=0.7,ja-JP;q=0.6,ja;q=0.5',
-            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'sec-ch-ua': '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'x-csrf-token': `${dataForm.token}`,
-            'x-requested-with': 'XMLHttpRequest',
-          },
-          referrer: 'https://corporate.bandhanbank.com/Corporatebanking/account/statement/start',
-          referrerPolicy: 'strict-origin-when-cross-origin',
-          body: body2,
-          method: 'POST',
-          mode: 'cors',
-          credentials: 'include',
-        })
-          .then((res) => {
-            // 这里解析body
-            return res.arrayBuffer()
-          })
-          .then((res) => {
-            console.log('res: ', res)
-            // blob对象
-            const a = document.createElement('a')
-            const body: any = document.querySelector('body')
-            // 这里注意添加需要下载的文件后缀；
-            a.download = 'bandhan.xlsx'
-            a.href = window.URL.createObjectURL(
-              new Blob([res], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-              }),
-            )
-            a.style.display = 'none'
-            body.appendChild(a)
-            a.click()
-            body.removeChild(a)
-            window.URL.revokeObjectURL(a.href)
-
+      )
+        .then((res) => {
+          if (!res.ok) {
             // 重置
             clearTimeout(timer)
             clearInterval(cutDownNumTimer)
@@ -291,19 +244,79 @@ export default defineComponent({
                 clearInterval(cutDownNumTimer)
               }
             }, 1000)
-          })
-          .catch((err) => {
-            console.log('下载出错: ', err)
-            clearTimeout(timer)
-            clearInterval(cutDownNumTimer)
-            ElMessage({
-              message: '[下载出错]：请刷新浏览器重新操作.',
-              type: 'error',
-            })
-          })
-      })
-    }
+            return
+          }
 
+          fetch('https://corporate.bandhanbank.com/Corporatebanking/report-statement/download', {
+            headers: {
+              accept: '*/*',
+              'accept-language': 'zh-CN,zh;q=0.9,en-CA;q=0.8,en;q=0.7,ja-JP;q=0.6,ja;q=0.5',
+              'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              'sec-ch-ua': '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
+              'sec-ch-ua-mobile': '?0',
+              'sec-ch-ua-platform': '"macOS"',
+              'sec-fetch-dest': 'empty',
+              'sec-fetch-mode': 'cors',
+              'sec-fetch-site': 'same-origin',
+              'x-csrf-token': `${dataForm.token}`,
+              'x-requested-with': 'XMLHttpRequest',
+            },
+            referrer: 'https://corporate.bandhanbank.com/Corporatebanking/account/statement/start',
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            body: body2,
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'include',
+          })
+            .then((res) => {
+              // 这里解析body
+              return res.arrayBuffer()
+            })
+            .then((res) => {
+              // blob对象
+              const a = document.createElement('a')
+              const body: any = document.querySelector('body')
+              // 这里注意添加需要下载的文件后缀；
+              a.download = 'bandhan.xlsx'
+              a.href = window.URL.createObjectURL(
+                new Blob([res], {
+                  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+              )
+              a.style.display = 'none'
+              body.appendChild(a)
+              a.click()
+              body.removeChild(a)
+              window.URL.revokeObjectURL(a.href)
+
+              // 重置
+              clearTimeout(timer)
+              clearInterval(cutDownNumTimer)
+              cutDownNum.value = ruleForm.intervalTime
+              timer = setTimeout(() => {
+                download()
+              }, ruleForm.intervalTime * 1000 || 30000)
+              cutDownNumTimer = setInterval(() => {
+                cutDownNum.value--
+                if (cutDownNum.value < 0) {
+                  clearInterval(cutDownNumTimer)
+                }
+              }, 1000)
+            })
+            .catch((err) => {
+              console.log('下载出错: ', err)
+              clearTimeout(timer)
+              clearInterval(cutDownNumTimer)
+              ElMessage({
+                message: '[下载出错]：请刷新浏览器重新操作.',
+                type: 'error',
+              })
+            })
+        })
+        .catch((e) => {
+          console.log('e', e)
+        })
+    }
     const getCookie = (name: string) => {
       var arr,
         reg = new RegExp('(^| )' + name + '=([^;]*)(;|$)')

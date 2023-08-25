@@ -51,7 +51,7 @@ import Hdfc from './components/Hdfc.vue'
 import HdfcOld from './components/HdfcOld.vue'
 import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
-import Rblbank from './components/rblbank.vue'
+import Rblbank from './components/Rblbank.vue'
 
 
 import { ElMessage } from 'element-plus'
@@ -261,7 +261,7 @@ export default defineComponent({
       },
       {
         type: 'Rblbank',
-        typeName: 'RBL corporate',
+        typeName: 'RBL',
         matches: ['online.rblbank.com'],
       },
     ]

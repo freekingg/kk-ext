@@ -3,7 +3,7 @@
     <div style="display: flex; align-items: center; width: 350px; font-size: 14px; flex-wrap: wrap">
       <el-alert title="操作说明" type="info">
         <p>此网站不支持接口下载</p>
-        <p>直接点下载按钮或者打开开关即可自动下载xls流水文件</p>
+        <p>在Account Statement流水界面点击开始即可自动下载</p>
       </el-alert>
     </div>
     <section class="run-status">
@@ -38,25 +38,6 @@
         </el-form-item>
       </el-form>
     </section>
-    <div class="btn-area" style="display: flex; justify-content: center; margin-bottom: 10px">
-      <el-button type="primary" @click="startHandle">下载流水</el-button>
-      <!-- <el-button type="primary" @click="transForPageHandle">转账</el-button> -->
-    </div>
-    <el-dialog v-model="dialogHelpVisible" title="Tips" width="30%">
-      <div>
-        <strong>使用方法</strong>
-        <ul style="padding: 0 20px">
-          <li>1、进入流水界面，然后点击开始</li>
-          <li>2、不想下载流水时将开关关闭</li>
-          <li>3、下载间隔时间从设置里面配置</li>
-        </ul>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button type="primary" @click="dialogHelpVisible = false">Confirm</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </main>
 </template>
 
@@ -144,11 +125,7 @@ export default defineComponent({
 
     // 检查流水页面
     const watchBillPage = () => {
-      let HREF_Space: any = document.querySelector('#name_header')
-      let MoreDetails: any = document.getElementById(
-        'PageConfigurationMaster_CXACBSW__1:MoreDetails',
-      )
-
+      let HREF_Space: any = document.querySelector('a[title="Accounts"]')
       if (HREF_Space) {
         return true
       } else {
@@ -169,8 +146,15 @@ export default defineComponent({
     }
 
     const checkBlockOverlay = () => {
+      let maxNum = 120
+      let num = 0
       return new Promise((resolve) => {
         let timer = setInterval(() => {
+          num++
+          if (maxNum > maxNum) {
+            clearInterval(timer)
+            resolve(false)
+          }
           let blockOverlay: any = document.querySelector('.blockUI')
           if (!blockOverlay) {
             clearInterval(timer)
@@ -185,53 +169,22 @@ export default defineComponent({
       if (!watchBillPage()) {
         return
       }
-      const liushuiHandle = async () => {
-        // 选择时间类型
-        let txnDateRadioButton: any = document.getElementById(
-          'PageConfigurationMaster_CXACBSW__1:txnDateRadioButton',
-        )
-        if (txnDateRadioButton) {
-          txnDateRadioButton.click()
+
+      var myDate = new Date()
+      function add(n: any) {
+        if (n <= 9) {
+          return `0${n}`
         }
+        return n
+      }
+      var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+      var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+      var myToday = add(myDate.getDate()) //获取当前日(1-31)
+      let today = `${myToday}/${myMonth}/${myYear}`
+      // let today = `20/06/2023`   24/02/2023
+      // 展开过滤条件
 
-        var myDate = new Date()
-        function add(n: any) {
-          if (n <= 9) {
-            return `0${n}`
-          }
-          return n
-        }
-        var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
-        var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
-        var myToday = add(myDate.getDate()) //获取当前日(1-31)
-        let today = `${myToday}/${myMonth}/${myYear}`
-        // let today = `20/06/2023`
-
-        // 时间赋值
-        let FROM_TXN_DATE: any = document.getElementById(
-          'PageConfigurationMaster_CXACBSW__1:TransactionHistoryFG.FROM_TXN_DATE',
-        )
-        let TO_TXN_DATE: any = document.getElementById(
-          'PageConfigurationMaster_CXACBSW__1:TransactionHistoryFG.TO_TXN_DATE',
-        )
-        if (FROM_TXN_DATE) {
-          FROM_TXN_DATE.value = today
-          TO_TXN_DATE.value = today
-        }
-
-        let SEARCH: any = document.getElementById('PageConfigurationMaster_CXACBSW__1:SEARCH')
-        SEARCH.click()
-        await checkBlockOverlay()
-
-        let downloadtext: any = document.querySelector('.downloadtext')
-        if (downloadtext) {
-          let GENERATE_REPORT4: any = document.getElementById(
-            'PageConfigurationMaster_CXACBSW__1:GENERATE_REPORT4',
-          )
-          GENERATE_REPORT4.click()
-          await sleep(3000)
-        }
-
+      const resetHandle = () => {
         // 重置
         clearTimeout(timer)
         clearInterval(cutDownNumTimer)
@@ -247,28 +200,52 @@ export default defineComponent({
         }, 1000)
       }
 
-      await checkBlockOverlay()
-      await sleep(3000)
+      const liushuiHandle = async () => {
 
-      // 是否在流水界面
-      let AccountStatement: any = document.querySelector('input[name="Action.SEARCH"]')
-      let ac: any = document.getElementById('PageConfigurationMaster_CXACBSW__1:NavigationPanel_Stage313.Ra1.C1')
-      // 账号详情页面
-      let accountDetail: any = document.querySelector('a[title="Account Number"]')
-      
-      if (AccountStatement) {
-        console.log('AccountStatement: ', AccountStatement)
-        // 流水界面
-        liushuiHandle()
-      } else if (ac && accountDetail) {
-        accountDetail.click()
-        await checkBlockOverlay()
-        liushuiHandle()
-      } else {
-        let parent_DASHAT: any = document.querySelector('#parent_CACTS #IL_CACTS_20 a')
-        console.log('parent_DASHAT: ', parent_DASHAT)
-        if (parent_DASHAT) {
-          parent_DASHAT.click()
+        // 选择日期
+        let dateRadioDom:any = document.querySelector('input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]')
+        if(dateRadioDom){
+          let ischecked:any = dateRadioDom.checked
+          if(!ischecked){
+            eventClick(dateRadioDom)
+            await sleep(1000)
+          }
+        }
+
+        let startDateDom: any = document.querySelector(
+          'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
+        )
+        if (startDateDom) {
+          startDateDom.value = today
+        }
+
+        // 搜索
+        let searchDom: any = document.querySelector('input[name="Action.SEARCH"]')
+        if (searchDom) {
+          eventClick(searchDom)
+          let r = await checkBlockOverlay()
+          await sleep(2000)
+          if (r) {
+            let xlsDom: any = document.querySelector('input[title="Download as XLS"]')
+            if (xlsDom) {
+              eventClick(xlsDom)
+              resetHandle()
+            }
+          } else {
+            resetHandle()
+          }
+        }
+      }
+
+      let expandableMenu: any = document.querySelector('a[name="HREF_MoreDetails"]')
+      if (expandableMenu) {
+        let hasCollapsipleMenu = expandableMenu.classList.contains('collapsipleMenu')
+        if (hasCollapsipleMenu) {
+          liushuiHandle()
+        } else {
+          eventClick(expandableMenu)
+          await sleep(1000)
+          liushuiHandle()
         }
       }
     }

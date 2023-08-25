@@ -221,6 +221,7 @@ export default defineComponent({
 
               // 使用正则表达式匹配字符串中的变量值
               const match = variableRegex.exec(htmlString)
+              console.log('match: ', match);
               // 获取匹配到的变量值
               let acc = match && match[1]
               if (ruleForm.subAccount) {

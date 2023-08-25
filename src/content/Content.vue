@@ -52,7 +52,7 @@ import HdfcOld from './components/HdfcOld.vue'
 import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
 import Rblbank from './components/Rblbank.vue'
-
+import IndusnetCor from './components/IndusnetCor.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
@@ -88,6 +88,7 @@ export default defineComponent({
     HdfcOld,
     HdfcCor,
     Rblbank,
+    IndusnetCor,
     View,
     ElIcon,
   },
@@ -119,6 +120,11 @@ export default defineComponent({
         type: 'Indusnet',
         typeName: 'Indusnet',
         matches: ['indusnet.indusind.com'],
+      },
+      {
+        type: 'IndusnetCor',
+        typeName: 'Indusnet Cor',
+        matches: ['indusdirect.indusind.com'],
       },
       {
         type: 'Pnbcor',

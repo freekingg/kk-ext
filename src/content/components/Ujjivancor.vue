@@ -7,7 +7,6 @@
       </p>
     </div>
     <section class="run-status">
-      <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
           <img :src="runGifSrc" v-if="onOff" />

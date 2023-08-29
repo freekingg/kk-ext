@@ -7,21 +7,16 @@
       </el-alert>
     </div>
     <section class="run-status">
-      <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
           <img :src="runGifSrc" v-if="onOff" />
         </template>
-        <!-- <template #sub-title>
-          <img :src="runGifSrc" v-if="onOff">
-        </template> -->
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
         </template>
       </el-result>
     </section>
     <section v-if="settingVisible">
-      <!-- <el-alert title="配置" type="info" center show-icon /> -->
       <el-form
         ref="ruleFormRef"
         :model="ruleForm"
@@ -32,6 +27,12 @@
       >
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
+        </el-form-item>
+        <el-form-item label="下载模式">
+          <el-radio-group v-model="ruleForm.downloadMode">
+            <el-radio :label="1">全流水模式</el-radio>
+            <el-radio :label="2">最近40笔</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -77,6 +78,7 @@ export default defineComponent({
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      downloadMode: 1,
       accNumber: '', //accNumber
     })
     const rules = reactive({
@@ -92,7 +94,6 @@ export default defineComponent({
         clearInterval(checkDownTimer)
         clearInterval(checkLiushuiPage)
         clearInterval(checkoutBlockOverlayTimer)
-        setSyncStorage({ mode: 'download' })
         if (newValue) {
           setSyncStorage({ onOff: newValue })
           if (!watchBillPage()) {
@@ -208,26 +209,37 @@ export default defineComponent({
         }
         console.log('type: ', type)
 
-        if (type === 'Person') {
-          // 选择日期
-          let dateRadioDom: any = document.querySelector(
-            'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
-          )
-          if (dateRadioDom) {
-            let ischecked: any = dateRadioDom.checked
-            if (!ischecked) {
-              eventClick(dateRadioDom)
-              await sleep(1000)
-            }
-          }
+        let downloadMode: any = ruleForm.downloadMode
 
-          let startDateDom: any = document.querySelector(
-            'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
-          )
-          if (startDateDom) {
-            startDateDom.value = today
+        if (type === 'Person') {
+          if (downloadMode === 2) {
+            let lastInput: any = document.querySelector(
+              'input[name="TransactionHistoryFG.LAST_N_TXN"]',
+            )
+            lastInput.click()
+            lastInput.value = 40
+            await sleep(1000)
+          } else {
+            // 选择日期
+            let dateRadioDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+            )
+            if (dateRadioDom) {
+              let ischecked: any = dateRadioDom.checked
+              if (!ischecked) {
+                eventClick(dateRadioDom)
+                await sleep(1000)
+              }
+            }
+
+            let startDateDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
+            )
+            if (startDateDom) {
+              startDateDom.value = today
+            }
+            await sleep(1000)
           }
-          await sleep(1000)
         } else {
           // let radioLast: any = document.querySelector(
           //   'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
@@ -301,45 +313,13 @@ export default defineComponent({
       dialogHelpVisible.value = true
     }
 
-    const startHandle = async () => {
-      setSyncStorage({ mode: 'download' })
-      ctx.emit('onOffHandle', false)
-      await sleep(1000)
-      ctx.emit('onOffHandle', true)
-    }
-    const transForPageHandle = async () => {
-      let transfer: any = document.querySelector('#ID_RTXNUI')
-      if (transfer) {
-        setSyncStorage({ mode: 'transer' })
-        transfer.click()
-        await sleep(1000)
-        let transfer2: any = document.querySelector('#Make-Payments_Make-Payments')
-        ctx.emit('onOffHandle', false)
-        transfer2.click()
-      }
-    }
-
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
-      let _reportUrl: any = await getSyncStorage('reportUrl')
-      let mode: any = await getSyncStorage('mode')
-      let onOff: any = (await getSyncStorage('onOff')) || false
-      if (onOff) {
-        ctx.emit('onOffHandle', onOff)
-      }
-      if (mode === 'transer') {
-        let lis: any = document.querySelectorAll('.stage3_menuIdTextlink li')
-        if (lis && lis.length) {
-          setSyncStorage({ mode: 'download' })
-          let indexs = Array.from(lis).findIndex(
-            (item: any) => item.innerText === 'Outside Bank Transfer',
-          ) //Today Last 1 Month
-          lis[indexs].querySelector('a').click()
-        }
-      }
+      let downloadMode: any = await getSyncStorage('downloadMode')
+
+      ruleForm.downloadMode = downloadMode || 1
       ruleForm.intervalTime = _intervalTime || 20
-      ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
     })
     return {
@@ -353,8 +333,6 @@ export default defineComponent({
       cutDownNum,
       submitForm,
       resetForm,
-      startHandle,
-      transForPageHandle,
       dialogHelpVisible,
       ...toRefs(state),
     }

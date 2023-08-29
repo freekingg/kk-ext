@@ -367,7 +367,6 @@ export default defineComponent({
     // 与后台通信
     onMounted(async () => {
       // chrome.storage.sync.clear()
-    
       let PgHeading = document.getElementById('PgHeading.Ra1.C2')
       if(PgHeading?.innerText === 'View Mini Statement'){
         pageType.value = 'Mini'

@@ -51,7 +51,7 @@ import Hdfc from './components/Hdfc.vue'
 import HdfcOld from './components/HdfcOld.vue'
 import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
-import Rblbank from './components/Rblbank.vue'
+import Rblbank from './components/rblbank.vue'
 import IndusnetCor from './components/IndusnetCor.vue'
 
 import { ElMessage } from 'element-plus'

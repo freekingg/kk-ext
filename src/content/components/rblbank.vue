@@ -201,22 +201,46 @@ export default defineComponent({
       }
 
       const liushuiHandle = async () => {
-
-        // 选择日期
-        let dateRadioDom:any = document.querySelector('input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]')
-        if(dateRadioDom){
-          let ischecked:any = dateRadioDom.checked
-          if(!ischecked){
-            eventClick(dateRadioDom)
-            await sleep(1000)
-          }
+        let pathname: any = location.pathname
+        let type: any = 'Person'
+        if (pathname.indexOf('CorpBank') > -1) {
+          type = 'CorpBank'
         }
+        console.log('type: ', type)
 
-        let startDateDom: any = document.querySelector(
-          'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
-        )
-        if (startDateDom) {
-          startDateDom.value = today
+        if (type === 'Person') {
+          // 选择日期
+          let dateRadioDom: any = document.querySelector(
+            'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+          )
+          if (dateRadioDom) {
+            let ischecked: any = dateRadioDom.checked
+            if (!ischecked) {
+              eventClick(dateRadioDom)
+              await sleep(1000)
+            }
+          }
+
+          let startDateDom: any = document.querySelector(
+            'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
+          )
+          if (startDateDom) {
+            startDateDom.value = today
+          }
+          await sleep(1000)
+        } else {
+          // let radioLast: any = document.querySelector(
+          //   'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+          // )
+          // eventClick(radioLast)
+          // await sleep(1000)
+
+          let lastInput: any = document.querySelector(
+            'input[name="TransactionHistoryFG.LAST_N_TXN"]',
+          )
+          lastInput.click()
+          lastInput.value = 40
+          await sleep(1000)
         }
 
         // 搜索
@@ -224,12 +248,26 @@ export default defineComponent({
         if (searchDom) {
           eventClick(searchDom)
           let r = await checkBlockOverlay()
+          console.log('r: ', r)
           await sleep(2000)
           if (r) {
-            let xlsDom: any = document.querySelector('input[title="Download as XLS"]')
-            if (xlsDom) {
-              eventClick(xlsDom)
-              resetHandle()
+            // let xlsDom: any = document.querySelector('input[title="Download as XLS"]')
+
+            if (type === 'Person') {
+              // 个户 edit xls文件
+              let xlsDom: any = document.querySelector('input[name="Action.DOWNLOAD_SORT_XLS"]')
+              if (xlsDom) {
+                eventClick(xlsDom)
+                resetHandle()
+              }
+            } else {
+              // 公户 最近40
+              let xlsDom2: any = document.querySelector('input[name="Action.GENERATE_REPORT"]')
+              console.log('xlsDom2: ', xlsDom2)
+              if (xlsDom2) {
+                eventClick(xlsDom2)
+                resetHandle()
+              }
             }
           } else {
             resetHandle()

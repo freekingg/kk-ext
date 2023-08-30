@@ -32,7 +32,29 @@
           <el-radio-group v-model="ruleForm.downloadMode">
             <el-radio :label="1">全流水模式</el-radio>
             <el-radio :label="2">最近40笔</el-radio>
+            <el-radio :label="3">金额区间</el-radio>
           </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="ruleForm.downloadMode === 3"
+          label="金额范围"
+          prop="reportUrl"
+          v-for="(item, index) in limits"
+          :key="index"
+        >
+          <el-input size="small" v-model="item.min" style="width: 100px" /> -
+          <el-input
+            size="small"
+            v-model="item.max"
+            style="width: 100px; margin-left: 4px; margin-right: 4px"
+          />
+          <el-switch
+            size="small"
+            v-model="item.onOff"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          >
+          </el-switch>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -43,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
+import { defineComponent, ref, onMounted, reactive, toRefs, watch, toRaw } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled, Search } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
@@ -81,6 +103,22 @@ export default defineComponent({
       downloadMode: 1,
       accNumber: '', //accNumber
     })
+
+    const limits: any = ref([
+      { min: 100, max: 200, onOff: true },
+      { min: 201, max: 600, onOff: false },
+      { min: 601, max: 1000, onOff: false },
+      { min: 1001, max: 1500, onOff: false },
+      { min: 1501, max: 2500, onOff: false },
+      { min: 2501, max: 4000, onOff: false },
+      { min: 4001, max: 6000, onOff: false },
+      { min: 6001, max: 8000, onOff: false },
+      { min: 8001, max: 10000, onOff: false },
+      { min: 10001, max: 25000, onOff: false },
+      { min: 25001, max: 50000, onOff: false },
+      { min: 50001, max: 100000, onOff: false },
+    ])
+
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
@@ -138,7 +176,8 @@ export default defineComponent({
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
         if (valid) {
-          console.log('submit!')
+          setSyncStorage({ step: 0 })
+          setSyncStorage({ limits: toRaw(limits.value) })
           setSyncStorage(ruleForm)
         } else {
           console.log('error submit!', fields)
@@ -211,6 +250,11 @@ export default defineComponent({
 
         let downloadMode: any = ruleForm.downloadMode
 
+        let FROM_AMOUNT: any = document.querySelector(
+          'input[name="TransactionHistoryFG.FROM_AMOUNT"]',
+        )
+        let TO_AMOUNT: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
+
         if (type === 'Person') {
           if (downloadMode === 2) {
             let lastInput: any = document.querySelector(
@@ -218,7 +262,55 @@ export default defineComponent({
             )
             lastInput.click()
             lastInput.value = 40
+
+            if (FROM_AMOUNT) {
+              FROM_AMOUNT.value = ''
+              TO_AMOUNT.value = ''
+            }
+
             await sleep(1000)
+          } else if (downloadMode === 3) {
+            // 选择日期
+            let dateRadioDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
+            )
+            if (dateRadioDom) {
+              let ischecked: any = dateRadioDom.checked
+              if (!ischecked) {
+                eventClick(dateRadioDom)
+                await sleep(1000)
+              }
+            }
+
+            let startDateDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
+            )
+            let endDateDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.TO_TXN_DATE"]',
+            )
+            if (startDateDom) {
+              startDateDom.value = today
+            }
+            if (endDateDom) {
+              endDateDom.value = today
+            }
+            await sleep(1000)
+
+            let _step: number = (await getSyncStorage('step')) || 0
+            let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
+            let targetAmount = keyong[_step]
+            console.log('targetAmount: ', targetAmount)
+            if (targetAmount) {
+              if (FROM_AMOUNT) {
+                FROM_AMOUNT.value = targetAmount['min']
+                TO_AMOUNT.value = targetAmount['max']
+              }
+              setSyncStorage({ step: _step + 1 })
+            } else {
+              setSyncStorage({ step: 0 })
+              resetHandle()
+              return
+            }
           } else {
             // 选择日期
             let dateRadioDom: any = document.querySelector(
@@ -235,8 +327,19 @@ export default defineComponent({
             let startDateDom: any = document.querySelector(
               'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
             )
+            let endDateDom: any = document.querySelector(
+              'input[name="TransactionHistoryFG.TO_TXN_DATE"]',
+            )
             if (startDateDom) {
               startDateDom.value = today
+            }
+            if (endDateDom) {
+              endDateDom.value = today
+            }
+
+            if (FROM_AMOUNT) {
+              FROM_AMOUNT.value = ''
+              TO_AMOUNT.value = ''
             }
             await sleep(1000)
           }
@@ -270,6 +373,11 @@ export default defineComponent({
               let xlsDom: any = document.querySelector('input[name="Action.DOWNLOAD_SORT_XLS"]')
               if (xlsDom) {
                 eventClick(xlsDom)
+                if (downloadMode === 3) {
+                  await sleep(5000)
+                  download()
+                  return
+                }
                 resetHandle()
               }
             } else {
@@ -317,6 +425,21 @@ export default defineComponent({
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let downloadMode: any = await getSyncStorage('downloadMode')
+      let _limits: number = await getSyncStorage('limits')
+      limits.value = _limits || [
+        { min: 100, max: 200, onOff: true },
+        { min: 201, max: 600, onOff: false },
+        { min: 601, max: 1000, onOff: false },
+        { min: 1001, max: 1500, onOff: false },
+        { min: 1501, max: 2500, onOff: false },
+        { min: 2501, max: 4000, onOff: false },
+        { min: 4001, max: 6000, onOff: false },
+        { min: 6001, max: 8000, onOff: false },
+        { min: 8001, max: 10000, onOff: false },
+        { min: 10001, max: 25000, onOff: false },
+        { min: 25001, max: 50000, onOff: false },
+        { min: 50001, max: 100000, onOff: false },
+      ]
 
       ruleForm.downloadMode = downloadMode || 1
       ruleForm.intervalTime = _intervalTime || 20
@@ -334,6 +457,7 @@ export default defineComponent({
       submitForm,
       resetForm,
       dialogHelpVisible,
+      limits,
       ...toRefs(state),
     }
   },
@@ -345,6 +469,10 @@ export default defineComponent({
   display: flex;
   justify-content: center;
 }
+#kk-container {
+  max-height: 72vh;
+  overflow: auto;
+}
 #kk-container :deep() .el-result {
   padding-top: 0;
 }
@@ -353,5 +481,13 @@ export default defineComponent({
 }
 #kk-container :deep() .el-result__extra {
   margin-top: 10px;
+}
+
+#kk-container :deep() input[type='text'] {
+  border-bottom: 1px solid #e9e9e9;
+  color: #010101;
+  height: 1.5rem !important;
+  margin-top: 4px;
+  width: 100%;
 }
 </style>

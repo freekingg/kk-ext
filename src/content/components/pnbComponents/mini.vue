@@ -3,13 +3,14 @@
     <div style="display: flex; align-items: center; width: 350px">
       <p style="font-size: 14px; display: inline-block">
         停留在当前页面，会自动下载最近10笔 <br />
+        <span style="color: red">卡接请不要下载最近10笔</span> <br />
       </p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <img :src="runGifSrc" style="width: 100px;" v-if="onOff" />
+          <img :src="runGifSrc" style="width: 100px" v-if="onOff" />
         </template>
         <!-- <template #sub-title>
           <img :src="runGifSrc" v-if="onOff">
@@ -208,7 +209,7 @@ export default defineComponent({
       // chrome.storage.sync.clear()
 
       let _intervalTime: number = await getSyncStorage('intervalTimeMini')
-      console.log('_intervalTime: ', _intervalTime);
+      console.log('_intervalTime: ', _intervalTime)
       let _index: number = await getSyncStorage('indexMini')
 
       let onOff: any = (await getSyncStorage('onOff')) || false

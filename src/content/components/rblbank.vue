@@ -4,6 +4,12 @@
       <el-alert title="操作说明" type="info">
         <p>此网站不支持接口下载</p>
         <p>在Account Statement流水界面点击开始即可自动下载</p>
+        <p><strong>使用说明：</strong></p>
+        <p style="color: red;">1、当流水量不大或者收款总额小于3000万时可以使用全流水模式</p>
+        <p style="color: red;">2、当总额大于3000万或者下载慢时可以使用金额区间模式,
+        分析哪个区间比较慢，然后再次拆分，比方100-200区间下载慢，则拆分为100-150，150-200这样。
+        根据具体情况，具体调控</p>
+        <p style="color: red;">3、如果同时使用个户的金额区间，再加上公户的最近40笔，效果是最好的。(公户的下载文件需要下载到个户文件夹内)</p>
       </el-alert>
     </div>
     <section class="run-status">
@@ -105,10 +111,10 @@ export default defineComponent({
     })
 
     const limits: any = ref([
-      { min: 100, max: 200, onOff: true },
-      { min: 201, max: 600, onOff: false },
-      { min: 601, max: 1000, onOff: false },
-      { min: 1001, max: 1500, onOff: false },
+      { min: 100, max: 150, onOff: true },
+      { min: 150, max: 200, onOff: false },
+      { min: 200, max: 500, onOff: false },
+      { min: 500, max: 1500, onOff: false },
       { min: 1501, max: 2500, onOff: false },
       { min: 2501, max: 4000, onOff: false },
       { min: 4001, max: 6000, onOff: false },
@@ -427,10 +433,10 @@ export default defineComponent({
       let downloadMode: any = await getSyncStorage('downloadMode')
       let _limits: number = await getSyncStorage('limits')
       limits.value = _limits || [
-        { min: 100, max: 200, onOff: true },
-        { min: 201, max: 600, onOff: false },
-        { min: 601, max: 1000, onOff: false },
-        { min: 1001, max: 1500, onOff: false },
+        { min: 100, max: 150, onOff: true },
+        { min: 150, max: 200, onOff: false },
+        { min: 200, max: 500, onOff: false },
+        { min: 500, max: 1500, onOff: false },
         { min: 1501, max: 2500, onOff: false },
         { min: 2501, max: 4000, onOff: false },
         { min: 4001, max: 6000, onOff: false },

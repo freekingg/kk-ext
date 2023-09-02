@@ -1,10 +1,13 @@
 <template>
   <main id="kk-container">
-    <div style="display: flex; align-items: center; width: 350px">
-      <p style="font-size: 14px; display: inline-block">
-        此网站可以 <span style="color: red;">多开网页</span> ，
-        可以一个网页在流水界面下流水，另一个转账，（在标签上右键可以复制网页）
+    <div style="width: 350px">
+      <p style="font-size: 14px; margin: 0; padding: 0">
+        1、此网站可以 <span style="color: red">多开网页</span> ，
       </p>
+      <p style="font-size: 14px; margin: 0; padding: 0; color: red">
+        2、可以用多个网页在同时下流水，其中一个页面转账
+      </p>
+      <p style="font-size: 14px; margin: 0; padding: 0; color: red">3、在网页右键选择复制当前窗口</p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
@@ -20,20 +23,20 @@
     <section v-if="settingVisible">
       <el-form
         ref="ruleFormRef"
-        :model="ruleForm"
+        :model="currentTab.ruleForm"
         :rules="rules"
         label-width="120px"
         class="demo-ruleForm"
         status-icon
       >
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
-          <el-input type="number" v-model="ruleForm.intervalTime" />
+          <el-input type="number" v-model="currentTab.ruleForm.intervalTime" />
         </el-form-item>
         <el-form-item label="customer下标" prop="customerIndex">
-          <el-input type="number" v-model="ruleForm.customerIndex" />
+          <el-input type="number" v-model="currentTab.ruleForm.customerIndex" />
         </el-form-item>
         <el-form-item label="account下标" prop="accountIndex">
-          <el-input type="number" v-model="ruleForm.accountIndex" />
+          <el-input type="number" v-model="currentTab.ruleForm.accountIndex" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -65,38 +68,46 @@ export default defineComponent({
     const cutDownNum = ref(30)
     const settingVisible = ref(false)
     const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
-    const state = reactive({
-      currentTab: null,
+    const currentTab: any = reactive({
+      ruleForm: {
+        intervalTime: 20, //爬取间隔时间
+        name: 'Hello',
+        customerIndex: 1, //accNumber
+        accountIndex: 1, //accNumber
+      },
+      step: 'customer',
+      cutDownNum: 20,
     })
 
     const { setSyncStorage, getSyncStorage } = useStorage()
 
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
-    const step = ref('customer')
 
-    const ruleForm = reactive({
-      intervalTime: 20, //爬取间隔时间
-      reportUrl: '', //上报接口地址
-      name: 'Hello',
-      data: {},
-      customerIndex: 1, //accNumber
-      accountIndex: 1, //accNumber
-    })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
       desc: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
     })
 
+    const setStrrageHandle = () => {
+      setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
+      console.log({ ['currentTab' + currentTab.windowId]: currentTab })
+    }
+
+    const getStrrageHandle = () => {
+      return getSyncStorage('currentTab' + currentTab.windowId)
+    }
+
     watch(
       () => props.onOff,
       (newValue) => {
-        setSyncStorage({ onOff: props.onOff })
+        currentTab.onOff = props.onOff
+        setStrrageHandle()
         clearTimeout(timer)
         clearTimeout(timer2)
         clearTimeout(timer3)
         clearInterval(cutDownNumTimer)
-        setSyncStorage({ intervalTime: ruleForm.intervalTime })
+        setStrrageHandle()
         if (newValue) {
           checkNavPage()
         }
@@ -104,10 +115,18 @@ export default defineComponent({
     )
 
     const checkNavPage = async () => {
+      if (location.pathname.indexOf('THAccountStatement') === -1) {
+        ElMessage({
+          message: '[启动失败]：请在流水界面执行开始.',
+          type: 'error',
+        })
+        ctx.emit('onOffHandle', false)
+        return
+      }
       let flag: any = false
-
-      let step: any = (await getSyncStorage('step')) || 'customer'
-
+      let currentTabData: any = await getStrrageHandle()
+      console.log('currentTabData: ', currentTabData)
+      let step: any = currentTabData.step || 'customer'
       // 当前在下载页面
       let accountDom: any = document.querySelector(
         'select[name="ctl00$ContentPlaceHolder1$ddlcustomerid"]',
@@ -120,11 +139,13 @@ export default defineComponent({
         let sel_fldacctno_ops: any = document.querySelectorAll(
           'select[name="ctl00$ContentPlaceHolder1$ddlcustomerid"] option',
         )
-        let lastVal = sel_fldacctno_ops[ruleForm.accountIndex]['value']
+        let lastVal = sel_fldacctno_ops[currentTab.ruleForm.accountIndex]['value']
+        console.log('lastVal: ', lastVal)
 
         // 选择帐号
         if (accountDom.value == 0) {
-          setSyncStorage({ step: 'customer' })
+          currentTab.step = 'customer'
+          setStrrageHandle()
           accountDom.value = lastVal
           accountDom.dispatchEvent(new Event('change'))
         }
@@ -136,26 +157,29 @@ export default defineComponent({
           let sel_fldacctno_ops2: any = document.querySelectorAll(
             'select[name="ctl00$ContentPlaceHolder1$ddlaccountlist"] option',
           )
-          let lastVal2 = sel_fldacctno_ops2[ruleForm.accountIndex]['value']
+          let lastVal2 = sel_fldacctno_ops2[currentTab.ruleForm.accountIndex]['value']
 
           // 选择帐号
           if (accountDom2.value == 0) {
-            setSyncStorage({ step: 'accountNumber' })
+            currentTab.step = 'accountNumber'
+            setStrrageHandle()
             accountDom2.value = lastVal2
             accountDom2.dispatchEvent(new Event('change'))
-          }else{
-            setSyncStorage({ step: 'accountNumber' })
+          } else {
+            currentTab.step = 'accountNumber'
+            setStrrageHandle()
           }
 
           if (step === 'accountNumber') {
             let viewDom: any = document.querySelector(
               'input[name="ctl00$ContentPlaceHolder1$btnview"]',
             )
-            setSyncStorage({ step: 'view' })
-            console.log('点查询');
+            currentTab.step = 'view'
+            setStrrageHandle()
+            console.log('点查询')
             viewDom.click()
           } else if (step === 'view') {
-            console.log('step: view');
+            console.log('step: view')
             let exportDom: any = document.querySelector(
               'input[name="ctl00$ContentPlaceHolder1$btnExportGrid"]',
             )
@@ -164,7 +188,6 @@ export default defineComponent({
               'input[name="ctl00$ContentPlaceHolder1$btndownload"]',
             )
 
-            
             if (exportDom || downloadDom) {
               exportDom && exportDom.click()
               downloadDom && downloadDom.click()
@@ -172,41 +195,45 @@ export default defineComponent({
               // 重置
               clearTimeout(timer)
               clearInterval(cutDownNumTimer)
-              cutDownNum.value = ruleForm.intervalTime
+              cutDownNum.value = currentTab.ruleForm.intervalTime
               timer = setTimeout(() => {
                 checkNavPage()
-              }, ruleForm.intervalTime * 1000 || 20000)
+              }, currentTab.ruleForm.intervalTime * 1000 || 20000)
               cutDownNumTimer = setInterval(() => {
                 cutDownNum.value--
-                setSyncStorage({ cutDownNum: cutDownNum.value })
+                currentTab.cutDownNum = cutDownNum.value
+                setStrrageHandle()
                 if (cutDownNum.value < 0) {
-                  setSyncStorage({ cutDownNum: ruleForm.intervalTime })
+                  currentTab.cutDownNum = currentTab.ruleForm.intervalTime
+                  setStrrageHandle()
                   clearInterval(cutDownNumTimer)
                 }
               }, 1000)
-
             } else {
-              setSyncStorage({ step: 'customer' })
+              currentTab.step = 'customer'
+              setStrrageHandle()
               // 重置
               clearTimeout(timer)
               clearInterval(cutDownNumTimer)
-              cutDownNum.value = ruleForm.intervalTime
+              cutDownNum.value = currentTab.ruleForm.intervalTime
               timer = setTimeout(() => {
                 checkNavPage()
-              }, ruleForm.intervalTime * 1000 || 20000)
+              }, currentTab.ruleForm.intervalTime * 1000 || 20000)
               cutDownNumTimer = setInterval(() => {
                 cutDownNum.value--
-                setSyncStorage({ cutDownNum: cutDownNum.value })
+                currentTab.cutDownNum = cutDownNum.value
+                setStrrageHandle()
                 if (cutDownNum.value < 0) {
-                  setSyncStorage({ cutDownNum: ruleForm.intervalTime })
+                  currentTab.cutDownNum = currentTab.ruleForm.intervalTime
+                  setStrrageHandle()
                   clearInterval(cutDownNumTimer)
                 }
               }, 1000)
             }
-          }else if(step === 'customer'){
+          } else if (step === 'customer') {
             checkNavPage()
           } else {
-            console.log('else');
+            console.log('else')
             // let viewDom: any = document.querySelector(
             //   'input[name="ctl00$ContentPlaceHolder1$btnview"]',
             // )
@@ -228,8 +255,8 @@ export default defineComponent({
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
         if (valid) {
-          console.log('submit!')
-          setSyncStorage(ruleForm)
+          console.log('currentTab: ', currentTab)
+          setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
         } else {
           console.log('error submit!', fields)
         }
@@ -251,39 +278,65 @@ export default defineComponent({
 
     // 与后台通信
     onMounted(async () => {
-      let _cutDownNum: number = await getSyncStorage('cutDownNum')
-      let _intervalTime: number = await getSyncStorage('intervalTime')
-      let _customerIndex: any = await getSyncStorage('customerIndex')
-      let _accountIndex: any = await getSyncStorage('accountIndex')
-      let onOff: any = (await getSyncStorage('onOff')) || false
+      chrome.runtime.sendMessage({ type: 'GET_TAB' }, async (tab) => {
+        console.log('tab: ', tab)
+        if (tab) {
+          currentTab.windowId = tab.id
+        } else {
+          currentTab.windowId = 1
+        }
 
-      if(location.pathname.indexOf('THAccountStatement') !== -1){
-        ctx.emit('onOffHandle', onOff)
-      }else{
-        let container:any =  document.getElementById('kk-container')
-       if(container){
-        container.style.display = 'none'
-       }
-      }
-      
-      ruleForm.intervalTime = _intervalTime || 30
-      ruleForm.customerIndex = _customerIndex || 1
-      ruleForm.accountIndex = _accountIndex || 1
-      cutDownNum.value = _cutDownNum || ruleForm.intervalTime
+        let defaultEuleForm: any = {
+          intervalTime: 20, //爬取间隔时间
+          name: 'Hello',
+          customerIndex: 1, //accNumber
+          accountIndex: 1, //accNumber
+        }
+        console.log(['currentTab' + currentTab.windowId])
+        let _currentTab: any = (await getSyncStorage('currentTab' + currentTab.windowId)) || {
+          ruleForm: defaultEuleForm,
+          cutDownNum: 20,
+          onOff: false,
+          step: 'customer',
+        }
+        console.log('_currentTab')
+        let _cutDownNum: number = _currentTab.cutDownNum
+        let _intervalTime: number = _currentTab.ruleForm.intervalTime
+        let _customerIndex: any = _currentTab.ruleForm.customerIndex
+        let _accountIndex: any = _currentTab.ruleForm.accountIndex
+        let _step: any = _currentTab.step
+        let onOff: any = _currentTab.onOff
+
+        currentTab.ruleForm.intervalTime = _intervalTime
+        currentTab.ruleForm.customerIndex = _customerIndex
+        currentTab.ruleForm.accountIndex = _accountIndex
+        cutDownNum.value = _cutDownNum
+        currentTab.step = _step
+
+        if (location.pathname.indexOf('THAccountStatement') !== -1) {
+          setTimeout(() => {
+            ctx.emit('onOffHandle', onOff)
+          }, 1000)
+        } else {
+          // let container: any = document.getElementById('kk-container')
+          // if (container) {
+          //   container.style.display = 'none'
+          // }
+        }
+      })
     })
     return {
       settingVisible,
       settingVisibleHandle,
       runGifSrc,
       ruleFormRef,
-      ruleForm,
+      currentTab,
       rules,
       cutDownNum,
       submitForm,
       resetForm,
       helpHandle,
       dialogHelpVisible,
-      ...toRefs(state),
     }
   },
 })

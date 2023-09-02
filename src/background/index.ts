@@ -50,6 +50,11 @@ async function getCurrentTab() {
   return tab;
 }
 
+async function getCurrentWindow() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
+
 /**
 * 监听tab页面变化
 */
@@ -78,6 +83,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       getCurrentTab().then(()=>{
         sendResponse({result:'success'})
       });
+      return true;
+    case "GET_TAB":
+      getCurrentWindow().then((tab)=>{
+        sendResponse(tab)
+      });
+      //
+      sendResponse({id:sender.tab?.windowId})
       return true;
     case "COPY_WIN":
       getCurrentTab().then((tab)=>{

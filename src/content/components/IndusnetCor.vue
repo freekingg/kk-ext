@@ -38,6 +38,9 @@
         <el-form-item label="account下标" prop="accountIndex">
           <el-input type="number" v-model="currentTab.ruleForm.accountIndex" />
         </el-form-item>
+        <el-form-item label="下载类型" prop="downloadType">
+          <el-input type="text" v-model="currentTab.ruleForm.downloadType" placeholder="E:excel, X:excel WithoutLog" />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -74,6 +77,7 @@ export default defineComponent({
         name: 'Hello',
         customerIndex: 1, //accNumber
         accountIndex: 1, //accNumber
+        downloadType:'X'
       },
       step: 'customer',
       cutDownNum: 20,
@@ -91,7 +95,6 @@ export default defineComponent({
 
     const setStrrageHandle = () => {
       setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
-      console.log({ ['currentTab' + currentTab.windowId]: currentTab })
     }
 
     const getStrrageHandle = () => {
@@ -125,7 +128,6 @@ export default defineComponent({
       }
       let flag: any = false
       let currentTabData: any = await getStrrageHandle()
-      console.log('currentTabData: ', currentTabData)
       let step: any = currentTabData.step || 'customer'
       // 当前在下载页面
       let accountDom: any = document.querySelector(
@@ -140,7 +142,6 @@ export default defineComponent({
           'select[name="ctl00$ContentPlaceHolder1$ddlcustomerid"] option',
         )
         let lastVal = sel_fldacctno_ops[currentTab.ruleForm.accountIndex]['value']
-        console.log('lastVal: ', lastVal)
 
         // 选择帐号
         if (accountDom.value == 0) {
@@ -179,7 +180,6 @@ export default defineComponent({
             console.log('点查询')
             viewDom.click()
           } else if (step === 'view') {
-            console.log('step: view')
             let exportDom: any = document.querySelector(
               'input[name="ctl00$ContentPlaceHolder1$btnExportGrid"]',
             )
@@ -189,6 +189,13 @@ export default defineComponent({
             )
 
             if (exportDom || downloadDom) {
+
+              let downloadTypeVal = currentTab.ruleForm.downloadType || 'X'
+              let XxlsDom:any = document.querySelector(`input[value="${downloadTypeVal}"]`)
+              if(XxlsDom){
+                XxlsDom.click()
+              }
+
               exportDom && exportDom.click()
               downloadDom && downloadDom.click()
 
@@ -255,7 +262,6 @@ export default defineComponent({
       if (!formEl) return
       await formEl.validate((valid: any, fields: any) => {
         if (valid) {
-          console.log('currentTab: ', currentTab)
           setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
         } else {
           console.log('error submit!', fields)
@@ -279,7 +285,6 @@ export default defineComponent({
     // 与后台通信
     onMounted(async () => {
       chrome.runtime.sendMessage({ type: 'GET_TAB' }, async (tab) => {
-        console.log('tab: ', tab)
         if (tab) {
           currentTab.windowId = tab.id
         } else {
@@ -291,25 +296,26 @@ export default defineComponent({
           name: 'Hello',
           customerIndex: 1, //accNumber
           accountIndex: 1, //accNumber
+          downloadType:'X'
         }
-        console.log(['currentTab' + currentTab.windowId])
         let _currentTab: any = (await getSyncStorage('currentTab' + currentTab.windowId)) || {
           ruleForm: defaultEuleForm,
           cutDownNum: 20,
           onOff: false,
           step: 'customer',
         }
-        console.log('_currentTab')
         let _cutDownNum: number = _currentTab.cutDownNum
         let _intervalTime: number = _currentTab.ruleForm.intervalTime
         let _customerIndex: any = _currentTab.ruleForm.customerIndex
         let _accountIndex: any = _currentTab.ruleForm.accountIndex
+        let _downloadType: any = _currentTab.ruleForm.downloadType
         let _step: any = _currentTab.step
         let onOff: any = _currentTab.onOff
 
         currentTab.ruleForm.intervalTime = _intervalTime
         currentTab.ruleForm.customerIndex = _customerIndex
         currentTab.ruleForm.accountIndex = _accountIndex
+        currentTab.ruleForm.downloadType = _downloadType
         cutDownNum.value = _cutDownNum
         currentTab.step = _step
 

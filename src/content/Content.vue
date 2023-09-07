@@ -53,6 +53,7 @@ import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
 import Rblbank from './components/rblbank.vue'
 import IndusnetCor from './components/IndusnetCor.vue'
+import AUBankP from './components/AuBankP.vue'
 
 import { ElMessage } from 'element-plus'
 export default defineComponent({
@@ -82,6 +83,7 @@ export default defineComponent({
     IdfcCor,
     Msme,
     AUBank,
+    AUBankP,
     Paytm,
     Shivalik,
     Hdfc,
@@ -238,8 +240,14 @@ export default defineComponent({
       {
         type: 'AUBank',
         typeName: 'AUBank',
-        matches: ['cib.aubank.in'],
+        matches: ['cib.aubank.in','netbanking.aubank.in'],
         injectJs: ['js/xlsx.full.min.js', 'js/au.js'],
+      },
+      {
+        type: 'AUBankP',
+        typeName: 'AUBank Person',
+        matches: ['netbanking.aubank.in'],
+        injectJs: ['js/au-p.js'],
       },
       {
         type: 'Paytm',

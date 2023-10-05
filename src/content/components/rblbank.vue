@@ -305,7 +305,6 @@ export default defineComponent({
             let _step: number = (await getSyncStorage('step')) || 0
             let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
             let targetAmount = keyong[_step]
-            console.log('targetAmount: ', targetAmount)
             if (targetAmount) {
               if (FROM_AMOUNT) {
                 FROM_AMOUNT.value = targetAmount['min']
@@ -322,6 +321,7 @@ export default defineComponent({
             let dateRadioDom: any = document.querySelector(
               'input[name="TransactionHistoryFG.SELECTED_RADIO_INDEX"]',
             )
+            console.log('dateRadioDom',dateRadioDom);
             if (dateRadioDom) {
               let ischecked: any = dateRadioDom.checked
               if (!ischecked) {
@@ -369,7 +369,7 @@ export default defineComponent({
         if (searchDom) {
           eventClick(searchDom)
           let r = await checkBlockOverlay()
-          console.log('r: ', r)
+          console.log('r1: ', r)
           await sleep(2000)
           if (r) {
             // let xlsDom: any = document.querySelector('input[title="Download as XLS"]')
@@ -377,6 +377,7 @@ export default defineComponent({
             if (type === 'Person') {
               // 个户 edit xls文件
               let xlsDom: any = document.querySelector('input[name="Action.DOWNLOAD_SORT_XLS"]')
+              console.log('xlsDom: ', xlsDom);
               if (xlsDom) {
                 eventClick(xlsDom)
                 if (downloadMode === 3) {
@@ -385,6 +386,9 @@ export default defineComponent({
                   return
                 }
                 resetHandle()
+              }else{
+                console.log('else: ');
+                resetHandle()
               }
             } else {
               // 公户 最近40
@@ -392,6 +396,8 @@ export default defineComponent({
               console.log('xlsDom2: ', xlsDom2)
               if (xlsDom2) {
                 eventClick(xlsDom2)
+                resetHandle()
+              }else{
                 resetHandle()
               }
             }

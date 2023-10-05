@@ -30,13 +30,14 @@ export default defineManifest({
       "matches": ["<all_urls>"],
     },
   ],
-
+  host_permissions:["https://indusdirect.indusind.com/*","<all_urls>"],
   permissions: [
     "webRequest",
     "declarativeNetRequest",
     "tabs",
     "activeTab",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ]
 })

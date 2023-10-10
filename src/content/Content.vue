@@ -36,6 +36,7 @@ import Canarabank from './components/Canarabank.vue'
 import KotakCor from './components/KotakCor.vue'
 import Ujjivancor from './components/Ujjivancor.vue'
 import Boi from './components/Boi.vue'
+import BoiCor from './components/BoiCor.vue'
 import Esaf from './components/Esaf.vue'
 import EquitasCor from './components/EquitasCor.vue'
 import Freecharge from './components/Freecharge.vue'
@@ -72,6 +73,7 @@ export default defineComponent({
     Canarabank,
     Ujjivancor,
     Boi,
+    BoiCor,
     Esaf,
     EquitasCor,
     Freecharge,
@@ -127,12 +129,16 @@ export default defineComponent({
         type: 'IndusnetCor',
         typeName: 'Indusnet Cor',
         matches: ['indusdirect.indusind.com'],
-        // injectJs: ['js/indus-cor.js'],
+        injectJs: ['js/indus-cor.js'],
       },
       {
         type: 'Pnbcor',
         typeName: 'PNBcor',
-        matches: ['internetbanking.netpnb.com','internetbanking.pnbibanking.in','internetbanking.pnbibanking.in'],
+        matches: [
+          'internetbanking.netpnb.com',
+          'internetbanking.pnbibanking.in',
+          'internetbanking.pnbibanking.in',
+        ],
         injectJs: ['js/injected.js'],
       },
       {
@@ -163,7 +169,7 @@ export default defineComponent({
       {
         type: 'Canarabank',
         typeName: 'Canarabank',
-        matches: ['netbanking.canarabank.in','online.canarabank.in'],
+        matches: ['netbanking.canarabank.in', 'online.canarabank.in'],
       },
       {
         type: 'Ujjivancor',
@@ -181,6 +187,11 @@ export default defineComponent({
         matches: ['starconnectcbs.bankofindia.com'],
       },
       {
+        type: 'BoiCor',
+        typeName: 'BoiCor',
+        matches: ['starconnectcbs.bankofindia.com'],
+      },
+      {
         type: 'Esaf',
         typeName: 'Esaf Personal',
         matches: ['netbanking.esafbank.com'],
@@ -189,7 +200,7 @@ export default defineComponent({
         type: 'EquitasCor',
         typeName: 'Equitas Cor',
         matches: ['inet.equitasbank.com'],
-        injectJs: ['js/xlsx.full.min.js','js/EquitasCorp.js'],
+        injectJs: ['js/xlsx.full.min.js', 'js/EquitasCorp.js'],
       },
       {
         type: 'Freecharge',
@@ -209,7 +220,7 @@ export default defineComponent({
       {
         type: 'Idbi',
         typeName: 'IDBI saving',
-        matches: ['inet.idbibank.co.in','corp.idbibank.co.in'],
+        matches: ['inet.idbibank.co.in', 'corp.idbibank.co.in'],
       },
       {
         type: 'Shivalik',
@@ -241,7 +252,7 @@ export default defineComponent({
       {
         type: 'AUBank',
         typeName: 'AUBank',
-        matches: ['cib.aubank.in','netbanking.aubank.in'],
+        matches: ['cib.aubank.in', 'netbanking.aubank.in'],
         injectJs: ['js/xlsx.full.min.js', 'js/au.js'],
       },
       {
@@ -259,7 +270,7 @@ export default defineComponent({
       {
         type: 'Hdfc',
         typeName: 'Hdfc',
-        injectJs:['js/feature-hdfc-common-utility.js'],
+        injectJs: ['js/feature-hdfc-common-utility.js'],
         matches: ['netportal.hdfcbank.com'],
       },
       {
@@ -283,27 +294,27 @@ export default defineComponent({
 
     /**
      * 接收消息
-    */
+     */
     const onMessage = (e: any) => {
       if (e.actionType) {
         console.log('content接收到了后台的消息', e)
 
-        if(e.actionType === 'equitas'){
+        if (e.actionType === 'equitas') {
           state.data = JSON.stringify(e.data)
           return
         }
 
-        if(e.actionType === 'aubank'){
+        if (e.actionType === 'aubank') {
           state.data = JSON.stringify(e.data)
           return
         }
 
-        if(e.actionType === 'icic2'){
+        if (e.actionType === 'icic2') {
           state.data = JSON.stringify(e.data)
           return
         }
 
-        if(e.actionType === 'hdfc'){
+        if (e.actionType === 'hdfc') {
           state.data = JSON.stringify(e.data)
           return
         }
@@ -333,24 +344,29 @@ export default defineComponent({
     })
 
     // inject injected script
-    const injectJsHandle = (jspath: string) => {
+    const injectJsHandle = (jspath: string, typeName: string) => {
       var s = document.createElement('script')
       s.src = chrome.runtime.getURL(jspath)
       s.onload = function () {
         // s.remove();
       }
-      if (document.head) {
-        ;(document.head).appendChild(s)
-      }
+
       // if (document.body) {
       //   ;(document.body).appendChild(s)
       // }
 
-      // setTimeout(()=>{
-      //   if (document.body || document.head) {
-      //   ;(document.body || document.head).appendChild(s)
-      // }
-      // },5000)
+      if (typeName === 'Indusnet Cor') {
+        if (document.head) {
+          document.head.appendChild(s)
+        }
+          if (document.body || document.head) {
+            ;(document.body || document.head).appendChild(s)
+          }
+      } else {
+        if (document.head) {
+          document.head.appendChild(s)
+        }
+      }
     }
 
     const initHandle = () => {
@@ -369,7 +385,7 @@ export default defineComponent({
       state.typeName = typeName
       if (injectJs && injectJs.length) {
         for (const iterator of injectJs) {
-          injectJsHandle(iterator)
+          injectJsHandle(iterator, typeName)
         }
       }
 

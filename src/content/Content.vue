@@ -175,6 +175,7 @@ export default defineComponent({
         type: 'Ujjivancor',
         typeName: 'Ujjivancor',
         matches: ['cib.ujjivansfb.in'],
+        injectJs:['js/xlsx.full.min.js', ]
       },
       {
         type: 'UtkarshCor',

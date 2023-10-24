@@ -1,10 +1,11 @@
 <template>
   <main id="kk-container">
-    <div style="display: flex; align-items: center; width: 350px">
-      <el-icon :size="24" color="#e6a23c"><QuestionFilled /></el-icon>
-      <p style="font-size: 14px; display: inline-block">
-        此网站支持后台下载流水，需要流水界面进行一次下载
-      </p>
+    <div style="display: flex; align-items: center; width: 350px; font-size: 14px; flex-wrap: wrap">
+      <el-alert title="操作说明" type="info">
+        <p>此网站支持后台下载流水</p>
+        <p><strong>使用说明：</strong></p>
+        <p style="color: red;">需要登录后，在流水下载界面进行一次下载操作即可实现后台下载</p>
+      </el-alert>
     </div>
     <section class="run-status">
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">

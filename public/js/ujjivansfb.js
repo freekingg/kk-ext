@@ -13,14 +13,108 @@ var lcurrSec = "FIRST";
 var shwmrepg = 1;
 var shwmreck = false;
 
+console.log('inject script received:' );
+
+let data2Excel = (list) => {
+  // const json = list
+  var jsonArray = list
+  // const columnFields = ['pstdDate', 'txnDescription', 'txnId', 'txnId', 'txnId', 'txnId', 'txnId'];
+  var worksheet = XLSX.utils.json_to_sheet(jsonArray);
+  var workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  XLSX.writeFile(workbook, "ujjivan.xlsx");
+};
 
 window.addEventListener('message', function (e) {
   console.log('inject script received:' , e);
+  // if(e && e.data.actionType === 'downloadUjjivancor'){
+  //   let parseProps = e.data.data
+  //   let jsonStr = JSON.stringify(parseProps.jsonStr)
+  //   let ltype = "CSV"
+  //   appzillon.server.callServer("DynamicAccountStatementImpl", "DynamicAccountStatementImpl", "N", jsonStr, "N", ltype, true, appzillon.app.onDownloadStmtCB)
+  // }
+
+  var callGetAccountStatementCallBack = function(pcallid, lifaceid, pstatus, perrorCode, lbodyobj) {
+    if (pstatus == "success") {
+        if (lbodyobj.getAccountStmtPaginationRes.resHdr.responseStatus.status == 0) {
+            var ltempObj = [];
+            ltempObj = lbodyobj.getAccountStmtPaginationRes.body.transactionDetails
+            var ltransDtls = ltempObj;
+            ltransDetails1 = ltempObj;
+            if(ltransDtls && ltransDtls.length){
+              data2Excel(ltransDtls)
+            }
+        }
+    }
+}
+
   if(e && e.data.actionType === 'downloadUjjivancor'){
     let parseProps = e.data.data
-    let jsonStr = JSON.stringify(parseProps.jsonStr)
-    let ltype = "CSV"
-    appzillon.server.callServer("DynamicAccountStatementImpl", "DynamicAccountStatementImpl", "N", jsonStr, "N", ltype, true, appzillon.app.onDownloadStmtCB)
+    console.log('parseProps: ', parseProps);
+    function setuniqueMsgId(){
+      var deviceType = appzillon.plugin.deviceId();
+      var uniqueMsgId = "";
+      var appId = "CIB";
+      var channelCode = "9333";
+      var locUserId = appzillon.plugin.retrieve('USERID');
+      var dateObj = new Date();
+      var ldate = Date.now();
+      var ldateStr = new Date(ldate).toString();
+      var userId = appzillon.plugin.retrieve('USERID');
+      var ldateNum = ldateStr.replace(/\D/g, '');
+      var a = ldateNum.substring(0, 2);
+      var res = ldateNum.substring(4, 12);
+      var n = dateObj.getMonth();
+      var m = n + 1;
+      var d = dateObj;
+      var randNo = Math.floor(Math.random() * (99900000000 - 1 + 1) + 1);
+      var ms = d.getMilliseconds();
+      var num = channelCode + a + m + res + ms + randNo + userId;
+      uniqueMsgId = num.replace(/\D/g, '');
+      uniqueMsgId = uniqueMsgId.slice(0, 44);
+      return uniqueMsgId
+  }
+
+  function formatDate(dateString) {
+    const dateParts = dateString.split('/');
+    const year = dateParts[2];
+    const month = dateParts[1].padStart(2, '0');
+    const day = dateParts[0].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  let jsonStrReq = {
+      "getAccountStmtPaginationReq": {
+          "reqHdr": {
+              "consumerContext": {
+                  "applicationId": "CIB"
+              },
+              "serviceContext": {
+                  "uniqueMsgId": setuniqueMsgId(),
+                  "reqMsgDateTime": new Date().toISOString(),
+                  "serviceName": "GetAccountStmtPagination",
+                  "serviceVersion": "1"
+              },
+              "providerContext": {
+                  "providerId": "CBS"
+              },
+              "userContext": {
+                  "userId": parseProps.jsonStr.getAccountStatementRequest.custId,
+                  "cifId": parseProps.jsonStr.getAccountStatementRequest.cifId
+              }
+          },
+          "body": {
+              "custId": parseProps.jsonStr.getAccountStatementRequest.custId,
+              "accountNumber": parseProps.jsonStr.getAccountStatementRequest.accountNo,
+              "branchId": parseProps.jsonStr.getAccountStatementRequest.branchId,
+              "fromDate": `${formatDate(parseProps.jsonStr.getAccountStatementRequest.fromDate)}T00:00:00.000`,
+              "toDate": `${formatDate(parseProps.jsonStr.getAccountStatementRequest.toDate)}T00:00:00.000`
+          }
+      }
+  }
+
+  let jsonStr = JSON.stringify(jsonStrReq)
+  appzillon.server.callServer("GetAccountStmtPagination", "GetAccountStmtPagination", "N", jsonStr, "Y", "124", true, callGetAccountStatementCallBack)
   }
 });
 
@@ -496,9 +590,13 @@ appzillon.app.accountDetail.callGetAccountStatement = function() {
         json.getAccountStmtPaginationReq.body.paginationDetails.lastTxnId = lstTxnId;
         json.getAccountStmtPaginationReq.body.paginationDetails.lastTxnSerialNo = lastSno
     }
+
+    // window.postMessage({ actionType: 'ujjivancorDownloadParams', data: _postData }, '*');
+
     if (ldate.fromDate != "" && ldate.toDate != "") {
         if (ldate.fromDate <= ldate.toDate) {
             var jsonStr = JSON.stringify(json);
+            console.log('jsonStr1111: ', jsonStr);
             appzillon.app.common.startLoader();
             appzillon.server.callServer("GetAccountStmtPagination", "GetAccountStmtPagination", "N", jsonStr, "Y", "124", true, appzillon.app.accountDetail.callGetAccountStatementCallBack)
         } else {

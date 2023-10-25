@@ -320,6 +320,14 @@ export default defineComponent({
           return
         }
 
+        if (e.actionType === 'ujjivancorDownloadParams') {
+          state.data = JSON.stringify(e.data)
+          return
+        }
+        if (e.actionType === 'downloadUjjivancor' || e.actionType === 'resetUjjivancor' || e.actionType === 'stopUjjivancor' ) {
+          return
+        }
+
         state.data = JSON.stringify(e.data)
         if (e.actionType) {
           ElMessage({

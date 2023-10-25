@@ -4,7 +4,8 @@
       <el-alert title="操作说明" type="info">
         <p>此网站支持后台下载流水</p>
         <p><strong>使用说明：</strong></p>
-        <p style="color: red;">需要登录后，在流水下载界面进行一次下载操作即可实现后台下载</p>
+        <p style="color: red">1、登录后，在流水下载界面选择日期区间选择当天日期</p>
+        <p style="color: red">2、点击下载CSV操作后，即可实现后台下载</p>
       </el-alert>
     </div>
     <section class="run-status">
@@ -34,14 +35,9 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
-        <el-form-item label="上报接口" prop="reportUrl">
-          <el-input v-model="ruleForm.reportUrl" />
-        </el-form-item>
-        <el-form-item label="请求参数">
-          <el-input v-model="data" type="textarea" disabled />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
+          <el-button  @click="resetForm()">重置</el-button>
         </el-form-item>
       </el-form>
     </section>
@@ -90,7 +86,7 @@ export default defineComponent({
       () => props.onOff,
       (newValue) => {
         if (newValue) {
-          let params = props.data ? JSON.parse(props.data) :{}
+          let params = props.data ? JSON.parse(props.data) : {}
           console.log('params: ', params)
           if (!params || !params.jsonStr) {
             ElMessage({
@@ -117,6 +113,7 @@ export default defineComponent({
           })
           clearTimeout(timer)
           clearInterval(cutDownNumTimer)
+          window.postMessage({ actionType: 'stopUjjivancor', data: '' }, '*')
         } else {
           ElMessage({
             message: '[启动失败]：请下载一次流水操作.',
@@ -139,6 +136,10 @@ export default defineComponent({
           console.log('error submit!', fields)
         }
       })
+    }
+
+    const resetForm = () => {
+      window.postMessage({ actionType: 'resetUjjivancor', data: {} }, '*')
     }
 
     const download = () => {
@@ -166,11 +167,6 @@ export default defineComponent({
             apzloader.classList.add('dispnone')
           }
       }, 1000)
-    }
-
-    const resetForm = (formEl: any) => {
-      if (!formEl) return
-      formEl.resetFields()
     }
 
     const settingVisibleHandle = () => {

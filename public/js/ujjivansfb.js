@@ -13,6 +13,9 @@ var lcurrSec = "FIRST";
 var shwmrepg = 1;
 var shwmreck = false;
 
+var downloadTimer = null
+var isstart = false
+
 console.log('inject script received:' );
 
 let data2Excel = (list) => {
@@ -35,22 +38,55 @@ window.addEventListener('message', function (e) {
   // }
 
   var callGetAccountStatementCallBack = function(pcallid, lifaceid, pstatus, perrorCode, lbodyobj) {
+    console.log('perrorCode: ', perrorCode);
+    console.log('pstatus: ', pstatus);
     if (pstatus == "success") {
         if (lbodyobj.getAccountStmtPaginationRes.resHdr.responseStatus.status == 0) {
             var ltempObj = [];
             ltempObj = lbodyobj.getAccountStmtPaginationRes.body.transactionDetails
             var ltransDtls = ltempObj;
             ltransDetails1 = ltempObj;
+            var ltransDtlslength = ltransDtls.length;
+            console.log('resbody: ', lbodyobj.getAccountStmtPaginationRes.body);
+            console.log('ltransDtls: ', ltransDtls);
             if(ltransDtls && ltransDtls.length){
+              console.log('最后一个',ltransDtls[ltransDtlslength - 1]);
+              localStorage.setItem('last',JSON.stringify(ltransDtls[ltransDtlslength - 1]))
+              lastBal = ltransDtls[ltransDtlslength - 1].txnBalance;
+              lastPstdDt = ltransDtls[ltransDtlslength - 1].pstdDate;
+              lastTxnDt = ltransDtls[ltransDtlslength - 1].txnDate;
+              lstTxnId = ltransDtls[ltransDtlslength - 1].txnId;
+              lastSno = ltransDtls[ltransDtlslength - 1].txnSerialNo;
+
+              // 判断是否有下一页
+              if(lbodyobj.getAccountStmtPaginationRes.body.hasMoreData == "Y"){
+               if(isstart){
+                downloadTimer = setTimeout(()=>{
+                  getDataHandle()
+                },2500)
+               }
+              }
               data2Excel(ltransDtls)
             }
         }
     }
 }
 
+if(e && e.data.actionType === 'stopUjjivancor'){
+  clearTimeout(downloadTimer)
+  isstart = false
+  return
+}
+
+if(e && e.data.actionType === 'resetUjjivancor'){
+  localStorage.setItem('last','')
+  return
+}
+
   if(e && e.data.actionType === 'downloadUjjivancor'){
     let parseProps = e.data.data
     console.log('parseProps: ', parseProps);
+    isstart = true
     function setuniqueMsgId(){
       var deviceType = appzillon.plugin.deviceId();
       var uniqueMsgId = "";
@@ -73,17 +109,19 @@ window.addEventListener('message', function (e) {
       uniqueMsgId = num.replace(/\D/g, '');
       uniqueMsgId = uniqueMsgId.slice(0, 44);
       return uniqueMsgId
-  }
+   }
 
-  function formatDate(dateString) {
-    const dateParts = dateString.split('/');
-    const year = dateParts[2];
-    const month = dateParts[1].padStart(2, '0');
-    const day = dateParts[0].padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+    function formatDate(dateString) {
+      const dateParts = dateString.split('/');
+      const year = dateParts[2];
+      const month = dateParts[1].padStart(2, '0');
+      const day = dateParts[0].padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
-  let jsonStrReq = {
+
+  function getDataHandle(){
+    let jsonStrReq = {
       "getAccountStmtPaginationReq": {
           "reqHdr": {
               "consumerContext": {
@@ -108,14 +146,39 @@ window.addEventListener('message', function (e) {
               "accountNumber": parseProps.jsonStr.getAccountStatementRequest.accountNo,
               "branchId": parseProps.jsonStr.getAccountStatementRequest.branchId,
               "fromDate": `${formatDate(parseProps.jsonStr.getAccountStatementRequest.fromDate)}T00:00:00.000`,
-              "toDate": `${formatDate(parseProps.jsonStr.getAccountStatementRequest.toDate)}T00:00:00.000`
+              "toDate": `${formatDate(parseProps.jsonStr.getAccountStatementRequest.toDate)}T00:00:00.000`,
           }
       }
   }
 
-  let jsonStr = JSON.stringify(jsonStrReq)
-  appzillon.server.callServer("GetAccountStmtPagination", "GetAccountStmtPagination", "N", jsonStr, "Y", "124", true, callGetAccountStatementCallBack)
+  let last = localStorage.getItem('last') || null
+  let lastItem = {}
+  if(last){
+    lastItem = JSON.parse(last)
   }
+  console.log('lastItem: ', lastItem);
+  if(lastItem && lastItem.txnId){
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails = {}
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastBalance = lastItem.txnBalance
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastPstdDate = lastItem.pstdDate
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastTxnDate = lastItem.txnDate
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastTxnId = lastItem.txnId
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastTxnSerialNo = lastItem.txnSerialNo
+  }else{
+    jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails = {}
+  }
+  console.log('查询参数',jsonStrReq);
+  let jsonStr = JSON.stringify(jsonStrReq)
+  appzillon.app.common.stopLoader();
+  appzillon.server.callServer("GetAccountStmtPagination", "GetAccountStmtPagination", "N", jsonStr, "Y", "124", true, callGetAccountStatementCallBack)
+  appzillon.app.common.stopLoader();
+  }
+
+  getDataHandle()
+
+
+
+}
 });
 
 appzillon.app.load_AccountDetail = function() {
@@ -622,6 +685,8 @@ appzillon.app.accountDetail.callGetAccountStatementCallBack = function(pcallid, 
                 ltempObj = lbodyobj.getAccountStmtPaginationRes.body.transactionDetails
             }
             var ltransDtls = ltempObj;
+            console.log('lbodyobj: ', lbodyobj);
+            console.log('ltransDtls: ', ltransDtls);
             ltransDetails1 = ltempObj;
             var temp = [];
             var ltransDtlslength = ltransDtls.length;

@@ -3,7 +3,6 @@
     <div style="display: flex; align-items: center; width: 350px">
       <p style="font-size: 14px; display: inline-block">
         停留在当前页面，会自动下载最近10笔 <br />
-        <span style="color: red">卡接请不要下载最近10笔</span> <br />
       </p>
     </div>
     <section class="run-status">

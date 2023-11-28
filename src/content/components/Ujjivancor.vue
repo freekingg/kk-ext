@@ -6,6 +6,7 @@
         <p><strong>使用说明：</strong></p>
         <p style="color: red">1、登录后，在流水下载界面选择日期区间选择当天日期</p>
         <p style="color: red">2、点击下载CSV操作后，即可实现后台下载</p>
+        <p style="color: rgb(18, 15, 221)">特别注意：如果流水小于25条时，配置里面选择<b>有分页</b>，然后再开始下载，或者手动下载csv文件进行几次回调，如果出现异常时，建议刷新页面重新登录尝试下</p>
       </el-alert>
     </div>
     <section class="run-status">
@@ -34,6 +35,12 @@
       >
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
+        </el-form-item>
+        <el-form-item label="是否有分页">
+          <el-radio-group v-model="ruleForm.ispage">
+            <el-radio :label="1">有分页</el-radio>
+            <el-radio :label="0">无分页</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
@@ -76,6 +83,7 @@ export default defineComponent({
       name: 'Hello',
       data: {},
       accNumber: '', //accNumber
+      ispage: 1
     })
     const rules = reactive({
       intervalTime: [{ required: true, message: 'Please input ...', trigger: 'blur' }],
@@ -147,6 +155,7 @@ export default defineComponent({
       console.log('params: ', params)
       if (!params || !props.onOff) return
       let parseProps = JSON.parse(params)
+      parseProps.ispage = ruleForm.ispage
       window.postMessage({ actionType: 'downloadUjjivancor', data: parseProps }, '*')
 
       // 重置

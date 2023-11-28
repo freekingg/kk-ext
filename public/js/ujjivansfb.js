@@ -40,6 +40,7 @@ window.addEventListener('message', function (e) {
   var callGetAccountStatementCallBack = function(pcallid, lifaceid, pstatus, perrorCode, lbodyobj) {
     console.log('perrorCode: ', perrorCode);
     console.log('pstatus: ', pstatus);
+    console.log('lbodyobj: ', lbodyobj);
     if (pstatus == "success") {
         if (lbodyobj.getAccountStmtPaginationRes.resHdr.responseStatus.status == 0) {
             var ltempObj = [];
@@ -157,7 +158,7 @@ if(e && e.data.actionType === 'resetUjjivancor'){
     lastItem = JSON.parse(last)
   }
   console.log('lastItem: ', lastItem);
-  if(lastItem && lastItem.txnId){
+  if(lastItem && lastItem.txnId && parseProps.ispage){
     jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails = {}
     jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastBalance = lastItem.txnBalance
     jsonStrReq.getAccountStmtPaginationReq.body.paginationDetails.lastPstdDate = lastItem.pstdDate

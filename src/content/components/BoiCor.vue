@@ -198,6 +198,12 @@ export default defineComponent({
         shijianinput.value = today
         shijianinput2.value = today
         await sleep(500)
+
+        let txnSrchSortOrder: any = document.querySelectorAll('input[name="txnSrchSortOrder"]')
+        txnSrchSortOrder[1].click()
+        txnSrchSortOrder[1].checked = true
+        await sleep(500)
+
         // 选择下载格式
         let xiazaigeshi: any = document.querySelector('input[value="4"]')
         xiazaigeshi.click()

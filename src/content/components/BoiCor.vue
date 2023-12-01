@@ -195,7 +195,7 @@ export default defineComponent({
         var myToday = add(myDate.getDate()) //获取当前日(1-31)
         let today1 = `01/${myToday}/${myYear}`
         let today = `${myMonth}/${myToday}/${myYear}`
-        shijianinput.value = today1
+        shijianinput.value = today
         shijianinput2.value = today
         await sleep(500)
         // 选择下载格式

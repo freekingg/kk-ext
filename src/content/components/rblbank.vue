@@ -10,6 +10,7 @@
         分析哪个区间比较慢，然后再次拆分，比方100-200区间下载慢，则拆分为100-150，150-200这样。
         根据具体情况，具体调控</p>
         <p style="color: red;">3、如果同时使用个户的金额区间，再加上公户的最近40笔，效果是最好的。(公户的下载文件需要下载到个户文件夹内)</p>
+        <p style="color: blue;font-weight: bolder;">定时补单：个户流水出问题或者掉单时，可以手动操作，结合使用公户(Transaction Period - Today)将xls文件下载到个户文件夹内进行回调</p>
       </el-alert>
     </div>
     <section class="run-status">

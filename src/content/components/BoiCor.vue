@@ -138,6 +138,7 @@ export default defineComponent({
       cutDownNum.value = ruleForm.intervalTime
       setSyncStorage({ step: 0 })
       timer = setTimeout(() => {
+        if (!props.onOff) return
         let ActionGo: any = document.querySelector('input[name="Action.Go"]')
         console.log('ActionGo: ', ActionGo)
         if (ActionGo) {
@@ -171,6 +172,7 @@ export default defineComponent({
         console.log('当前在下载页面')
         ExcelFormat.click()
         await sleep(5000)
+        if (!props.onOff) return
         setSyncStorage({ step: 0 })
         // 等待重置
         resetHandle()

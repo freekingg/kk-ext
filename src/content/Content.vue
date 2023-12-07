@@ -55,7 +55,7 @@ import Shivalik from './components/shivalik.vue'
 import Rblbank from './components/rblbank.vue'
 import IndusnetCor from './components/IndusnetCor.vue'
 import AUBankP from './components/AuBankP.vue'
-
+import Fednetbank from './components/Fednetbank.vue'
 import { ElMessage } from 'element-plus'
 export default defineComponent({
   components: {
@@ -72,6 +72,7 @@ export default defineComponent({
     UtkarshCor,
     Canarabank,
     Ujjivancor,
+    Fednetbank,
     Boi,
     BoiCor,
     Esaf,
@@ -291,6 +292,11 @@ export default defineComponent({
         typeName: 'RBL',
         matches: ['online.rblbank.com'],
       },
+      {
+        type:'Fednetbank',
+        typeName: 'Fednetbank',
+        matches: ['fednetbank.com','www.fednetbank.com'],
+      }
     ]
 
     /**

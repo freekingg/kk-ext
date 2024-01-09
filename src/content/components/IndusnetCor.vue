@@ -5,10 +5,13 @@
         1、此网站可以 <span style="color: red">多开网页</span> ，
       </p>
       <p style="font-size: 14px; margin: 0; padding: 0; color: red">
-        2、可以用多个网页在同时下流水，其中一个页面转账（目前推荐使用最近10笔方式）
+        2、可以用多个网页在同时下流水，其中一个页面转账
       </p>
       <p style="font-size: 14px; margin: 0; padding: 0; color: red">
         3、在网页右键选择复制当前窗口
+      </p>
+      <p style="font-size: 14px; margin: 0; padding: 0; color: red">
+        4、遇到异常时点击“重置”按钮或者刷新页面尝试
       </p>
     </div>
     <section class="run-status">
@@ -19,6 +22,7 @@
         </template>
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
+          <el-button type="primary" @click="rest">重置</el-button>
         </template>
       </el-result>
     </section>
@@ -90,7 +94,7 @@ export default defineComponent({
         customerIndex: 1, //accNumber
         accountIndex: 1, //accNumber
         downloadType: 'E',
-        downloadMode: 2,
+        downloadMode: 1,
       },
       step: 'customer',
       cutDownNum: 20,
@@ -129,6 +133,17 @@ export default defineComponent({
         }
       },
     )
+
+    const rest = ()=>{
+      ctx.emit('onOffHandle', false)
+      currentTab.step = 'customer'
+      setStrrageHandle()
+      clearTimeout(timer)
+        clearTimeout(timer2)
+        clearTimeout(timer3)
+        clearInterval(cutDownNumTimer)
+        setStrrageHandle()
+    }
 
     const checkNavPage = async () => {
       let flag: any = false
@@ -204,8 +219,6 @@ export default defineComponent({
               )
 
               if (exportDom || downloadDom) {
-                console.log('exportDom: ', exportDom)
-                console.log('downloadDom: ', downloadDom)
                 await sleep(1000)
                 let downloadTypeVal = currentTab.ruleForm.downloadType || 'E'
                 let XxlsDom: any = document.querySelector(`input[value="${downloadTypeVal}"]`)
@@ -217,10 +230,11 @@ export default defineComponent({
                 exportDom && exportDom.click()
                 downloadDom && downloadDom.click()
                 console.log('重置')
-
-                chrome.runtime.sendMessage({ type: 'GET_INDUS_STATUS' }, async (tab) => {
-                  console.log('tab: ', tab)
-                  if (tab.status) {
+                currentTab.step = 'customer'
+                setStrrageHandle()
+                // chrome.runtime.sendMessage({ type: 'GET_TAB' }, async (tab) => {
+                  // console.log('tab: ', tab)
+                  // if (tab.status) {
                     // 重置
                     clearTimeout(timer)
                     clearInterval(cutDownNumTimer)
@@ -238,8 +252,8 @@ export default defineComponent({
                         clearInterval(cutDownNumTimer)
                       }
                     }, 1000)
-                  }
-                })
+                  // }
+                // })
               } else {
                 currentTab.step = 'customer'
                 setStrrageHandle()
@@ -315,6 +329,7 @@ export default defineComponent({
 
         let checkoutResTimer: any = null
         checkoutResTimer = setInterval(async () => {
+          console.log('checkoutResTimer: ');
           let overlay: any = document.querySelector('.overlay[hidden]')
           if (overlay) {
             clearInterval(checkoutResTimer)
@@ -387,7 +402,7 @@ export default defineComponent({
           customerIndex: 1, //accNumber
           accountIndex: 1, //accNumber
           downloadType: 'E',
-          downloadMode: 2,
+          downloadMode: 1,
         }
         let _currentTab: any = (await getSyncStorage('currentTab' + currentTab.windowId)) || {
           ruleForm: defaultEuleForm,
@@ -400,7 +415,7 @@ export default defineComponent({
         let _customerIndex: any = _currentTab.ruleForm.customerIndex
         let _accountIndex: any = _currentTab.ruleForm.accountIndex
         let _downloadType: any = _currentTab.ruleForm.downloadType
-        let _downloadMode: any = _currentTab.ruleForm.downloadMode || 2
+        let _downloadMode: any = _currentTab.ruleForm.downloadMode || 1
         let _step: any = _currentTab.step
         let onOff: any = _currentTab.onOff
 
@@ -433,6 +448,7 @@ export default defineComponent({
       runGifSrc,
       ruleFormRef,
       currentTab,
+      rest,
       rules,
       cutDownNum,
       submitForm,

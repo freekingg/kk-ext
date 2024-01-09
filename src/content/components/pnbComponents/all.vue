@@ -5,6 +5,8 @@
         1、流水界面,打开插件开关，此时会自动下载 <br />
         2、插件会自动按开关的金额区间依次进行下载 <br />
         3、全流水：可以只打开一个区间，金额从最小到最大 <br />
+        <p style="color: blue;font-weight: bolder;">注意：金额区间模式下载的文件中没有余额，全流水模式的文件中带有余额，如果想要下载带余额的文件 ，可以用一个独立的pnb子账号开启全流水下载</p>
+
       </p>
     </div>
     <section class="run-status">
@@ -37,8 +39,15 @@
         <el-form-item label="账户下标" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.index" />
         </el-form-item>
+        <el-form-item label="下载模式">
+          <el-radio-group v-model="ruleForm.downloadAll">
+            <el-radio :label="1">金额区间模式</el-radio>
+            <el-radio :label="2">全流水模式</el-radio>
+          </el-radio-group>
+        </el-form-item>
 
-        <el-form-item
+        <template v-if="ruleForm.downloadAll === 1">
+          <el-form-item
           label="金额范围"
           prop="reportUrl"
           v-for="(item, index) in limits"
@@ -52,6 +61,8 @@
             inactive-color="#ff4949">
           </el-switch>
         </el-form-item>
+        </template>
+       
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -114,6 +125,7 @@ export default defineComponent({
       data: {},
       index: 1,
       accNumber: '', //accNumber
+      downloadAll:1
     })
 
     const limits: any = ref([
@@ -226,11 +238,26 @@ export default defineComponent({
         let fromamount: any = document.querySelector(
           'input[name="TransactionHistoryFG.FROM_AMOUNT"]',
         )
+        let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
+
+
+        if(ruleForm.downloadAll === 2){
+          fromamount.value = ''
+          tomount.value = ''
+          setSyncStorage({ step: 0 })
+          let searchBtn: any = document.querySelector('#SEARCH')
+          setTimeout(() => {
+            searchBtn.click()
+          }, 6000)
+          return
+        }
+
+
+       
         let _step: number = (await getSyncStorage('step')) || 0
         console.log('research_step: ', _step)
         let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
         fromamount.value = keyong[_step] ? keyong[_step]['min'] : keyong[keyong.length - 1]['min']
-        let tomount: any = document.querySelector('input[name="TransactionHistoryFG.TO_AMOUNT"]')
         tomount.value = keyong[_step] ? keyong[_step]['max'] : keyong[keyong.length - 1]['max']
         console.log('当前下载.....', _step, fromamount.value, tomount.value)
         let searchBtn: any = document.querySelector('#SEARCH')
@@ -271,6 +298,29 @@ export default defineComponent({
           let okButton: any = document.querySelector(
             'form[name="TransactionHistoryFG"] .HW_formbtn #okButton',
           )
+
+
+          if(ruleForm.downloadAll === 2){
+            setSyncStorage({ step: 0 })
+            setTimeout(() => {
+              // 重置
+              clearTimeout(timer)
+              clearInterval(cutDownNumTimer)
+              cutDownNum.value = ruleForm.intervalTime
+              okButton.click()
+              timer = setTimeout(() => {
+                research()
+              }, ruleForm.intervalTime * 1000 || 20000)
+              cutDownNumTimer = setInterval(() => {
+                cutDownNum.value--
+                if (cutDownNum.value < 0) {
+                  clearInterval(cutDownNumTimer)
+                }
+              }, 1000)
+            }, 5000)
+            return
+          }
+
           if (_step > keyong.length) {
             console.log(_step, '===', keyong.length)
 
@@ -374,6 +424,7 @@ export default defineComponent({
         pageType.value = 'Transactions'
       }
 
+      let _downloadAll: number = await getSyncStorage('downloadAll')
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _index: number = await getSyncStorage('index')
 
@@ -402,6 +453,7 @@ export default defineComponent({
       let keyong = limits.value.filter((item: any) => item.min && item.max && item.onOff)
       console.log('keyong: ', keyong.length)
 
+      ruleForm.downloadAll = _downloadAll || 1
       ruleForm.intervalTime = _intervalTime || 20
       ruleForm.reportUrl = _reportUrl || ''
       ruleForm.index = _index || 1

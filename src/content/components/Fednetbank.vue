@@ -4,8 +4,9 @@
       <el-alert title="操作说明" type="info">
         <p>此网站可以多开窗口操作</p>
         <p><strong>使用说明：</strong></p>
-        <p style="color: red;">1、先登录进行流水界面，点击开始，用这个窗口进行下载流水</p>
-        <p style="color: red;">2、再新开一个窗口，重新登录进去，用这个窗口进行转账操作即可</p>
+        <p style="color: red">1、先登录进行流水界面，点击开始，用这个窗口进行下载流水</p>
+        <p style="color: red">2、再新开一个窗口，重新登录进去，用这个窗口进行转账操作即可</p>
+        <p style="color: blue">下载模式：当前页面是指不需要跳转到其它页面下载的</p>
       </el-alert>
     </div>
     <section class="run-status">
@@ -28,6 +29,12 @@
         class="demo-ruleForm"
         status-icon
       >
+        <el-form-item label="下载模式">
+          <el-radio-group v-model="ruleForm.downloadMode">
+            <el-radio :label="1">当前页面</el-radio>
+            <el-radio :label="2">跳转页面</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
@@ -91,6 +98,7 @@ export default defineComponent({
       reportUrl: '', //上报接口地址
       name: 'Hello',
       data: {},
+      downloadMode: 1,
       accNumber: '', //accNumber
     })
     const rules = reactive({
@@ -100,43 +108,143 @@ export default defineComponent({
 
     watch(
       () => props.onOff,
-      (newValue) => {
-        if (location.pathname !== '/prod/statementnew/') {
-          ElMessage({
-            message: '[启动失败]：请在流水界面操作.',
-            type: 'error',
-          })
-          ctx.emit('onOffHandle', false)
-          return
+      async (newValue) => {
+        let downloadMode: any = await getSyncStorage('downloadMode')
+        if (downloadMode === 1) {
+          let page1select: any = document.getElementById('s2id_TransactionHistoryFG.OUTFORMAT')
+          if (page1select) {
+            checkNavPage1()
+          } else {
+            ElMessage({
+              message: '[启动失败]：请在流水界面操作.如果已经在流水界面，请先点击一次search按钮再开始',
+              type: 'error',
+            })
+            ctx.emit('onOffHandle', false)
+          }
+        } else {
+          if (location.pathname !== '/prod/statementnew/') {
+            ElMessage({
+              message: '[启动失败]：请在流水界面操作.',
+              type: 'error',
+            })
+            ctx.emit('onOffHandle', false)
+          }
+          if (newValue) {
+            let flag = checkNavPage()
+          }
         }
+
         setSyncStorage({ onOff: props.onOff })
         clearTimeout(timer)
         clearTimeout(timer2)
         clearTimeout(timer3)
         clearInterval(cutDownNumTimer)
-        if (newValue) {
-          let flag = checkNavPage()
-          // console.log('flag: ', flag);
-          if (newValue) {
-            // ElMessage({
-            //   message: '.',
-            //   type: 'error',
-            // })
-            console.log(2)
-          } else {
-            ElMessage({
-              message: '[启动失败]：先登录再操作.',
-              type: 'error',
-            })
-            clearTimeout(timer)
-            clearTimeout(timer2)
-            clearTimeout(timer3)
-            clearInterval(cutDownNumTimer)
-            ctx.emit('onOffHandle', false)
-          }
-        }
       },
     )
+
+    const checkNavPage1 = async () => {
+      let flag: any = false
+      let xiazai: any = document.getElementById('s2id_TransactionHistoryFG.OUTFORMAT')
+      // 当前在下载页面 下载完成
+      if (xiazai) {
+        await sleep(2000)
+        let s1: any = document.getElementById('s2id_TransactionHistoryFG.OUTFORMAT')
+        let s2id_download_type: any = s1.querySelector('a')
+        console.log('s2id_download_type: ', s2id_download_type)
+        eventClick(s2id_download_type)
+        await sleep(3000)
+        let drows: any = document.querySelectorAll('#select2-drop li')
+        if (drows.length) {
+          eventClick(drows[3])
+        }
+
+        await sleep(1000)
+        eventClick(document.querySelector('button[name="Action.GENERATE_REPORT"]'))
+        timer = setTimeout(async () => {
+          let onOff: any = (await getSyncStorage('onOff')) || false
+          let ActionButton: any = document.querySelector('button[name="Action.SEARCH"]')
+          if (ActionButton && onOff) {
+            clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+
+            let shijianinput: any = document.querySelector(
+              'input[name="TransactionHistoryFG.FROM_TXN_DATE"]',
+            )
+            // 当前在时间选择界面
+            if (shijianinput) {
+              // 当前在时间选择界面
+              await setSyncStorage({ step: 'xuanzeshijian' })
+              let shijianinput2: any = document.querySelector(
+                'input[name="TransactionHistoryFG.TO_TXN_DATE"]',
+              )
+
+              var myDate = new Date()
+              function add(n: any) {
+                if (n <= 9) {
+                  return `0${n}`
+                }
+                return n
+              }
+              var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+              var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+              var myToday = add(myDate.getDate()) //获取当前日(1-31)
+              let today = `${myToday}/${myMonth}/${myYear}`
+              shijianinput.value = today
+              shijianinput2.value = today
+            }
+            ActionButton.click()
+          }
+        }, ruleForm.intervalTime * 1000 || 20000)
+        cutDownNumTimer = setInterval(() => {
+          cutDownNum.value--
+          if (cutDownNum.value < 0) {
+            clearInterval(cutDownNumTimer)
+          }
+        }, 1000)
+        return 'wancheng'
+      } else {
+        timer = setTimeout(async () => {
+          let onOff: any = (await getSyncStorage('onOff')) || false
+          let ActionButton: any = document.querySelector('button[name="Action.SEARCH"]')
+          clearInterval(cutDownNumTimer)
+          if (ActionButton && onOff) {
+            clearInterval(cutDownNumTimer)
+            cutDownNum.value = ruleForm.intervalTime
+
+            let shijianinput: any = document.querySelector('input[name="transaction_date_from"]')
+            // 当前在时间选择界面
+            if (shijianinput) {
+              // 当前在时间选择界面
+              await setSyncStorage({ step: 'xuanzeshijian' })
+              let shijianinput2: any = document.querySelector('input[name="transaction_date_to"]')
+
+              var myDate = new Date()
+              function add(n: any) {
+                if (n <= 9) {
+                  return `0${n}`
+                }
+                return n
+              }
+              var myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
+              var myMonth = add(myDate.getMonth() + 1) //获取当前月份(0-11,0代表1月)
+              var myToday = add(myDate.getDate()) //获取当前日(1-31)
+              let today = `${myToday}/${myMonth}/${myYear}`
+              shijianinput.value = today
+              shijianinput2.value = today
+            }
+            ActionButton.click()
+          }
+        }, ruleForm.intervalTime * 1000 || 20000)
+        cutDownNumTimer = setInterval(() => {
+          cutDownNum.value--
+          if (cutDownNum.value < 0) {
+            clearInterval(cutDownNumTimer)
+          }
+        }, 1000)
+      }
+
+      return flag
+    }
 
     const checkNavPage = async () => {
       let flag: any = false
@@ -268,13 +376,22 @@ export default defineComponent({
       let _intervalTime: number = await getSyncStorage('intervalTime')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       let onOff: any = (await getSyncStorage('onOff')) || false
-      let step: any = (await getSyncStorage('step')) || 0
-      if (location.pathname === '/prod/statementnew/') {
-        ctx.emit('onOffHandle', onOff)
-      }
+      let downloadMode: any = await getSyncStorage('downloadMode')
+      console.log('downloadMode: ', downloadMode);
+
+      ruleForm.downloadMode = downloadMode || 1
       ruleForm.intervalTime = _intervalTime || 30
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
+
+      if (downloadMode === 1 && onOff) {
+        ctx.emit('onOffHandle', onOff)
+        // checkNavPage1()
+      } else {
+        if (location.pathname === '/prod/statementnew/') {
+          ctx.emit('onOffHandle', onOff)
+        }
+      }
 
       // if (onOff) {
       //   let flag = checkNavPage()

@@ -118,8 +118,23 @@ export default defineComponent({
       }
     }
 
-    const getStrrageHandle = () => {
-      return getSyncStorage('currentTab' + currentTab.windowId)
+    const getStrrageHandle = async () => {
+      let defaultEuleForm: any = {
+        intervalTime: 20, //爬取间隔时间
+        name: 'Hello',
+        customerIndex: 1, //accNumber
+        accountIndex: 1, //accNumber
+        downloadType: 'E',
+        downloadMode: 1,
+      }
+      let _currentTab: any = (await getSyncStorage('currentTab' + currentTab.windowId)) || {
+        ruleForm: defaultEuleForm,
+        cutDownNum: 20,
+        onOff: false,
+        step: 'customer',
+      }
+
+      return _currentTab
     }
 
     watch(
@@ -151,6 +166,7 @@ export default defineComponent({
 
     const checkNavPage = async () => {
       let flag: any = false
+      await sleep(1500)
       let downloadMode: any = currentTab.ruleForm.downloadMode
       if (!currentTab.onOff) {
         ctx.emit('onOffHandle', false)
@@ -171,6 +187,7 @@ export default defineComponent({
         }
 
         let currentTabData: any = await getStrrageHandle()
+        console.log('currentTabData---: ', currentTabData)
 
         let step: any = currentTabData.step || 'customer'
         // 当前在下载页面
@@ -188,6 +205,7 @@ export default defineComponent({
           if (accountDom.value == 0) {
             currentTab.step = 'customer'
             setStrrageHandle()
+            await sleep(1000)
             accountDom.value = lastVal
             accountDom.dispatchEvent(new Event('change'))
           }
@@ -216,11 +234,13 @@ export default defineComponent({
               }
               currentTab.step = 'accountNumber'
               setStrrageHandle()
+              await sleep(1000)
               accountDom2.value = lastVal2
               accountDom2.dispatchEvent(new Event('change'))
             } else {
               currentTab.step = 'accountNumber'
               setStrrageHandle()
+              await sleep(1000)
             }
             console.log('currentTab.step', currentTab.step)
             if (step === 'accountNumber') {
@@ -230,6 +250,7 @@ export default defineComponent({
               let checkoutResTimer: any = null
               currentTab.step = 'view'
               setStrrageHandle()
+              await sleep(1000)
               console.log('点查询')
               let nn = 0
               clearInterval(checkoutResTimer)
@@ -266,6 +287,7 @@ export default defineComponent({
                 console.log('重置')
                 currentTab.step = 'customer'
                 setStrrageHandle()
+                await sleep(1000)
                 // chrome.runtime.sendMessage({ type: 'GET_TAB' }, async (tab) => {
                 // console.log('tab: ', tab)
                 // if (tab.status) {
@@ -291,6 +313,7 @@ export default defineComponent({
               } else {
                 currentTab.step = 'customer'
                 setStrrageHandle()
+                await sleep(1000)
                 // 重置
                 clearTimeout(timer)
                 clearInterval(cutDownNumTimer)
@@ -312,7 +335,9 @@ export default defineComponent({
             } else if (step === 'customer') {
               checkNavPage()
             } else {
-              console.log('else')
+              console.log('else step  什么也不做')
+              await sleep(1000)
+              checkNavPage()
               // let viewDom: any = document.querySelector(
               //   'input[name="ctl00$ContentPlaceHolder1$btnview"]',
               // )
@@ -457,6 +482,9 @@ export default defineComponent({
         currentTab.ruleForm.downloadMode = _downloadMode
         cutDownNum.value = _cutDownNum
         currentTab.step = _step
+
+        console.log('初始  本地currentTab', _currentTab)
+        console.log('初始  currentTab', currentTab)
 
         if (
           location.pathname.indexOf('THAccountStatement') !== -1 ||

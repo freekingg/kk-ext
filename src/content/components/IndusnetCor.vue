@@ -144,9 +144,9 @@ export default defineComponent({
       currentTab.step = 'customer'
       currentTab.onOff = false
       setStrrageHandle()
-     setTimeout(() => {
-      location.reload()
-     }, 500);
+      setTimeout(() => {
+        location.reload()
+      }, 800)
     }
 
     const checkNavPage = async () => {

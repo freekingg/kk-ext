@@ -31,7 +31,7 @@ export default function useStorage() {
   */
        const setSyncStorage = (obj: any) => {
         return new Promise((resolve) => {
-          chrome.storage.sync.set(obj, () => {
+          chrome.storage.local.set(obj, () => {
             // @ts-ignore
             resolve();
           });
@@ -44,7 +44,7 @@ export default function useStorage() {
       */
       const getSyncStorage = <T>(key: string) => {
         return new Promise<T>((resolve) => {
-          chrome.storage.sync.get(key, (item) => {
+          chrome.storage.local.get(key, (item) => {
             key ? resolve(<T>item[key]) : resolve(<T>item);
           });
         });

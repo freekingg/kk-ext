@@ -11,14 +11,14 @@
         3、在网页右键选择复制当前窗口
       </p>
       <p style="font-size: 14px; margin: 0; padding: 0; color: red">
-        4、遇到异常时点击“重置”按钮或者刷新页面尝试
+        4、遇到异常时点击“重置”按钮或者刷新页面尝试(程序如果卡1分钟也会自动尝试重启运行)
       </p>
     </div>
     <section class="run-status">
       <!-- <img :src="runGifSrc"> -->
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
-          <img :src="runGifSrc" v-if="onOff" />
+          <img :src="runGifSrc" v-if="onOff" style="width: 100px" />
         </template>
         <template #extra>
           <el-button type="primary" @click="settingVisibleHandle">配置</el-button>
@@ -86,7 +86,7 @@ export default defineComponent({
   setup(props: any, ctx) {
     const cutDownNum = ref(30)
     const settingVisible = ref(false)
-    const runGifSrc = ref(chrome.runtime.getURL('img/runing.gif'))
+    const runGifSrc = ref(chrome.runtime.getURL('img/runing2.gif'))
     const currentTab: any = reactive({
       ruleForm: {
         intervalTime: 20, //爬取间隔时间
@@ -111,7 +111,11 @@ export default defineComponent({
     })
 
     const setStrrageHandle = () => {
-      setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
+      try {
+        setSyncStorage({ ['currentTab' + currentTab.windowId]: currentTab })
+      } catch (error) {
+        console.log('error: ', error)
+      }
     }
 
     const getStrrageHandle = () => {
@@ -129,25 +133,32 @@ export default defineComponent({
         clearInterval(cutDownNumTimer)
         setStrrageHandle()
         if (newValue) {
+          console.log('newValue: ', newValue)
           checkNavPage()
         }
       },
     )
 
-    const rest = ()=>{
+    const rest = () => {
       ctx.emit('onOffHandle', false)
       currentTab.step = 'customer'
+      currentTab.onOff = false
       setStrrageHandle()
-      clearTimeout(timer)
-        clearTimeout(timer2)
-        clearTimeout(timer3)
-        clearInterval(cutDownNumTimer)
-        setStrrageHandle()
+     setTimeout(() => {
+      location.reload()
+     }, 500);
     }
 
     const checkNavPage = async () => {
       let flag: any = false
       let downloadMode: any = currentTab.ruleForm.downloadMode
+      if (!currentTab.onOff) {
+        ctx.emit('onOffHandle', false)
+        currentTab.step = 'customer'
+        currentTab.onOff = false
+        setStrrageHandle()
+        return
+      }
 
       if (downloadMode === 1) {
         if (location.pathname.indexOf('THAccountStatement') === -1) {
@@ -160,6 +171,7 @@ export default defineComponent({
         }
 
         let currentTabData: any = await getStrrageHandle()
+
         let step: any = currentTabData.step || 'customer'
         // 当前在下载页面
         let accountDom: any = document.querySelector(
@@ -188,9 +200,20 @@ export default defineComponent({
               'select[name="ctl00$ContentPlaceHolder1$ddlaccountlist"] option',
             )
             let lastVal2 = sel_fldacctno_ops2[currentTab.ruleForm.accountIndex]['value']
-
+            console.log('lastVal2: ', lastVal2)
             // 选择帐号
             if (accountDom2.value == 0) {
+              if (lastVal2 == 0) {
+                console.log('lastVal2: 要点取消要点取消要点取消要点取消')
+                currentTab.step = 'customer'
+                setStrrageHandle()
+                await sleep(1000)
+                let cannelBtn: any = document.querySelector(
+                  'input[name="ctl00$ContentPlaceHolder1$btncancel"]',
+                )
+                cannelBtn.click()
+                return
+              }
               currentTab.step = 'accountNumber'
               setStrrageHandle()
               accountDom2.value = lastVal2
@@ -199,14 +222,26 @@ export default defineComponent({
               currentTab.step = 'accountNumber'
               setStrrageHandle()
             }
-
+            console.log('currentTab.step', currentTab.step)
             if (step === 'accountNumber') {
               let viewDom: any = document.querySelector(
                 'input[name="ctl00$ContentPlaceHolder1$btnview"]',
               )
+              let checkoutResTimer: any = null
               currentTab.step = 'view'
               setStrrageHandle()
               console.log('点查询')
+              let nn = 0
+              clearInterval(checkoutResTimer)
+              checkoutResTimer = setInterval(async () => {
+                nn += 1
+                console.log('检查', nn)
+                if (nn > 60) {
+                  clearInterval(checkoutResTimer)
+                  location.reload()
+                }
+              }, 1000)
+              await sleep(1000)
               viewDom.click()
             } else if (step === 'view') {
               await sleep(1000)
@@ -222,37 +257,36 @@ export default defineComponent({
                 await sleep(1000)
                 let downloadTypeVal = currentTab.ruleForm.downloadType || 'E'
                 let XxlsDom: any = document.querySelector(`input[value="${downloadTypeVal}"]`)
-                console.log('XxlsDom: ', XxlsDom)
                 if (XxlsDom) {
                   XxlsDom.click()
                 }
 
-                exportDom && exportDom.click()
+                // exportDom && exportDom.click()
                 downloadDom && downloadDom.click()
                 console.log('重置')
                 currentTab.step = 'customer'
                 setStrrageHandle()
                 // chrome.runtime.sendMessage({ type: 'GET_TAB' }, async (tab) => {
-                  // console.log('tab: ', tab)
-                  // if (tab.status) {
-                    // 重置
-                    clearTimeout(timer)
+                // console.log('tab: ', tab)
+                // if (tab.status) {
+                // 重置
+                clearTimeout(timer)
+                clearInterval(cutDownNumTimer)
+                cutDownNum.value = currentTab.ruleForm.intervalTime
+                timer = setTimeout(() => {
+                  checkNavPage()
+                }, currentTab.ruleForm.intervalTime * 1000 || 20000)
+                cutDownNumTimer = setInterval(() => {
+                  cutDownNum.value--
+                  currentTab.cutDownNum = cutDownNum.value
+                  setStrrageHandle()
+                  if (cutDownNum.value < 0) {
+                    currentTab.cutDownNum = currentTab.ruleForm.intervalTime
+                    setStrrageHandle()
                     clearInterval(cutDownNumTimer)
-                    cutDownNum.value = currentTab.ruleForm.intervalTime
-                    timer = setTimeout(() => {
-                      checkNavPage()
-                    }, currentTab.ruleForm.intervalTime * 1000 || 20000)
-                    cutDownNumTimer = setInterval(() => {
-                      cutDownNum.value--
-                      currentTab.cutDownNum = cutDownNum.value
-                      setStrrageHandle()
-                      if (cutDownNum.value < 0) {
-                        currentTab.cutDownNum = currentTab.ruleForm.intervalTime
-                        setStrrageHandle()
-                        clearInterval(cutDownNumTimer)
-                      }
-                    }, 1000)
-                  // }
+                  }
+                }, 1000)
+                // }
                 // })
               } else {
                 currentTab.step = 'customer'
@@ -307,11 +341,9 @@ export default defineComponent({
         let currentTabData: any = await getStrrageHandle()
 
         let sel_fldacctno: any = document.querySelector('select[formcontrolname="mappedAccount"]')
-        console.log(sel_fldacctno.value)
         let sel_fldacctno_ops: any = document.querySelectorAll(
           'select[formcontrolname="mappedAccount"] option',
         )
-        console.log(sel_fldacctno.value)
 
         let lastVal = sel_fldacctno_ops[currentTab.ruleForm.customerIndex]['value']
         sel_fldacctno.value = lastVal
@@ -329,7 +361,6 @@ export default defineComponent({
 
         let checkoutResTimer: any = null
         checkoutResTimer = setInterval(async () => {
-          console.log('checkoutResTimer: ');
           let overlay: any = document.querySelector('.overlay[hidden]')
           if (overlay) {
             clearInterval(checkoutResTimer)
@@ -435,10 +466,12 @@ export default defineComponent({
             ctx.emit('onOffHandle', onOff)
           }, 1000)
         } else {
-          // let container: any = document.getElementById('kk-container')
-          // if (container) {
-          //   container.style.display = 'none'
-          // }
+          setTimeout(() => {
+            ctx.emit('onOffHandle', false)
+            currentTab.onOff = false
+            currentTab.step = 'customer'
+            setStrrageHandle()
+          }, 1000)
         }
       })
     })

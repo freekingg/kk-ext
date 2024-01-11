@@ -130,7 +130,7 @@ export default defineComponent({
         type: 'IndusnetCor',
         typeName: 'Indusnet Cor',
         matches: ['indusdirect.indusind.com'],
-        injectJs: ['js/indus-cor.js'],
+        // injectJs: ['js/indus-cor.js'],
       },
       {
         type: 'Pnbcor',

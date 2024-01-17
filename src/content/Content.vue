@@ -52,6 +52,7 @@ import Hdfc from './components/Hdfc.vue'
 import HdfcOld from './components/HdfcOld.vue'
 import HdfcCor from './components/HdfcCor.vue'
 import Shivalik from './components/shivalik.vue'
+import SbiCor from './components/SbiCor.vue'
 import Rblbank from './components/rblbank.vue'
 import IndusnetCor from './components/IndusnetCor.vue'
 import AUBankP from './components/AuBankP.vue'
@@ -69,6 +70,7 @@ export default defineComponent({
     KVBcor,
     KotakCor,
     Jana,
+    SbiCor,
     UtkarshCor,
     Canarabank,
     Ujjivancor,
@@ -131,6 +133,11 @@ export default defineComponent({
         typeName: 'Indusnet Cor',
         matches: ['indusdirect.indusind.com'],
         // injectJs: ['js/indus-cor.js'],
+      },
+      {
+        type: 'SbiCor',
+        typeName: 'Sbi Cor',
+        matches: ['yonobusiness.sbi','corp.onlinesbi.sbi'],
       },
       {
         type: 'Pnbcor',

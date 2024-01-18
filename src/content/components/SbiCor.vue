@@ -197,7 +197,8 @@ export default defineComponent({
         startdate.value = today
         await sleep(1000)
 
-        let iconExcel: any = document.querySelector('label[id="iconExcel"]')
+        let iconExcel: any = document.querySelector('label[id="iconText"]')
+        //  iconPdf  iconText
         iconExcel.click()
         await sleep(1000)
 

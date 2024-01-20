@@ -11,6 +11,7 @@
       <el-result icon="info" :title="onOff ? '运行中' + cutDownNum + 's' : '未启动'">
         <template #icon>
           <img :src="runGifSrc" v-if="onOff" />
+          <h4 v-if="onOff">实时余额: {{ accBalance }}</h4>
         </template>
         <!-- <template #sub-title>
           <img :src="runGifSrc" v-if="onOff">
@@ -75,6 +76,8 @@ export default defineComponent({
 
     const ruleFormRef = ref()
     const dialogHelpVisible = ref(false)
+
+    const accBalance = ref('-')
 
     const ruleForm = reactive({
       intervalTime: 20, //爬取间隔时间
@@ -164,7 +167,7 @@ export default defineComponent({
       }
       clearInterval(checkLiushuiPage)
       clearInterval(checkoutBlockOverlayTimer)
-
+      getAccBalance()
       const liushuiHandle = async () => {
         console.log('liushuiHandle: ')
         //打开时间搜索框
@@ -259,6 +262,43 @@ export default defineComponent({
       }
     }
 
+    const getAccBalance = ()=>{
+      let debit_accountNo:any = document.querySelector('#debit_accountNo')
+      let debit_branchCode:any = document.querySelector('#debit_branchCode')
+      if(!debit_accountNo) return
+        debit_accountNo = debit_accountNo.value
+        console.log('debit_accountNo: ', debit_accountNo);
+        debit_branchCode = debit_branchCode.value
+
+      fetch("https://corp.onlinesbi.sbi/saral/getAccBalcheck.htm", {
+  "headers": {
+    "accept": "text/plain, */*; q=0.01",
+    "accept-language": "zh-CN,zh;q=0.9",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-requested-with": "XMLHttpRequest"
+  },
+  "referrer": "https://corp.onlinesbi.sbi/saral/mypage.htm",
+  "referrerPolicy": "strict-origin-when-cross-origin",
+  "body": `account_no=${debit_accountNo}&branchCode=${debit_branchCode}&userName=`,
+  "method": "POST",
+  "mode": "cors",
+  "credentials": "include"
+}).then((result) => {
+  return result.json()
+}).then((result) => {
+  console.log('result: ', result);
+  accBalance.value = result.accBalance
+}).catch((err) => {
+  
+});
+    }
+
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
@@ -285,6 +325,7 @@ export default defineComponent({
       submitForm,
       resetForm,
       startHandle,
+      accBalance,
       transForPageHandle,
       dialogHelpVisible,
       ...toRefs(state),

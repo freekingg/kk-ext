@@ -34,6 +34,12 @@
         <el-form-item label="爬取间隔(s)" prop="intervalTime">
           <el-input type="number" v-model="ruleForm.intervalTime" />
         </el-form-item>
+        <el-form-item label="下载模式">
+          <el-radio-group v-model="ruleForm.downloadMode">
+            <el-radio :label="1">全流水模式</el-radio>
+            <el-radio :label="2">最近10笔</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">保存</el-button>
         </el-form-item>
@@ -51,6 +57,7 @@ import { defineComponent, ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import useStorage from '../useStorage'
+import { writeFileXLSX, utils } from 'xlsx'
 import { sleep, Timer, eventClick } from '../../utils/index'
 let timer: any = null
 let cutDownNumTimer: any = null
@@ -83,6 +90,7 @@ export default defineComponent({
       intervalTime: 20, //爬取间隔时间
       reportUrl: '', //上报接口地址
       name: 'Hello',
+      downloadMode: 1,
       data: {},
       accNumber: '', //accNumber
     })
@@ -102,6 +110,7 @@ export default defineComponent({
         setSyncStorage({ mode: 'download' })
         if (newValue) {
           setSyncStorage({ onOff: newValue })
+
           if (!watchBillPage()) {
             ElMessage({
               message: '[启动失败]：请在流水界面执行开始.',
@@ -133,18 +142,23 @@ export default defineComponent({
     // 检查流水页面
     const watchBillPage = () => {
       let pathname = 'accountstatement'
+      console.log(ruleForm.downloadMode)
+      if (ruleForm.downloadMode == 2) {
+        if (
+          location.pathname.indexOf('accountsummary') !== -1 ||
+          location.pathname.indexOf('accountsummaryconfirm') !== -1
+        ) {
+          return true
+        } else {
+          return false
+        }
+        return
+      }
       if (location.pathname.indexOf(pathname) === -1) {
         return false
       } else {
         return true
       }
-      // let inputs = document.querySelectorAll('form[name="TransactionHistoryFG"] input')
-      // let ra1 = document.querySelector('#dwnldDetailsCaption')
-      // if (inputs.length && ra1) {
-      //   return true
-      // } else {
-      //   return false
-      // }
     }
 
     const submitForm = async (formEl: any) => {
@@ -162,11 +176,66 @@ export default defineComponent({
     const download = async () => {
       console.log('props: ', props)
       if (!props.onOff) return
+
       if (!watchBillPage()) {
         return
       }
       clearInterval(checkLiushuiPage)
       clearInterval(checkoutBlockOverlayTimer)
+
+      if (ruleForm.downloadMode == 2) {
+        await sleep(3000)
+        console.log('location.pathname', location.pathname)
+        if (location.pathname.indexOf('accountsummary.htm') !== -1) {
+          let aLInk: any = document.querySelector('#dr1 a')
+          console.log('aLInk: ', aLInk);
+          if (aLInk) {
+            // aLInk.click()
+            eventClick(aLInk)
+          }else{
+            setSyncStorage({ mode: 'download' })
+          ctx.emit('onOffHandle', false)
+          }
+        } else if (location.pathname.indexOf('accountsummaryconfirm') !== -1) {
+          // 获取最近10笔
+          console.log('sss')
+          let trs: any = document.querySelectorAll('#test table tr')
+          console.log('trs: ', trs)
+          let tables = []
+          if (trs && trs.length > 1) {
+            for (let index = 1; index < trs.length; index++) {
+              const element = trs[index]
+              let tds: any = element.querySelectorAll('td')
+              tables.push({
+                date: tds[0]['innerText'],
+                description: tds[1]['innerText'],
+                debit: tds[2]['innerText'],
+                credit: tds[3]['innerText'],
+              })
+            }
+          }
+          console.log(tables)
+          downloadFile(tables)
+          // 重置
+          clearTimeout(timer)
+          clearInterval(cutDownNumTimer)
+          cutDownNum.value = ruleForm.intervalTime
+          timer = setTimeout(() => {
+            let back: any = document.querySelector('.common_btn input')
+            if (back) {
+              back.click()
+            }
+          }, ruleForm.intervalTime * 1000 || 20000)
+          cutDownNumTimer = setInterval(() => {
+            cutDownNum.value--
+            if (cutDownNum.value < 0) {
+              clearInterval(cutDownNumTimer)
+            }
+          }, 1000)
+        }
+        return
+      }
+
       getAccBalance()
       const liushuiHandle = async () => {
         console.log('liushuiHandle: ')
@@ -174,14 +243,13 @@ export default defineComponent({
         await sleep(1000)
 
         let bydateRadio: any = document.querySelector('input[id="bydate"]')
-        if(bydateRadio){
+        if (bydateRadio) {
           bydateRadio.click()
           await sleep(1000)
-        }else{
+        } else {
           ctx.emit('onOffHandle', false)
           return
         }
-       
 
         var myDate = new Date()
         function add(n: any) {
@@ -216,10 +284,12 @@ export default defineComponent({
       clearInterval(cutDownNumTimer)
       cutDownNum.value = ruleForm.intervalTime
       timer = setTimeout(() => {
-        let accountstatementLink:any = document.querySelector('a[onclick="javascript:callURL(\'/saral/accountstatement.htm\')"]')
-        if(accountstatementLink){
+        let accountstatementLink: any = document.querySelector(
+          'a[onclick="javascript:callURL(\'/saral/accountstatement.htm\')"]',
+        )
+        if (accountstatementLink) {
           accountstatementLink.click()
-        }else{
+        } else {
           download()
         }
       }, ruleForm.intervalTime * 1000 || 20000)
@@ -229,6 +299,14 @@ export default defineComponent({
           clearInterval(cutDownNumTimer)
         }
       }, 1000)
+    }
+
+    const downloadFile = async (list: any = [], flag: Boolean = true) => {
+      let newList = list
+      const ws = utils.json_to_sheet(newList)
+      const wb = utils.book_new()
+      utils.book_append_sheet(wb, ws, 'Data')
+      writeFileXLSX(wb, 'sbi-last10.xlsx')
     }
 
     const resetForm = (formEl: any) => {
@@ -262,50 +340,53 @@ export default defineComponent({
       }
     }
 
-    const getAccBalance = ()=>{
-      let debit_accountNo:any = document.querySelector('#debit_accountNo')
-      let debit_branchCode:any = document.querySelector('#debit_branchCode')
-      if(!debit_accountNo) return
-        debit_accountNo = debit_accountNo.value
-        console.log('debit_accountNo: ', debit_accountNo);
-        debit_branchCode = debit_branchCode.value
+    const getAccBalance = () => {
+      let debit_accountNo: any = document.querySelector('#debit_accountNo')
+      let debit_branchCode: any = document.querySelector('#debit_branchCode')
+      if (!debit_accountNo) return
+      debit_accountNo = debit_accountNo.value
+      console.log('debit_accountNo: ', debit_accountNo)
+      debit_branchCode = debit_branchCode.value
 
-      fetch("https://corp.onlinesbi.sbi/saral/getAccBalcheck.htm", {
-  "headers": {
-    "accept": "text/plain, */*; q=0.01",
-    "accept-language": "zh-CN,zh;q=0.9",
-    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": "\"Windows\"",
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-origin",
-    "x-requested-with": "XMLHttpRequest"
-  },
-  "referrer": "https://corp.onlinesbi.sbi/saral/mypage.htm",
-  "referrerPolicy": "strict-origin-when-cross-origin",
-  "body": `account_no=${debit_accountNo}&branchCode=${debit_branchCode}&userName=`,
-  "method": "POST",
-  "mode": "cors",
-  "credentials": "include"
-}).then((result) => {
-  return result.json()
-}).then((result) => {
-  console.log('result: ', result);
-  accBalance.value = result.accBalance
-}).catch((err) => {
-  
-});
+      fetch('https://corp.onlinesbi.sbi/saral/getAccBalcheck.htm', {
+        headers: {
+          accept: 'text/plain, */*; q=0.01',
+          'accept-language': 'zh-CN,zh;q=0.9',
+          'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin',
+          'x-requested-with': 'XMLHttpRequest',
+        },
+        referrer: 'https://corp.onlinesbi.sbi/saral/mypage.htm',
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        body: `account_no=${debit_accountNo}&branchCode=${debit_branchCode}&userName=`,
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+      })
+        .then((result) => {
+          return result.json()
+        })
+        .then((result) => {
+          console.log('result: ', result)
+          accBalance.value = result.accBalance
+        })
+        .catch((err) => {})
     }
 
     // 与后台通信
     onMounted(async () => {
       let _intervalTime: number = await getSyncStorage('intervalTime')
+      let _downloadMode: number = await getSyncStorage('downloadMode')
       let _reportUrl: any = await getSyncStorage('reportUrl')
       let onOff: any = (await getSyncStorage('onOff')) || false
-     
+
       ruleForm.intervalTime = _intervalTime || 20
+      ruleForm.downloadMode = _downloadMode || 1
       ruleForm.reportUrl = _reportUrl || ''
       cutDownNum.value = ruleForm.intervalTime
 

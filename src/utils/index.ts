@@ -7,6 +7,18 @@ export const sleep = (time: number = 1000, cb?: Function) => {
   })
 }
 
+// 创建一个模拟鼠标移动的事件
+export const simulateMouseMove = (element:any, posX:any, posY:any) => {
+  var event = new MouseEvent('mousemove', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: posX,
+      clientY: posY
+  });
+  element.dispatchEvent(event);
+}
+
 export const Timer: any = {
   sleep: function (time: number = 1000, cb?: Function) {
     return new Promise((resolve) => {

@@ -21,7 +21,7 @@ export default defineManifest({
     {
       matches: ['*://*/*'],
       js: ['src/content/index.ts'],
-      "run_at": "document_end"
+      "run_at": "document_end",
     },
   ],
   web_accessible_resources: [
@@ -30,6 +30,9 @@ export default defineManifest({
       "matches": ["<all_urls>"],
     },
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' 'unsafe-inline' https://corp.onlinesbi.sbi"
+},
   host_permissions:["https://indusdirect.indusind.com/*","<all_urls>"],
   permissions: [
     "webRequest",

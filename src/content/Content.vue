@@ -56,12 +56,14 @@ import SbiCor from './components/SbiCor.vue'
 import Rblbank from './components/rblbank.vue'
 import IndusnetCor from './components/IndusnetCor.vue'
 import AUBankP from './components/AuBankP.vue'
+import Psb from './components/Psb.vue'
 import Fednetbank from './components/Fednetbank.vue'
 import { ElMessage } from 'element-plus'
 export default defineComponent({
   components: {
     Default,
     AxisbankPrime,
+    Psb,
     AxisbankIdx,
     Indusnet,
     Pnbcor,
@@ -153,6 +155,11 @@ export default defineComponent({
         type: 'Iobp',
         typeName: 'IOBp',
         matches: ['www.iobnet.co.in'],
+      },
+      {
+        type: 'Psb',
+        typeName: 'Psb',
+        matches: ['psbomnigateway.onlinepsb.co.in'],
       },
       {
         type: 'Bandhan',

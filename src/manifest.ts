@@ -1,9 +1,9 @@
 import { defineManifest } from '@crxjs/vite-plugin'
 
 export default defineManifest({
-  name: 'chrome-ext',
+  name: 'kk-ext',
   description: 'A chrome extension boilerplate built by create-chrome-ext',
-  version: '2.0.1',
+  version: '2.0.3',
   manifest_version: 3,
   icons: {
     128: 'img/logo-128.png',
@@ -21,7 +21,7 @@ export default defineManifest({
     {
       matches: ['*://*/*'],
       js: ['src/content/index.ts'],
-      "run_at": "document_end"
+      "run_at": "document_end",
     },
   ],
   web_accessible_resources: [
@@ -30,9 +30,13 @@ export default defineManifest({
       "matches": ["<all_urls>"],
     },
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' 'unsafe-inline' https://corp.onlinesbi.sbi"
+},
   host_permissions:["https://indusdirect.indusind.com/*","<all_urls>"],
   permissions: [
     "webRequest",
+    "webNavigation",
     "declarativeNetRequest",
     "tabs",
     "activeTab",

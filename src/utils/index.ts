@@ -56,3 +56,17 @@ export const eventClick = (element:any) => {
   }
 }
 
+
+export const getQueryString = (url:any) => {
+  console.log(1);
+  const params:any = {};
+  const queryString = url.split('?')[1];
+  if (queryString) {
+    const keyValuePairs = queryString.split('&');
+    keyValuePairs.forEach((pair:any) => {
+      const [key, value] = pair.split('=');
+      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    });
+  }
+  return params;
+}
